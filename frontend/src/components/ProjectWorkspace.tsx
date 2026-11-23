@@ -110,10 +110,14 @@ export default function ProjectWorkspace({
       abstract: source.abstract.trim() || undefined
     };
     const next = { ...project, papers: [...project.papers, paper] };
-    setProject(next);
-    await saveProject(next);
-    setSource(emptyPaper); setShowSourceForm(false);
-    setNotice("Source added to this project's library.");
+    try {
+      await saveProject(next);
+      setProject(next);
+      setSource(emptyPaper); setShowSourceForm(false);
+      setNotice("Source added to this project's library.");
+    } catch (error) {
+      setNotice("Could not save this source: " + (error as Error).message);
+    }
   };
 
   const saveNote = async (event: React.FormEvent) => {
@@ -125,10 +129,14 @@ export default function ProjectWorkspace({
       content: noteContent.trim(), tags: existing?.tags || [],
       createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now()
     };
-    await saveProjectNote(note);
-    setNoteTitle(""); setNoteContent(""); setEditingNote(null);
-    await refreshRelated();
-    setNotice("Note saved.");
+    try {
+      await saveProjectNote(note);
+      setNoteTitle(""); setNoteContent(""); setEditingNote(null);
+      await refreshRelated();
+      setNotice("Note saved.");
+    } catch (error) {
+      setNotice("Could not save this note: " + (error as Error).message);
+    }
   };
 
   const editNote = (note: ProjectNote) => {
