@@ -234,7 +234,7 @@ export default function ProjectWorkspace({
             <div><strong>{papers.length}</strong><span>Sources</span></div><div><strong>{attachments.length}</strong><span>Files</span></div><div><strong>{notes.length}</strong><span>Notes</span></div>
           </div><div className="pw-summary-line"><span>Milestones complete</span><b>{completedMilestones}/{(project.milestones || []).length}</b></div>
           <div className="pw-mini-progress"><i style={{ width: (project.milestones?.length ? completedMilestones / project.milestones.length * 100 : 0) + "%" }}/></div>
-          <button className="pw-open-studio" onClick={onOpenStudio}>Continue to Writing Studio <BookOpen size={14}/></button></section>
+          <button className="pw-open-studio" onClick={() => void navigateAfterSave(onOpenStudio)}>Continue to Writing Studio <BookOpen size={14}/></button></section>
           <section className="pw-tip"><strong>Research library</strong><p>Keep papers and original documents here. Later workspaces will reuse these materials for screening, evidence extraction and manuscript writing.</p><button onClick={() => setSection("library")}>Manage sources <Link2 size={13}/></button></section>
         </aside>
       </div>}
