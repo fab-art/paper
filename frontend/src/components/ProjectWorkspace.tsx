@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import "./project-workspace.css";
 import {
   ArrowLeft, BookOpen, CalendarDays, Check, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
@@ -65,7 +66,7 @@ export default function ProjectWorkspace({
     [p.title, ...(p.authors || []), p.doi || "", p.venue || ""].join(" ").toLowerCase().includes(sourceQuery.toLowerCase())
   ), [papers, sourceQuery]);
 
-  const addSource = async (event: React.FormEvent) => {
+  const addSource = async (event: FormEvent) => {
     event.preventDefault();
     if (!project || !source.title.trim()) return;
     const paper: Paper = {
