@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import "./project-workspace.css";
+import ResearchDiscovery from "./ResearchDiscovery";
 import {
-  ArrowLeft, BookOpen, CalendarDays, Check, ClipboardList, Download, FilePlus2,
+  ArrowLeft, BookOpen, Check, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X
 } from "lucide-react";
@@ -20,7 +21,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -65,6 +66,23 @@ export default function ProjectWorkspace({
   const filteredPapers = useMemo(() => papers.filter(p =>
     [p.title, ...(p.authors || []), p.doi || "", p.venue || ""].join(" ").toLowerCase().includes(sourceQuery.toLowerCase())
   ), [papers, sourceQuery]);
+
+  const saveDiscoveredPaper = async (paper: Paper) => {
+    if (!project) return false;
+    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const doi = normalize(paper.doi || "");
+    const title = normalize(paper.title);
+    const duplicate = project.papers.some(item =>
+      (doi && normalize(item.doi || "") === doi) ||
+      (title && normalize(item.title) === title)
+    );
+    if (duplicate) return false;
+    const next = { ...project, papers: [...project.papers, paper] };
+    setProject(next);
+    await saveProject(next);
+    setNotice("Paper saved to the project library.");
+    return true;
+  };
 
   const addSource = async (event: FormEvent) => {
     event.preventDefault();
@@ -165,6 +183,7 @@ export default function ProjectWorkspace({
         <button className={section === "overview" ? "selected" : ""} onClick={() => setSection("overview")}><ClipboardList size={15}/> Overview</button>
         <button className={section === "library" ? "selected" : ""} onClick={() => setSection("library")}><FolderOpen size={15}/> Research library <span>{papers.length + attachments.length}</span></button>
         <button className={section === "notes" ? "selected" : ""} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
+        <button className={section === "discover" ? "selected" : ""} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
       </nav>
 
       {section === "overview" && <div className="pw-overview">
@@ -220,10 +239,10 @@ export default function ProjectWorkspace({
         <label className="pw-search"><Search size={14}/><input value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/></label>
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
           {filteredPapers.length === 0 ? <div className="pw-empty">No references yet. Add a reference manually or import one through a future discovery workflow.</div> :
-            filteredPapers.map((paper, index) => <article className="pw-reference" key={paper.doi || paper.title + index}>
+            filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title + index}>
               <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
               <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button title="Remove reference" onClick={() => {
-                if (window.confirm("Remove this reference from the project?")) patch({ papers: project.papers.filter((_, i) => i !== index) });
+                if (window.confirm("Remove this reference from the project?")) patch({ papers: project.papers.filter((item) => item !== paper) });
               }}><Trash2 size={14}/></button></div>
             </article>)}
         </div>
@@ -232,6 +251,8 @@ export default function ProjectWorkspace({
             attachments.map(file => <article className="pw-reference" key={file.id}><div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{file.name}</strong><p>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.mimeType}</p></div><div className="pw-ref-actions"><button title="Download file" onClick={() => downloadAttachment(file)}><Download size={14}/></button><button title="Delete file" onClick={async () => { if (window.confirm("Delete this uploaded file?")) { await deleteProjectAttachment(file.id); await refreshRelated(); } }}><Trash2 size={14}/></button></div></article>)}
         </div>
       </div>}
+
+      {section === "discover" && <ResearchDiscovery projectId={projectId} papers={papers} onSavePaper={saveDiscoveredPaper} onOpenLibrary={() => setSection("library")}/>}
 
       {section === "notes" && <div className="pw-notes-layout">
         <section className="pw-panel pw-note-editor"><div className="pw-panel-title"><div><span>✎</span><h2>{editingNote ? "Edit note" : "New project note"}</h2></div>{editingNote && <button className="pw-text-action" onClick={() => { setEditingNote(null); setNoteTitle(""); setNoteContent(""); }}>Cancel edit</button>}</div>
