@@ -31,6 +31,8 @@ export default function ProjectWorkspace({
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
+  const projectRef = useRef<Project | null>(null);
+  projectRef.current = project;
 
   const refreshRelated = async () => {
     const [nextNotes, nextAttachments] = await Promise.all([
@@ -61,7 +63,17 @@ export default function ProjectWorkspace({
     return () => window.clearTimeout(timer);
   }, [project]);
 
+  useEffect(() => () => {
+    const latest = projectRef.current;
+    if (latest?.id === projectId) void saveProject(latest);
+  }, [projectId]);
+
   const patch = (changes: Partial<Project>) => setProject(current => current ? { ...current, ...changes } : current);
+  const navigateAfterSave = async (action: () => void) => {
+    if (!project) return;
+    try { await saveProject(project); action(); }
+    catch (error) { setNotice("Could not save the latest project changes: " + (error as Error).message); }
+  };
   const papers = project?.papers || [];
   const filteredPapers = useMemo(() => papers.filter(p =>
     [p.title, ...(p.authors || []), p.doi || "", p.venue || ""].join(" ").toLowerCase().includes(sourceQuery.toLowerCase())
@@ -163,9 +175,9 @@ export default function ProjectWorkspace({
 
   return <div className="project-workspace">
     <header className="pw-topbar">
-      <button className="pw-back" onClick={onBack}><ArrowLeft size={15}/> Research Station</button>
+      <button className="pw-back" onClick={() => void navigateAfterSave(onBack)}><ArrowLeft size={15}/> Research Station</button>
       <div className="pw-brand"><span className="pw-brand-mark">P</span><span>PaperOrchestra</span><i>PROJECT WORKSPACE</i></div>
-      <button className="pw-writing" onClick={onOpenStudio}><BookOpen size={15}/> Open Writing Studio</button>
+      <button className="pw-writing" onClick={() => void navigateAfterSave(onOpenStudio)}><BookOpen size={15}/> Open Writing Studio</button>
     </header>
     <main className="pw-main">
       <div className="pw-breadcrumb">YOUR PROJECTS <span>/</span> PROJECT WORKSPACE</div>
@@ -185,6 +197,7 @@ export default function ProjectWorkspace({
         <button className={section === "notes" ? "selected" : ""} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
         <button className={section === "discover" ? "selected" : ""} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
       </nav>
+      {notice && <div className="pw-global-notice" role="status"><Check size={14}/><span>{notice}</span></div>}
 
       {section === "overview" && <div className="pw-overview">
         <div className="pw-main-column">
@@ -217,7 +230,6 @@ export default function ProjectWorkspace({
           <div className="pw-mini-progress"><i style={{ width: (project.milestones?.length ? completedMilestones / project.milestones.length * 100 : 0) + "%" }}/></div>
           <button className="pw-open-studio" onClick={onOpenStudio}>Continue to Writing Studio <BookOpen size={14}/></button></section>
           <section className="pw-tip"><strong>Research library</strong><p>Keep papers and original documents here. Later workspaces will reuse these materials for screening, evidence extraction and manuscript writing.</p><button onClick={() => setSection("library")}>Manage sources <Link2 size={13}/></button></section>
-          {notice && <div className="pw-notice"><Check size={13}/>{notice}</div>}
         </aside>
       </div>}
 
