@@ -1,4 +1,4 @@
-import type { Paper } from "./types";
+import type { Paper, FigureAsset } from "./types";
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch("/api/" + path, {
@@ -61,9 +61,20 @@ export async function generatePlot(data: unknown[], x: string, y: string, title:
   }
 }
 
-export async function compileLatex(tex: string, bibtex: string) {
+export async function compileLatex(
+  tex: string,
+  bibtex: string,
+  templateFiles: Record<string,string> = {},
+  figures: FigureAsset[] = []
+) {
+  const assets = Object.fromEntries(figures
+    .filter((figure) => figure.png && figure.mime !== "image/svg+xml")
+    .map((figure, index) => [figure.name || "figure-" + (index + 1) + ".png", figure.png!]));
   try {
-    return await post<{filename:string;pdf_base64:string}>("engine/compile-latex",{tex,bibtex});
+    return await post<{filename:string;pdf_base64:string}>(
+      "engine/compile-latex",
+      { tex, bibtex, files: templateFiles, assets }
+    );
   } catch (error) {
     const message=(error as Error).message;
     if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN")) throw error;
