@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hmac
 import os
 import re
 import subprocess
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
@@ -20,8 +21,11 @@ from pydantic import BaseModel, Field
 
 MAX_ROWS = 5000
 MAX_LATEX_SECONDS = 45
+MAX_COMPILE_FILES = 40
+MAX_COMPILE_TEXT_BYTES = 3_000_000
+MAX_COMPILE_ASSETS_BYTES = 3_000_000
 
-app = FastAPI(title="PaperOrchestra Studio Compute Engine", version="0.2.0")
+app = FastAPI(title="PaperOrchestra Studio Compute Engine", version="0.2.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
@@ -60,6 +64,8 @@ class PlotRequest(BaseModel):
 class CompileRequest(BaseModel):
     tex: str = Field(min_length=1, max_length=500_000)
     bibtex: str = Field(default="", max_length=300_000)
+    files: dict[str, str] = Field(default_factory=dict)
+    assets: dict[str, str] = Field(default_factory=dict)
 
 
 @app.get("/api/health")
@@ -141,22 +147,57 @@ async def generate_plot(request: PlotRequest):
     }
 
 
+def _safe_relative_path(name: str) -> Path:
+    normalized = name.replace("\\", "/")
+    candidate = PurePosixPath(normalized)
+    if not normalized or candidate.is_absolute() or any(part in ("", ".", "..") for part in candidate.parts):
+        raise HTTPException(status_code=400, detail=f"Unsafe compilation asset path: {name}")
+    if re.match(r"^[A-Za-z]:", normalized):
+        raise HTTPException(status_code=400, detail=f"Unsafe compilation asset path: {name}")
+    return Path(*candidate.parts)
+
+
 @app.post("/api/compile-latex")
 async def compile_latex(request: CompileRequest):
     latexmk = _which("latexmk")
     if not latexmk:
         raise HTTPException(status_code=503, detail="latexmk was not found in the compute image.")
-    # Basic guardrails only. For public multi-user production, use a one-shot sandboxed compiler worker.
     if re.search(r"\\write18|--shell-escape|\\openout|\\read18", request.tex, re.IGNORECASE):
         raise HTTPException(status_code=400, detail="Shell/file I/O primitives are not accepted.")
     if re.search(r"\\(input|include)\s*\{(?:/|[A-Za-z]:|.*\.\.)", request.tex):
         raise HTTPException(status_code=400, detail="Absolute paths and parent-directory includes are not allowed.")
+    if len(request.files) + len(request.assets) > MAX_COMPILE_FILES:
+        raise HTTPException(status_code=413, detail="Too many template files or figure assets.")
+    text_size = sum(len(value.encode("utf-8")) for value in request.files.values())
+    if text_size > MAX_COMPILE_TEXT_BYTES:
+        raise HTTPException(status_code=413, detail="Template files exceed the compilation size limit.")
 
     with tempfile.TemporaryDirectory(prefix="paperorchestra-") as tmp:
         work = Path(tmp)
         (work / "paper.tex").write_text(request.tex, encoding="utf-8")
         if request.bibtex.strip():
             (work / "references.bib").write_text(request.bibtex, encoding="utf-8")
+
+        for name, content in request.files.items():
+            relative = _safe_relative_path(name)
+            target = work / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+
+        asset_size = 0
+        for name, encoded in request.assets.items():
+            relative = _safe_relative_path(name)
+            try:
+                decoded = base64.b64decode(encoded, validate=True)
+            except (binascii.Error, ValueError) as exc:
+                raise HTTPException(status_code=400, detail=f"Invalid base64 figure asset: {name}") from exc
+            asset_size += len(decoded)
+            if asset_size > MAX_COMPILE_ASSETS_BYTES:
+                raise HTTPException(status_code=413, detail="Figure assets exceed the compilation size limit.")
+            target = work / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(decoded)
+
         try:
             result = subprocess.run(
                 [latexmk, "-pdf", "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", "paper.tex"],
