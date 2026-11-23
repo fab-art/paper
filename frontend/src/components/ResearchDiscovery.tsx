@@ -15,16 +15,18 @@ type Props = {
   onOpenLibrary: () => void;
 };
 
-function normalize(value: string) {
+function normalizeTitle(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
-
+function normalizeDoi(value: string) {
+  return value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
+}
 function isSaved(paper: Paper, saved: Paper[]) {
-  const doi = normalize(paper.doi || "");
-  const title = normalize(paper.title);
+  const doi = normalizeDoi(paper.doi || "");
+  const title = normalizeTitle(paper.title);
   return saved.some(item =>
-    (doi && normalize(item.doi || "") === doi) ||
-    (title && normalize(item.title) === title)
+    (doi && normalizeDoi(item.doi || "") === doi) ||
+    (title && normalizeTitle(item.title) === title)
   );
 }
 
