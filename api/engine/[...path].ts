@@ -22,10 +22,8 @@ async function enforceRateLimit(req: VercelRequest, path: string) {
   if (!increment.ok) throw new Error("Rate-limit service rejected the request.");
   const payload = await increment.json() as { result?: number };
   const count = Number(payload.result || 0);
-  if (count === 1) {
-    const expiry = await fetch(`${redisUrl}/expire/${key}/${WINDOW_SECONDS}`, { headers });
-    if (!expiry.ok) throw new Error("Could not set the rate-limit window.");
-  }
+  const expiry = await fetch(`${redisUrl}/expire/${key}/${WINDOW_SECONDS}`, { headers });
+  if (!expiry.ok) throw new Error("Could not set the rate-limit window.");
   return { configured: true, allowed: count <= limit, limit, remaining: Math.max(0, limit - count) };
 }
 
