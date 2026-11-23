@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import base64
-import json
+import hmac
 import os
 import re
 import subprocess
 import tempfile
-import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -15,23 +14,35 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-APP_DIR = Path(__file__).resolve().parent
 MAX_ROWS = 5000
-MAX_SCRIPT_SECONDS = 12
 MAX_LATEX_SECONDS = 45
 
-app = FastAPI(title="PaperOrchestra Studio API", version="0.1.0")
+app = FastAPI(title="PaperOrchestra Studio Compute Engine", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def authenticate_engine(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.method == "POST":
+        expected = os.getenv("PAPERORCHESTRA_ENGINE_TOKEN", "")
+        supplied = request.headers.get("authorization", "")
+        if not expected:
+            from starlette.responses import JSONResponse
+            return JSONResponse({"detail": "Compute engine authentication is not configured."}, status_code=503)
+        if not hmac.compare_digest(supplied, "Bearer " + expected):
+            from starlette.responses import JSONResponse
+            return JSONResponse({"detail": "Unauthorized compute request."}, status_code=401)
+    return await call_next(request)
 
 
 class SearchRequest(BaseModel):
@@ -53,12 +64,11 @@ class CompileRequest(BaseModel):
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "latexmk": _which("latexmk") is not None}
+    return {"ok": True, "latexmk": _which("latexmk") is not None, "engine": "python-tex"}
 
 
 @app.post("/api/search-papers")
 async def search_papers(request: SearchRequest):
-    """Proxy Semantic Scholar paper search to avoid browser CORS and keep API key server-side."""
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
     params = {
         "query": request.query,
@@ -96,19 +106,17 @@ async def search_papers(request: SearchRequest):
 
 @app.post("/api/generate-plot")
 async def generate_plot(request: PlotRequest):
-    """Generate a figure from tabular data using a fixed plotting template (no arbitrary code execution)."""
+    """Fixed-template chart rendering only; generated Python is never executed."""
     frame = pd.DataFrame(request.data)
     if request.x not in frame.columns or request.y not in frame.columns:
         raise HTTPException(status_code=400, detail=f"Columns not found. Available: {list(frame.columns)}")
-    if not pd.api.types.is_numeric_dtype(frame[request.y]):
-        frame[request.y] = pd.to_numeric(frame[request.y], errors="coerce")
+    frame[request.y] = pd.to_numeric(frame[request.y], errors="coerce")
     frame = frame.dropna(subset=[request.x, request.y])
     if frame.empty:
         raise HTTPException(status_code=400, detail="No valid rows for the selected x/y columns.")
 
     fig, ax = plt.subplots(figsize=(8.5, 5.2), dpi=180)
-    x_values = frame[request.x]
-    y_values = frame[request.y]
+    x_values, y_values = frame[request.x], frame[request.y]
     if pd.api.types.is_numeric_dtype(x_values):
         ax.plot(x_values, y_values, marker="o", linewidth=1.8)
     else:
@@ -129,6 +137,7 @@ async def generate_plot(request: PlotRequest):
         "filename": "figure.png",
         "png_base64": base64.b64encode(png.getvalue()).decode("ascii"),
         "pdf_base64": base64.b64encode(pdf.getvalue()).decode("ascii"),
+        "mime_type": "image/png",
     }
 
 
@@ -136,10 +145,10 @@ async def generate_plot(request: PlotRequest):
 async def compile_latex(request: CompileRequest):
     latexmk = _which("latexmk")
     if not latexmk:
-        raise HTTPException(status_code=503, detail="latexmk was not found on PATH. Install TeX Live or MiKTeX and latexmk.")
-    # Reject obvious path escapes and shell escape. Compilation remains for trusted local documents only.
+        raise HTTPException(status_code=503, detail="latexmk was not found in the compute image.")
+    # Basic guardrails only. For public multi-user production, use a one-shot sandboxed compiler worker.
     if re.search(r"\\write18|--shell-escape|\\openout|\\read18", request.tex, re.IGNORECASE):
-        raise HTTPException(status_code=400, detail="Shell/file I/O primitives are not accepted by this local compile endpoint.")
+        raise HTTPException(status_code=400, detail="Shell/file I/O primitives are not accepted.")
     if re.search(r"\\(input|include)\s*\{(?:/|[A-Za-z]:|.*\.\.)", request.tex):
         raise HTTPException(status_code=400, detail="Absolute paths and parent-directory includes are not allowed.")
 
