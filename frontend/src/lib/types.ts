@@ -14,6 +14,7 @@ export interface Project {
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
 export interface ProjectAttachment { id: string; projectId: string; name: string; mimeType: string; size: number; blob: Blob; description: string; createdAt: number }
+export interface ProjectSearchHistory { id: string; projectId: string; query: string; searchedAt: number }
 export const AGENTS: { id: AgentId; label: string; description: string }[] = [
   { id: "outline", label: "Outline", description: "Structure the paper" },
   { id: "literature", label: "Literature", description: "Find and ground sources" },
