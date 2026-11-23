@@ -139,23 +139,28 @@ export default function ProjectWorkspace({
     if (!files) return;
     const skipped: string[] = [];
     let savedCount = 0;
-    for (const file of Array.from(files)) {
-      if (file.size > 30 * 1024 * 1024) {
-        skipped.push(file.name);
-        continue;
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 30 * 1024 * 1024) {
+          skipped.push(file.name);
+          continue;
+        }
+        const attachment: ProjectAttachment = {
+          id: uid(), projectId, name: file.name, mimeType: file.type || "application/octet-stream",
+          size: file.size, blob: file, description: "", createdAt: Date.now()
+        };
+        await saveProjectAttachment(attachment);
+        savedCount += 1;
       }
-      const attachment: ProjectAttachment = {
-        id: uid(), projectId, name: file.name, mimeType: file.type || "application/octet-stream",
-        size: file.size, blob: file, description: "", createdAt: Date.now()
-      };
-      await saveProjectAttachment(attachment);
-      savedCount += 1;
+      await refreshRelated();
+      setNotice(skipped.length
+        ? `${savedCount} file(s) saved. Skipped files larger than 30 MB: ${skipped.join(", ")}.`
+        : `${savedCount} file(s) saved in this browser's project library.`);
+    } catch (error) {
+      setNotice("Could not save uploaded files: " + (error as Error).message);
+    } finally {
+      if (fileInput.current) fileInput.current.value = "";
     }
-    await refreshRelated();
-    if (fileInput.current) fileInput.current.value = "";
-    setNotice(skipped.length
-      ? `${savedCount} file(s) saved. Skipped files larger than 30 MB: ${skipped.join(", ")}.`
-      : `${savedCount} file(s) saved in this browser's project library.`);
   };
 
   const downloadAttachment = (file: ProjectAttachment) => {
