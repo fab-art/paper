@@ -223,8 +223,16 @@ export default function Studio() {
     setNotice(`Imported ${file.name}`);
   };
   const doCompile = async () => {
-    try { await compileLatex(project.latex, project.bibtex); setPdf(undefined); setNotice("Print-ready preview opened. In the print dialog, choose Save as PDF. This is a browser-rendered preview, not a TeX-engine compilation."); }
-    catch (e) { setNotice((e as Error).message); }
+    try {
+      const result = await compileLatex(project.latex, project.bibtex);
+      if (result.pdf_base64) {
+        setPdf(result.pdf_base64);
+        setNotice("LaTeX compilation succeeded. The compiled PDF is ready in the preview pane.");
+      } else {
+        setPdf(undefined);
+        setNotice("Browser print preview opened. Choose Save as PDF. Connect the Railway compute engine for native LaTeX compilation.");
+      }
+    } catch (e) { setNotice((e as Error).message); }
   };
   const runExport = () => exportProject(project, pdf);
 
