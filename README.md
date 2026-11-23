@@ -70,9 +70,18 @@ Install dependencies:
     npm --prefix frontend install
     npm --prefix frontend run dev
 
-For the backend install backend/requirements.txt, install TeX Live/MiKTeX with latexmk, set PAPERORCHESTRA_ENGINE_TOKEN in the shell that starts Vite and FastAPI, and set CORS_ORIGINS=http://localhost:5173, then run:
+For the backend install backend/requirements.txt and install TeX Live/MiKTeX with latexmk. Set the same local secret in both PowerShell terminals; it must match the token expected by FastAPI and is read only by the Vite development server and backend, never by browser code.
 
+Terminal 1 — start FastAPI:
+
+    $env:PAPERORCHESTRA_ENGINE_TOKEN="your-long-local-secret"
+    $env:CORS_ORIGINS="http://localhost:5173"
     uvicorn backend.main:app --reload --port 8000
+
+Terminal 2 — start Vite with the proxy secret:
+
+    $env:PAPERORCHESTRA_ENGINE_TOKEN="your-long-local-secret"
+    npm --prefix frontend run dev
 
 ## Upstream source
 
