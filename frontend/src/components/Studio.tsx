@@ -224,7 +224,7 @@ export default function Studio() {
   };
   const doCompile = async () => {
     try {
-      const result = await compileLatex(project.latex, project.bibtex);
+      const result = await compileLatex(project.latex, project.bibtex, project.templateFiles || {}, project.figures);
       if (result.pdf_base64) {
         setPdf(result.pdf_base64);
         setNotice("LaTeX compilation succeeded. The compiled PDF is ready in the preview pane.");
