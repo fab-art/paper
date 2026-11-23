@@ -138,7 +138,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => {
-    if ("latex" in changes || "bibtex" in changes || "templateFiles" in changes) setPdf(undefined);
+    if ("latex" in changes || "bibtex" in changes || "templateFiles" in changes || "figures" in changes) setPdf(undefined);
     setProject(p => ({ ...p, ...changes }));
   };
   const handleBack = async () => {
@@ -310,9 +310,21 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     setNotice(`Imported ${file.name}`);
   };
   const doCompile = async () => {
+    const snapshot = {
+      latex: project.latex,
+      bibtex: project.bibtex,
+      templateFiles: project.templateFiles,
+      figures: project.figures
+    };
     setPdf(undefined);
     try {
-      const result = await compileLatex(project.latex, project.bibtex, project.templateFiles || {}, project.figures);
+      const result = await compileLatex(snapshot.latex, snapshot.bibtex, snapshot.templateFiles || {}, snapshot.figures);
+      const latest = projectRef.current;
+      if (latest.latex !== snapshot.latex || latest.bibtex !== snapshot.bibtex ||
+          latest.templateFiles !== snapshot.templateFiles || latest.figures !== snapshot.figures) {
+        setNotice("The manuscript or figures changed during compilation. Run the preview again to compile the latest version.");
+        return;
+      }
       if (result.pdf_base64) {
         setPdf(result.pdf_base64);
         setNotice("LaTeX compilation succeeded. The compiled PDF is ready in the preview pane.");
