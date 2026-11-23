@@ -1,10 +1,11 @@
 import Dexie, { type Table } from "dexie";
-import type { Project, ProjectNote, ProjectAttachment } from "./types";
+import type { Project, ProjectNote, ProjectAttachment, ProjectSearchHistory } from "./types";
 
 class StudioDB extends Dexie {
   projects!: Table<Project, string>;
   notes!: Table<ProjectNote, string>;
   attachments!: Table<ProjectAttachment, string>;
+  searches!: Table<ProjectSearchHistory, string>;
   constructor() {
     super("paperorchestra-studio");
     this.version(1).stores({ projects: "id, updatedAt, name" });
@@ -12,6 +13,12 @@ class StudioDB extends Dexie {
       projects: "id, updatedAt, name, status",
       notes: "id, projectId, updatedAt, createdAt",
       attachments: "id, projectId, createdAt, name"
+    });
+    this.version(3).stores({
+      projects: "id, updatedAt, name, status",
+      notes: "id, projectId, updatedAt, createdAt",
+      attachments: "id, projectId, createdAt, name",
+      searches: "id, projectId, searchedAt"
     });
   }
 }
@@ -33,3 +40,12 @@ export async function listProjectAttachments(projectId: string) {
 }
 export async function saveProjectAttachment(file: ProjectAttachment) { await db.attachments.put(file); }
 export async function deleteProjectAttachment(id: string) { await db.attachments.delete(id); }
+export async function listProjectSearchHistory(projectId: string) {
+  return db.searches.where("projectId").equals(projectId).reverse().sortBy("searchedAt");
+}
+export async function recordProjectSearch(entry: ProjectSearchHistory) {
+  await db.searches.put(entry);
+  const history = await listProjectSearchHistory(entry.projectId);
+  const stale = history.slice(12);
+  if (stale.length) await db.searches.bulkDelete(stale.map(item => item.id));
+}
