@@ -1,4 +1,4 @@
-import { CreateWebWorkerMLCEngine, type MLCEngineInterface } from "@mlc-ai/web-llm";
+import type { MLCEngineInterface } from "@mlc-ai/web-llm";
 
 export const MODEL_OPTIONS = [
   { id: "Qwen2.5-3B-Instruct-q4f16_1-MLC", label: "Qwen2.5 3B (recommended)" },
@@ -19,6 +19,7 @@ export async function loadLocalModel(
   if (engine) return engine;
   if (!("gpu" in navigator)) throw new Error("WebGPU is not available in this browser.");
 
+  const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
   worker = new Worker(new URL("../workers/webllm.worker.ts", import.meta.url), { type: "module" });
   try {
     engine = await CreateWebWorkerMLCEngine(worker, modelId, {
