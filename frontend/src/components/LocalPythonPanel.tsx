@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./local-python.css";
 import { Activity, CheckCircle2, CircleAlert, Play, Settings2, Terminal, Wifi, WifiOff } from "lucide-react";
 
 const DEFAULT_URL = "http://127.0.0.1:8765";
