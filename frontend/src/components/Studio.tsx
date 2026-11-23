@@ -190,34 +190,43 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       for (const query of (plan.queries || []).slice(0, 4)) {
         const result = await searchPapers(query, 4); found.push(...result.papers);
       }
-      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\\s*/, "");
+      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
       const normalizeTitle = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const paperKey = (paper: Paper) => paper.doi ? "doi:" + normalizeDoi(paper.doi) : "title:" + normalizeTitle(paper.title);
+      const samePaper = (left: Paper, right: Paper) => {
+        const leftDoi = normalizeDoi(left.doi || "");
+        const rightDoi = normalizeDoi(right.doi || "");
+        return Boolean((leftDoi && rightDoi && leftDoi === rightDoi) ||
+          (normalizeTitle(left.title) && normalizeTitle(left.title) === normalizeTitle(right.title)));
+      };
       const mergePaperLists = (base: Paper[], incoming: Paper[]) => {
-        const merged = new Map<string, Paper>();
-        for (const paper of [...base, ...incoming]) {
-          const key = paperKey(paper);
-          const previous = merged.get(key);
-          if (!previous) merged.set(key, paper);
-          else merged.set(key, {
-            ...paper,
-            ...previous,
-            abstract: previous.abstract || paper.abstract,
-            url: previous.url || paper.url,
-            doi: previous.doi || paper.doi,
-            venue: previous.venue || paper.venue,
-            authors: previous.authors?.length ? previous.authors : paper.authors
-          });
+        const merged = [...base];
+        for (const paper of incoming) {
+          const index = merged.findIndex(existing => samePaper(existing, paper));
+          if (index < 0) merged.push(paper);
+          else {
+            const previous = merged[index];
+            merged[index] = {
+              ...paper,
+              ...previous,
+              abstract: previous.abstract || paper.abstract,
+              url: previous.url || paper.url,
+              doi: previous.doi || paper.doi,
+              venue: previous.venue || paper.venue,
+              authors: previous.authors?.length ? previous.authors : paper.authors
+            };
+          }
         }
-        return [...merged.values()];
+        return merged;
       };
       const discovered = mergePaperLists([], found).slice(0, 12);
-      const newPapers = discovered.filter(paper => !project.papers.some(existing => paperKey(existing) === paperKey(paper)));
+      const newPapers = discovered.filter(paper => !project.papers.some(existing => samePaper(existing, paper)));
       const mergedPapers = mergePaperLists(project.papers, discovered);
-      const bib = papersToBibtex(newPapers);
+      const currentBibTitles = project.bibtex.toLowerCase();
+      const papersNeedingBibtex = mergedPapers.filter(paper => !currentBibTitles.includes(paper.title.toLowerCase()));
+      const bib = papersToBibtex(papersNeedingBibtex);
       patch({ papers: mergedPapers, bibtex: [project.bibtex, bib].filter(Boolean).join("\n\n") });
-      setAgent("literature", "done", `Found ${discovered.length} candidate papers; added ${newPapers.length} new papers while preserving existing library entries.`);
-      setNotice(`Literature search found ${discovered.length} candidates and added ${newPapers.length} new references.`);
+      setAgent("literature", "done", `Found ${discovered.length} candidate papers; added ${newPapers.length} new papers and preserved ${project.papers.length} existing library entries.`);
+      setNotice(`Literature search found ${discovered.length} candidates, added ${newPapers.length} new papers and synchronized missing references to BibTeX.`);
     } catch (e) { setAgent("literature", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
