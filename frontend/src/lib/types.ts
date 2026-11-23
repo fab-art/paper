@@ -10,7 +10,7 @@ export interface Project {
   id: string; name: string; notes: string; latex: string; bibtex: string; template: string;
   outline: OutlineSection[]; papers: Paper[]; figures: FigureAsset[]; logs: string; templateFiles?: Record<string, string>;
   agentRecords: AgentRecord[]; updatedAt: number;
-  researchQuestion?: string; objectives?: string[]; methodology?: string; status?: ProjectStatus; milestones?: ResearchMilestone[];
+  researchQuestion?: string; objectives?: string[]; methodology?: string; status?: ProjectStatus; milestones?: ResearchMilestone[]; archivedAt?: number;
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
 export interface ProjectAttachment { id: string; projectId: string; name: string; mimeType: string; size: number; blob: Blob; description: string; createdAt: number }
