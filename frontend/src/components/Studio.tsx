@@ -125,12 +125,12 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   }, [projectId]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || loadError) return;
     const timer = window.setTimeout(() => {
       saveProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [project, hydrated]);
+  }, [project, hydrated, loadError]);
 
   useEffect(() => () => {
     const latest = projectRef.current;
@@ -190,7 +190,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       for (const query of (plan.queries || []).slice(0, 4)) {
         const result = await searchPapers(query, 4); found.push(...result.papers);
       }
-      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "").replace(/^doi:\\s*/, "");
+      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\\s*/, "");
       const normalizeTitle = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
       const paperKey = (paper: Paper) => paper.doi ? "doi:" + normalizeDoi(paper.doi) : "title:" + normalizeTitle(paper.title);
       const mergePaperLists = (base: Paper[], incoming: Paper[]) => {
@@ -380,6 +380,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
         <div className="center-content">
           {tab==="python" && <LocalPythonPanel/>}
           {tab==="workspace" && <>
+            <div className="studio-project-context"><span>PROJECT RESEARCH BRIEF</span><p>{project.researchQuestion || project.notes || "No research question has been added yet. Add one in the project overview to ground the writing agents."}</p>{(project.objectives?.length || project.methodology) ? <small>{project.objectives?.length ? "Objectives: " + project.objectives.join(" · ") : ""}{project.objectives?.length && project.methodology ? "  |  " : ""}{project.methodology ? "Methodology: " + project.methodology : ""}</small> : null}</div>
             <div className="agent-heading"><div><div className="eyebrow">AGENT PIPELINE / {activeAgent.toUpperCase()}</div><h1>{AGENTS.find(a=>a.id===activeAgent)?.label} <span>Agent</span></h1><p>{AGENTS.find(a=>a.id===activeAgent)?.description}. Review outputs before continuing.</p></div><button className="primary-button" disabled={busy} onClick={runAgent}>{busy?<Loader2 className="spin" size={15}/>:<Play size={14}/>} Run agent</button></div>
             <div className="agent-card">
               <div className="card-top"><span className="card-title"><Sparkles size={14}/> {activeAgent==="outline"?"Research blueprint":activeAgent==="literature"?"Literature discovery":activeAgent==="plots"?"Experiment visualization":activeAgent==="writing"?"Section drafting":"Manuscript quality review"}</span><span className={`status ${records[activeAgent]?.status}`}>{records[activeAgent]?.status || "idle"}</span></div>
