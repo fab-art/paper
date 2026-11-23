@@ -136,9 +136,11 @@ export default function ProjectWorkspace({
 
   const uploadFiles = async (files: FileList | null) => {
     if (!files) return;
+    const skipped: string[] = [];
+    let savedCount = 0;
     for (const file of Array.from(files)) {
       if (file.size > 30 * 1024 * 1024) {
-        setNotice(file.name + " is larger than 30 MB and was skipped.");
+        skipped.push(file.name);
         continue;
       }
       const attachment: ProjectAttachment = {
@@ -146,10 +148,13 @@ export default function ProjectWorkspace({
         size: file.size, blob: file, description: "", createdAt: Date.now()
       };
       await saveProjectAttachment(attachment);
+      savedCount += 1;
     }
     await refreshRelated();
     if (fileInput.current) fileInput.current.value = "";
-    setNotice("File upload saved in this browser's project library.");
+    setNotice(skipped.length
+      ? `${savedCount} file(s) saved. Skipped files larger than 30 MB: ${skipped.join(", ")}.`
+      : `${savedCount} file(s) saved in this browser's project library.`);
   };
 
   const downloadAttachment = (file: ProjectAttachment) => {
