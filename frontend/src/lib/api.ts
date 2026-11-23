@@ -81,7 +81,7 @@ export async function generatePlot(data: unknown[], x: string, y: string, title:
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN")) throw error;
+    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL")) throw error;
     return browserSvg(data,x,y,title);
   }
 }
