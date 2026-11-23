@@ -41,7 +41,8 @@ export async function listProjectAttachments(projectId: string) {
 export async function saveProjectAttachment(file: ProjectAttachment) { await db.attachments.put(file); }
 export async function deleteProjectAttachment(id: string) { await db.attachments.delete(id); }
 export async function listProjectSearchHistory(projectId: string) {
-  return db.searches.where("projectId").equals(projectId).reverse().sortBy("searchedAt");
+  const entries = await db.searches.where("projectId").equals(projectId).toArray();
+  return entries.sort((a, b) => b.searchedAt - a.searchedAt);
 }
 export async function recordProjectSearch(entry: ProjectSearchHistory) {
   await db.searches.put(entry);
