@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
 import { listProjects, loadProject, saveProject } from "../lib/db";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
@@ -60,7 +60,7 @@ function papersToBibtex(papers: Paper[]) {
   }).join("\n\n");
 }
 
-export default function Studio() {
+export default function Studio({ onBack }: { onBack?: () => void }) {
   const [project, setProject] = useState<Project>(initialProject);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
@@ -251,6 +251,7 @@ export default function Studio() {
   return <div className="app-shell">
     <header className="topbar">
       <div className="brand"><div className="brand-mark"><Sparkles size={17}/></div><span>paper<span className="brand-light">orchestra</span></span><span className="studio-tag">STUDIO</span></div>
+      {onBack && <button className="secondary-button" onClick={onBack}><ArrowLeft size={13}/> Project workspace</button>}
       <div className="project-title"><span className="muted">PROJECT /</span> <input value={project.name} onChange={e => patch({name:e.target.value})} aria-label="Project name"/></div>
       <div className="top-actions">
         <span className={`gpu-pill ${gpu.includes("available") ? "good" : "warn"}`}><Zap size={13}/>{gpu}</span>
