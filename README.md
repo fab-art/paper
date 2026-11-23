@@ -75,3 +75,18 @@ For the backend install backend/requirements.txt, install TeX Live/MiKTeX with l
 ## Upstream source
 
 The uploaded Google Research repository remains under upstream/paper-orchestra/. The Studio adapts the five-stage workflow to browser-local inference and bounded compute endpoints; it does not claim to directly execute the original Gemini-dependent Python agent classes.
+
+
+## E. Windows desktop companion (local Python execution)
+
+The optional Windows companion adds a desktop window for the Vercel PWA and runs a local FastAPI engine on the user's computer. Python execution stays on the Windows machine; it does not use Railway.
+
+1. Install 64-bit Python 3.11 or 3.12.
+2. Open the repository folder and double-click `desktop/start_windows.bat`.
+3. On first launch, paste the deployed Vercel HTTPS URL when prompted. The launcher creates a Python virtual environment and installs the local scientific stack.
+4. Copy the pairing token printed in the companion console.
+5. In PaperOrchestra, open the **Python console** tab, expand **Local Engine Settings**, paste the token and select **Save & connect**.
+
+The local engine binds only to `127.0.0.1:8765`. It creates `%USERPROFILE%\\PaperOrchestra\\workspace` as the default working directory. The pairing token is stored under `%USERPROFILE%\\PaperOrchestra\\local-engine-token`.
+
+See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python scripts run with the permissions of the signed-in Windows account; the workspace is not a security sandbox. Only execute code you trust. Never forward port 8765 to the internet.
