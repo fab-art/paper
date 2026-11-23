@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+const localEngineToken = process.env.PAPERORCHESTRA_ENGINE_TOKEN;
+
 export default defineConfig({
   plugins: [
     react(),
@@ -22,5 +24,18 @@ export default defineConfig({
       devOptions: { enabled: false }
     })
   ],
-  server: { proxy: { "/api": "http://127.0.0.1:8000" } }
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api\/engine\//, "/api/"),
+        configure: proxy => {
+          proxy.on("proxyReq", proxyReq => {
+            if (localEngineToken) proxyReq.setHeader("Authorization", "Bearer " + localEngineToken);
+          });
+        }
+      }
+    }
+  }
 });
