@@ -143,13 +143,13 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   };
   const handleBack = async () => {
     if (busy) return;
-    await saveProject(project);
-    onBack?.();
+    try { await saveProject(project); onBack?.(); }
+    catch (error) { setNotice("Could not save before leaving: " + (error as Error).message); }
   };
   const handleSelectProject = async (id: string) => {
     if (busy) return;
-    await saveProject(project);
-    onSelectProject?.(id);
+    try { await saveProject(project); onSelectProject?.(id); }
+    catch (error) { setNotice("Could not save before switching projects: " + (error as Error).message); }
   };
   const setAgent = (id: AgentId, status: "running" | "done" | "error", summary = "") => {
     setProject(p => ({ ...p, agentRecords: p.agentRecords.map(r => r.id === id ? { ...r, status, summary: summary.slice(0, 1800), updatedAt: Date.now() } : r) }));
