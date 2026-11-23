@@ -101,7 +101,11 @@ export default function Studio() {
     window.addEventListener("studio:tokens", listener);
     return () => window.removeEventListener("studio:tokens", listener);
   }, []);
-  useEffect(() => { saveProject(project).catch(() => {}); }, [project]);
+  useEffect(() => {
+    // When launched from the dashboard, wait for the selected IndexedDB project to hydrate.
+    if (localStorage.getItem("paperorchestra:open-project")) return;
+    saveProject(project).catch(() => {});
+  }, [project]);
 
   const patch = (changes: Partial<Project>) => setProject(p => ({ ...p, ...changes }));
   const setAgent = (id: AgentId, status: "running" | "done" | "error", summary = "") => {
