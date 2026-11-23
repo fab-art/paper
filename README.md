@@ -41,9 +41,11 @@ Set these variables in Vercel → Project → Settings → Environment Variables
 
 - PAPERORCHESTRA_ENGINE_URL = Railway public URL (without trailing slash).
 - PAPERORCHESTRA_ENGINE_TOKEN = the same secret configured in Railway.
+- UPSTASH_REDIS_REST_URL = Upstash Redis REST endpoint used for compute abuse protection.
+- UPSTASH_REDIS_REST_TOKEN = Upstash Redis REST token. Compute proxy requests fail closed until both rate-limit variables are configured.
 - Optional SEMANTIC_SCHOLAR_API_KEY = Semantic Scholar API key.
 
-Apply to Production and Preview as appropriate, then redeploy. The browser calls Vercel /api/engine/*; the Vercel proxy adds the secret token. The token is never sent to browser code.
+Apply to Production and Preview as appropriate, then redeploy. The browser calls Vercel /api/engine/*; the Vercel proxy adds the secret token. The token is never sent to browser code. The proxy applies per-IP limits of 4 LaTeX compilations and 20 plot requests per minute using Upstash Redis; configure both Upstash variables in Vercel Preview and Production.
 
 ## D. Test
 
@@ -68,7 +70,7 @@ Install dependencies:
     npm --prefix frontend install
     npm --prefix frontend run dev
 
-For the backend install backend/requirements.txt, install TeX Live/MiKTeX with latexmk, set PAPERORCHESTRA_ENGINE_TOKEN and CORS_ORIGINS=http://localhost:5173, then run:
+For the backend install backend/requirements.txt, install TeX Live/MiKTeX with latexmk, set PAPERORCHESTRA_ENGINE_TOKEN in the shell that starts Vite and FastAPI, and set CORS_ORIGINS=http://localhost:5173, then run:
 
     uvicorn backend.main:app --reload --port 8000
 
