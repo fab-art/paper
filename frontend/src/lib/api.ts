@@ -81,7 +81,7 @@ export async function generatePlot(data: unknown[], x: string, y: string, title:
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL")) throw error;
+    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
     return browserSvg(data,x,y,title);
   }
 }
@@ -102,7 +102,7 @@ export async function compileLatex(
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL")) throw error;
+    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
     const esc=(s:string)=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]!));
     const title=tex.match(/\\title\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g,"")||"Research Manuscript";
     const author=tex.match(/\\author\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g," ")||"";
