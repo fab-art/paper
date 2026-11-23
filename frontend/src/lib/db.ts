@@ -30,13 +30,23 @@ export async function saveProject(project: Project) {
 }
 export async function loadProject(id: string) { return db.projects.get(id); }
 export async function listProjects() { return db.projects.orderBy("updatedAt").reverse().toArray(); }
+export async function deleteProjectAndData(projectId: string) {
+  await db.transaction("rw", db.projects, db.notes, db.attachments, db.searches, async () => {
+    await Promise.all([
+      db.notes.where("projectId").equals(projectId).delete(),
+      db.attachments.where("projectId").equals(projectId).delete(),
+      db.searches.where("projectId").equals(projectId).delete(),
+      db.projects.delete(projectId)
+    ]);
+  });
+}
 export async function listProjectNotes(projectId: string) {
-  return db.notes.where("projectId").equals(projectId).reverse().sortBy("updatedAt");
+  return db.notes.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a,b)=>b.updatedAt-a.updatedAt));
 }
 export async function saveProjectNote(note: ProjectNote) { note.updatedAt = Date.now(); await db.notes.put(note); }
 export async function deleteProjectNote(id: string) { await db.notes.delete(id); }
 export async function listProjectAttachments(projectId: string) {
-  return db.attachments.where("projectId").equals(projectId).reverse().sortBy("createdAt");
+  return db.attachments.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a,b)=>b.createdAt-a.createdAt));
 }
 export async function saveProjectAttachment(file: ProjectAttachment) { await db.attachments.put(file); }
 export async function deleteProjectAttachment(id: string) { await db.attachments.delete(id); }
