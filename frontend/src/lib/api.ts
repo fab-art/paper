@@ -37,7 +37,7 @@ function bibtexToHtml(bibtex: string) {
     const source = bibtex.slice(bodyStart, nextStart).replace(/\s*\}\s*$/, "");
     const author = field(source, "author").replace(/\s+and\s+/gi, ", ");
     const year = field(source, "year");
-    const title = field(source, "title") || entry[1] || \`Reference \${index + 1}\`;
+    const title = field(source, "title") || entry[1] || ("Reference " + (index + 1));
     const venue = field(source, "journal") || field(source, "booktitle") || field(source, "publisher");
     const doi = field(source, "doi");
     const url = field(source, "url");
@@ -102,7 +102,7 @@ export async function compileLatex(
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN")) throw error;
+    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL")) throw error;
     const esc=(s:string)=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]!));
     const title=tex.match(/\\title\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g,"")||"Research Manuscript";
     const author=tex.match(/\\author\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g," ")||"";
