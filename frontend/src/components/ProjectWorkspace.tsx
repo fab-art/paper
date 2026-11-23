@@ -81,12 +81,13 @@ export default function ProjectWorkspace({
 
   const saveDiscoveredPaper = async (paper: Paper) => {
     if (!project) return false;
-    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const doi = normalize(paper.doi || "");
-    const title = normalize(paper.title);
+    const normalizeTitle = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
+    const doi = normalizeDoi(paper.doi || "");
+    const title = normalizeTitle(paper.title);
     const duplicate = project.papers.some(item =>
-      (doi && normalize(item.doi || "") === doi) ||
-      (title && normalize(item.title) === title)
+      (doi && normalizeDoi(item.doi || "") === doi) ||
+      (title && normalizeTitle(item.title) === title)
     );
     if (duplicate) return false;
     const next = { ...project, papers: [...project.papers, paper] };
