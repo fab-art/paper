@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
-import { listProjects, saveProject } from "../lib/db";
+import { listProjects, loadProject, saveProject } from "../lib/db";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
 import { exportProject } from "../lib/export";
@@ -90,11 +90,22 @@ export default function Studio() {
   useEffect(() => {
     setGpu("gpu" in navigator ? "WebGPU available" : "WebGPU unavailable");
     listProjects().then(setProjects).catch(() => {});
+    const requestedProjectId = localStorage.getItem("paperorchestra:open-project");
+    if (requestedProjectId) {
+      loadProject(requestedProjectId).then(saved => {
+        if (saved) setProject(saved);
+        localStorage.removeItem("paperorchestra:open-project");
+      }).catch(() => {});
+    }
     const listener = (e: Event) => setTokensPerSec(Math.max(0, Math.round((e as CustomEvent<number>).detail)));
     window.addEventListener("studio:tokens", listener);
     return () => window.removeEventListener("studio:tokens", listener);
   }, []);
-  useEffect(() => { saveProject(project).catch(() => {}); }, [project]);
+  useEffect(() => {
+    // When launched from the dashboard, wait for the selected IndexedDB project to hydrate.
+    if (localStorage.getItem("paperorchestra:open-project")) return;
+    saveProject(project).catch(() => {});
+  }, [project]);
 
   const patch = (changes: Partial<Project>) => setProject(p => ({ ...p, ...changes }));
   const setAgent = (id: AgentId, status: "running" | "done" | "error", summary = "") => {
