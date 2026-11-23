@@ -60,7 +60,7 @@ function papersToBibtex(papers: Paper[]) {
   }).join("\n\n");
 }
 
-export default function Studio({ onBack }: { onBack?: () => void }) {
+export default function Studio({ projectId, onBack, onSelectProject }: { projectId: string; onBack?: () => void; onSelectProject?: (projectId: string) => void }) {
   const [project, setProject] = useState<Project>(initialProject);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
@@ -81,33 +81,76 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
   const [pdf, setPdf] = useState<string>();
   const [feedback, setFeedback] = useState("");
   const [plotData, setPlotData] = useState("");
-  const [notice, setNotice] = useState("Ready for a new research project.");
+  const [notice, setNotice] = useState("Ready for this research project.");
   const [showSettings, setShowSettings] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const notesRef = useRef<HTMLInputElement>(null);
   const logsRef = useRef<HTMLInputElement>(null);
+  const projectRef = useRef(project);
+  projectRef.current = project;
   const records = useMemo(() => Object.fromEntries(project.agentRecords.map(r => [r.id, r])), [project.agentRecords]);
 
   useEffect(() => {
+    let live = true;
     setGpu("gpu" in navigator ? "WebGPU available" : "WebGPU unavailable");
-    listProjects().then(setProjects).catch(() => {});
-    const requestedProjectId = localStorage.getItem("paperorchestra:open-project");
-    if (requestedProjectId) {
-      loadProject(requestedProjectId).then(saved => {
-        if (saved) setProject(saved);
-        localStorage.removeItem("paperorchestra:open-project");
-      }).catch(() => {});
-    }
+    setHydrated(false);
+    setLoadError("");
+    setPdf(undefined);
+    listProjects().then(items => {
+      if (live) setProjects(items.filter(item => !item.archivedAt));
+    }).catch(() => {});
+    loadProject(projectId).then(saved => {
+      if (!live) return;
+      if (!saved) {
+        setLoadError("This project could not be found in the local research library.");
+        setHydrated(true);
+        return;
+      }
+      setProject(saved);
+      setPdf(undefined);
+      setHydrated(true);
+      setNotice("Project loaded. Changes are saved locally.");
+    }).catch(error => {
+      if (!live) return;
+      setLoadError((error as Error).message || "Could not load this project.");
+      setHydrated(true);
+    });
     const listener = (e: Event) => setTokensPerSec(Math.max(0, Math.round((e as CustomEvent<number>).detail)));
     window.addEventListener("studio:tokens", listener);
-    return () => window.removeEventListener("studio:tokens", listener);
-  }, []);
-  useEffect(() => {
-    // When launched from the dashboard, wait for the selected IndexedDB project to hydrate.
-    if (localStorage.getItem("paperorchestra:open-project")) return;
-    saveProject(project).catch(() => {});
-  }, [project]);
+    return () => {
+      live = false;
+      window.removeEventListener("studio:tokens", listener);
+    };
+  }, [projectId]);
 
-  const patch = (changes: Partial<Project>) => setProject(p => ({ ...p, ...changes }));
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = window.setTimeout(() => {
+      saveProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [project, hydrated]);
+
+  useEffect(() => () => {
+    const latest = projectRef.current;
+    if (latest?.id === projectId) void saveProject(latest);
+  }, [projectId]);
+
+  const patch = (changes: Partial<Project>) => {
+    if ("latex" in changes || "bibtex" in changes || "templateFiles" in changes) setPdf(undefined);
+    setProject(p => ({ ...p, ...changes }));
+  };
+  const handleBack = async () => {
+    if (busy) return;
+    await saveProject(project);
+    onBack?.();
+  };
+  const handleSelectProject = async (id: string) => {
+    if (busy) return;
+    await saveProject(project);
+    onSelectProject?.(id);
+  };
   const setAgent = (id: AgentId, status: "running" | "done" | "error", summary = "") => {
     setProject(p => ({ ...p, agentRecords: p.agentRecords.map(r => r.id === id ? { ...r, status, summary: summary.slice(0, 1800), updatedAt: Date.now() } : r) }));
   };
@@ -147,11 +190,34 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
       for (const query of (plan.queries || []).slice(0, 4)) {
         const result = await searchPapers(query, 4); found.push(...result.papers);
       }
-      const unique = [...new Map(found.map(p => [p.title, p])).values()].slice(0, 12);
-      const bib = papersToBibtex(unique);
-      patch({ papers: unique, bibtex: [project.bibtex, bib].filter(Boolean).join("\n\n") });
-      setAgent("literature", "done", `Retrieved ${unique.length} candidate papers. Verify metadata and relevance.`);
-      setNotice(`Literature search returned ${unique.length} candidate papers.`);
+      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "").replace(/^doi:\\s*/, "");
+      const normalizeTitle = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const paperKey = (paper: Paper) => paper.doi ? "doi:" + normalizeDoi(paper.doi) : "title:" + normalizeTitle(paper.title);
+      const mergePaperLists = (base: Paper[], incoming: Paper[]) => {
+        const merged = new Map<string, Paper>();
+        for (const paper of [...base, ...incoming]) {
+          const key = paperKey(paper);
+          const previous = merged.get(key);
+          if (!previous) merged.set(key, paper);
+          else merged.set(key, {
+            ...paper,
+            ...previous,
+            abstract: previous.abstract || paper.abstract,
+            url: previous.url || paper.url,
+            doi: previous.doi || paper.doi,
+            venue: previous.venue || paper.venue,
+            authors: previous.authors?.length ? previous.authors : paper.authors
+          });
+        }
+        return [...merged.values()];
+      };
+      const discovered = mergePaperLists([], found).slice(0, 12);
+      const newPapers = discovered.filter(paper => !project.papers.some(existing => paperKey(existing) === paperKey(paper)));
+      const mergedPapers = mergePaperLists(project.papers, discovered);
+      const bib = papersToBibtex(newPapers);
+      patch({ papers: mergedPapers, bibtex: [project.bibtex, bib].filter(Boolean).join("\n\n") });
+      setAgent("literature", "done", `Found ${discovered.length} candidate papers; added ${newPapers.length} new papers while preserving existing library entries.`);
+      setNotice(`Literature search found ${discovered.length} candidates and added ${newPapers.length} new references.`);
     } catch (e) { setAgent("literature", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -235,6 +301,7 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
     setNotice(`Imported ${file.name}`);
   };
   const doCompile = async () => {
+    setPdf(undefined);
     try {
       const result = await compileLatex(project.latex, project.bibtex, project.templateFiles || {}, project.figures);
       if (result.pdf_base64) {
@@ -244,14 +311,17 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
         setPdf(undefined);
         setNotice("Browser print preview opened. Choose Save as PDF. Connect the Railway compute engine for native LaTeX compilation.");
       }
-    } catch (e) { setNotice((e as Error).message); }
+    } catch (e) { setPdf(undefined); setNotice((e as Error).message); }
   };
   const runExport = () => exportProject(project, pdf);
+
+  if (!hydrated) return <div className="studio-loading"><div className="studio-loading-mark"><Sparkles size={20}/></div><strong>Opening Writing Studio</strong><span>Loading your project's saved manuscript, sources and agent history…</span></div>;
+  if (loadError) return <div className="studio-loading"><strong>Unable to open this project</strong><span>{loadError}</span><button className="secondary-button" onClick={onBack}>Return to project workspace</button></div>;
 
   return <div className="app-shell">
     <header className="topbar">
       <div className="brand"><div className="brand-mark"><Sparkles size={17}/></div><span>paper<span className="brand-light">orchestra</span></span><span className="studio-tag">STUDIO</span></div>
-      {onBack && <button className="secondary-button" onClick={onBack}><ArrowLeft size={13}/> Project workspace</button>}
+      {onBack && <button className="secondary-button" disabled={busy} onClick={() => void handleBack()}><ArrowLeft size={13}/> Project workspace</button>}
       <div className="project-title"><span className="muted">PROJECT /</span> <input value={project.name} onChange={e => patch({name:e.target.value})} aria-label="Project name"/></div>
       <div className="top-actions">
         <span className={`gpu-pill ${gpu.includes("available") ? "good" : "warn"}`}><Zap size={13}/>{gpu}</span>
@@ -280,7 +350,7 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
 
     <main className="workspace">
       <aside className="left-pane">
-        <div className="pane-title"><FolderOpen size={14}/> PROJECT EXPLORER <button className="icon-button small" onClick={()=>setProject(initialProject())}><Plus size={14}/></button></div>
+        <div className="pane-title"><FolderOpen size={14}/> PROJECT EXPLORER</div>
         <div className="project-tree">
           <div className="tree-section">RESEARCH FILES</div>
           <div className="tree-item active"><FileText size={14}/> manuscript.tex <span className="file-type">TEX</span></div>
@@ -295,7 +365,7 @@ export default function Studio({ onBack }: { onBack?: () => void }) {
           <div className="tree-section section-gap">CONFERENCE TEMPLATE</div>
           <select className="template-select" value={project.template} onChange={e=>void selectTemplate(e.target.value)}>{templates.map(t=><option key={t}>{t}</option>)}</select>
           <div className="tree-section section-gap">SAVED PROJECTS</div>
-          {projects.slice(0,5).map(p=><button className="saved-project" key={p.id} onClick={()=>setProject(p)}>{p.name}</button>)}
+          {projects.slice(0,8).map(p=><button className="saved-project" key={p.id} disabled={busy || p.id === projectId} onClick={()=>void handleSelectProject(p.id)}>{p.name}</button>)}
         </div>
         <div className="sidebar-footer"><span className="live-dot"/><span>IndexedDB autosave enabled</span></div>
       </aside>
