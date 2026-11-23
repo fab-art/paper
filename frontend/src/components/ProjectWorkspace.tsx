@@ -239,7 +239,7 @@ export default function ProjectWorkspace({
         <label className="pw-search"><Search size={14}/><input value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/></label>
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
           {filteredPapers.length === 0 ? <div className="pw-empty">No references yet. Add a reference manually or import one through a future discovery workflow.</div> :
-            filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title + index}>
+            filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
               <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
               <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button title="Remove reference" onClick={() => {
                 if (window.confirm("Remove this reference from the project?")) patch({ papers: project.papers.filter((item) => item !== paper) });
