@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import base64
-import json
+import binascii
+import hmac
 import os
 import re
 import subprocess
 import tempfile
-import textwrap
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
@@ -15,23 +15,38 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-APP_DIR = Path(__file__).resolve().parent
 MAX_ROWS = 5000
-MAX_SCRIPT_SECONDS = 12
 MAX_LATEX_SECONDS = 45
+MAX_COMPILE_FILES = 40
+MAX_COMPILE_TEXT_BYTES = 3_000_000
+MAX_COMPILE_ASSETS_BYTES = 3_000_000
 
-app = FastAPI(title="PaperOrchestra Studio API", version="0.1.0")
+app = FastAPI(title="PaperOrchestra Studio Compute Engine", version="0.2.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def authenticate_engine(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.method == "POST":
+        expected = os.getenv("PAPERORCHESTRA_ENGINE_TOKEN", "")
+        supplied = request.headers.get("authorization", "")
+        if not expected:
+            from starlette.responses import JSONResponse
+            return JSONResponse({"detail": "Compute engine authentication is not configured."}, status_code=503)
+        if not hmac.compare_digest(supplied, "Bearer " + expected):
+            from starlette.responses import JSONResponse
+            return JSONResponse({"detail": "Unauthorized compute request."}, status_code=401)
+    return await call_next(request)
 
 
 class SearchRequest(BaseModel):
@@ -49,16 +64,17 @@ class PlotRequest(BaseModel):
 class CompileRequest(BaseModel):
     tex: str = Field(min_length=1, max_length=500_000)
     bibtex: str = Field(default="", max_length=300_000)
+    files: dict[str, str] = Field(default_factory=dict)
+    assets: dict[str, str] = Field(default_factory=dict)
 
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "latexmk": _which("latexmk") is not None}
+    return {"ok": True, "latexmk": _which("latexmk") is not None, "engine": "python-tex"}
 
 
 @app.post("/api/search-papers")
 async def search_papers(request: SearchRequest):
-    """Proxy Semantic Scholar paper search to avoid browser CORS and keep API key server-side."""
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
     params = {
         "query": request.query,
@@ -96,19 +112,17 @@ async def search_papers(request: SearchRequest):
 
 @app.post("/api/generate-plot")
 async def generate_plot(request: PlotRequest):
-    """Generate a figure from tabular data using a fixed plotting template (no arbitrary code execution)."""
+    """Fixed-template chart rendering only; generated Python is never executed."""
     frame = pd.DataFrame(request.data)
     if request.x not in frame.columns or request.y not in frame.columns:
         raise HTTPException(status_code=400, detail=f"Columns not found. Available: {list(frame.columns)}")
-    if not pd.api.types.is_numeric_dtype(frame[request.y]):
-        frame[request.y] = pd.to_numeric(frame[request.y], errors="coerce")
+    frame[request.y] = pd.to_numeric(frame[request.y], errors="coerce")
     frame = frame.dropna(subset=[request.x, request.y])
     if frame.empty:
         raise HTTPException(status_code=400, detail="No valid rows for the selected x/y columns.")
 
     fig, ax = plt.subplots(figsize=(8.5, 5.2), dpi=180)
-    x_values = frame[request.x]
-    y_values = frame[request.y]
+    x_values, y_values = frame[request.x], frame[request.y]
     if pd.api.types.is_numeric_dtype(x_values):
         ax.plot(x_values, y_values, marker="o", linewidth=1.8)
     else:
@@ -129,25 +143,61 @@ async def generate_plot(request: PlotRequest):
         "filename": "figure.png",
         "png_base64": base64.b64encode(png.getvalue()).decode("ascii"),
         "pdf_base64": base64.b64encode(pdf.getvalue()).decode("ascii"),
+        "mime_type": "image/png",
     }
+
+
+def _safe_relative_path(name: str) -> Path:
+    normalized = name.replace("\\", "/")
+    candidate = PurePosixPath(normalized)
+    if not normalized or candidate.is_absolute() or any(part in ("", ".", "..") for part in candidate.parts):
+        raise HTTPException(status_code=400, detail=f"Unsafe compilation asset path: {name}")
+    if re.match(r"^[A-Za-z]:", normalized):
+        raise HTTPException(status_code=400, detail=f"Unsafe compilation asset path: {name}")
+    return Path(*candidate.parts)
 
 
 @app.post("/api/compile-latex")
 async def compile_latex(request: CompileRequest):
     latexmk = _which("latexmk")
     if not latexmk:
-        raise HTTPException(status_code=503, detail="latexmk was not found on PATH. Install TeX Live or MiKTeX and latexmk.")
-    # Reject obvious path escapes and shell escape. Compilation remains for trusted local documents only.
+        raise HTTPException(status_code=503, detail="latexmk was not found in the compute image.")
     if re.search(r"\\write18|--shell-escape|\\openout|\\read18", request.tex, re.IGNORECASE):
-        raise HTTPException(status_code=400, detail="Shell/file I/O primitives are not accepted by this local compile endpoint.")
+        raise HTTPException(status_code=400, detail="Shell/file I/O primitives are not accepted.")
     if re.search(r"\\(input|include)\s*\{(?:/|[A-Za-z]:|.*\.\.)", request.tex):
         raise HTTPException(status_code=400, detail="Absolute paths and parent-directory includes are not allowed.")
+    if len(request.files) + len(request.assets) > MAX_COMPILE_FILES:
+        raise HTTPException(status_code=413, detail="Too many template files or figure assets.")
+    text_size = sum(len(value.encode("utf-8")) for value in request.files.values())
+    if text_size > MAX_COMPILE_TEXT_BYTES:
+        raise HTTPException(status_code=413, detail="Template files exceed the compilation size limit.")
 
     with tempfile.TemporaryDirectory(prefix="paperorchestra-") as tmp:
         work = Path(tmp)
         (work / "paper.tex").write_text(request.tex, encoding="utf-8")
         if request.bibtex.strip():
             (work / "references.bib").write_text(request.bibtex, encoding="utf-8")
+
+        for name, content in request.files.items():
+            relative = _safe_relative_path(name)
+            target = work / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+
+        asset_size = 0
+        for name, encoded in request.assets.items():
+            relative = _safe_relative_path(name)
+            try:
+                decoded = base64.b64decode(encoded, validate=True)
+            except (binascii.Error, ValueError) as exc:
+                raise HTTPException(status_code=400, detail=f"Invalid base64 figure asset: {name}") from exc
+            asset_size += len(decoded)
+            if asset_size > MAX_COMPILE_ASSETS_BYTES:
+                raise HTTPException(status_code=413, detail="Figure assets exceed the compilation size limit.")
+            target = work / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(decoded)
+
         try:
             result = subprocess.run(
                 [latexmk, "-pdf", "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", "paper.tex"],

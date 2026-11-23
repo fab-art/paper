@@ -5,6 +5,7 @@ import { listProjects, saveProject } from "../lib/db";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
 import { exportProject } from "../lib/export";
+import LocalPythonPanel from "./LocalPythonPanel";
 import { outlinePrompt, literatureQueryPrompt, plotPrompt, writingPrompt, refinePrompt } from "../agents/prompts";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -63,7 +64,7 @@ export default function Studio() {
   const [project, setProject] = useState<Project>(initialProject);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
-  const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots">("workspace");
+  const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots" | "python">("workspace");
   const [model, setModel] = useState<string>(MODEL_OPTIONS[0].id);
   const [modelReady, setModelReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -223,8 +224,16 @@ export default function Studio() {
     setNotice(`Imported ${file.name}`);
   };
   const doCompile = async () => {
-    try { await compileLatex(project.latex, project.bibtex); setPdf(undefined); setNotice("Print-ready preview opened. In the print dialog, choose Save as PDF. This is a browser-rendered preview, not a TeX-engine compilation."); }
-    catch (e) { setNotice((e as Error).message); }
+    try {
+      const result = await compileLatex(project.latex, project.bibtex, project.templateFiles || {}, project.figures);
+      if (result.pdf_base64) {
+        setPdf(result.pdf_base64);
+        setNotice("LaTeX compilation succeeded. The compiled PDF is ready in the preview pane.");
+      } else {
+        setPdf(undefined);
+        setNotice("Browser print preview opened. Choose Save as PDF. Connect the Railway compute engine for native LaTeX compilation.");
+      }
+    } catch (e) { setNotice((e as Error).message); }
   };
   const runExport = () => exportProject(project, pdf);
 
@@ -284,9 +293,10 @@ export default function Studio() {
           <span className={`step-num ${records[a.id]?.status==="done"?"complete":""}`}>{records[a.id]?.status==="done"?<Check size={12}/>:i+1}</span><span>{a.label}</span>{i<4&&<span className="step-line"/>}
         </button>)}</div>
         <div className="center-tabs">
-          {(["workspace","latex","literature","plots"] as const).map(t=><button key={t} className={tab===t?"tab active-tab":"tab"} onClick={()=>setTab(t)}>{t==="workspace"?"Agent workspace":t==="latex"?"LaTeX editor":t==="literature"?"Literature": "Plot gallery"}</button>)}
+          {(["workspace","latex","literature","plots","python"] as const).map(t=><button key={t} className={tab===t?"tab active-tab":"tab"} onClick={()=>setTab(t)}>{t==="workspace"?"Agent workspace":t==="latex"?"LaTeX editor":t==="literature"?"Literature":t==="plots"?"Plot gallery":"Python console"}</button>)}
         </div>
         <div className="center-content">
+          {tab==="python" && <LocalPythonPanel/>}
           {tab==="workspace" && <>
             <div className="agent-heading"><div><div className="eyebrow">AGENT PIPELINE / {activeAgent.toUpperCase()}</div><h1>{AGENTS.find(a=>a.id===activeAgent)?.label} <span>Agent</span></h1><p>{AGENTS.find(a=>a.id===activeAgent)?.description}. Review outputs before continuing.</p></div><button className="primary-button" disabled={busy} onClick={runAgent}>{busy?<Loader2 className="spin" size={15}/>:<Play size={14}/>} Run agent</button></div>
             <div className="agent-card">

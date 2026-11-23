@@ -1,0 +1,23 @@
+
+.python-console{height:100%;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:13px}
+.python-console-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.python-console-head h2{font-size:22px;margin:6px 0;color:#e8e8ee}.python-console-head h2 span{color:#9295a2;font-weight:400}
+.python-console-head p{font-size:11px;color:#9295a2;margin:0;line-height:1.6}
+.engine-status{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #5a4b37;border-radius:6px;color:#e3b77c;font:9px 'DM Mono';white-space:nowrap}
+.engine-status.connected{border-color:#315b48;color:#79d2a4}
+.python-toolbar,.python-run-row,.python-settings-actions{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.python-toolbar{padding:9px 11px;background:#17191e;border:1px solid #292b32;border-radius:6px}.python-toolbar>span{display:flex;align-items:center;gap:7px;color:#b8bac4;font-size:10px}
+.python-settings{display:grid;grid-template-columns:1fr 1.5fr;gap:12px;padding:13px;background:#1a1c22;border:1px solid #343640;border-radius:6px}
+.python-settings label{font-size:10px;color:#aeb0ba}.python-settings input{display:block;width:100%;margin-top:6px}
+.python-settings-actions{grid-column:1/-1}.python-settings-actions span,.python-run-row>span{font-size:9px;color:#898d99}
+.engine-details{display:flex;flex-wrap:wrap;gap:8px 16px;font:9px 'DM Mono';color:#9ea1ac}
+.python-alert{display:flex;gap:8px;align-items:flex-start;background:#33271f;border:1px solid #62462f;border-radius:6px;padding:9px;color:#efbd8a;font-size:10px;line-height:1.5}
+.python-editor-label,.python-output-head{display:flex;align-items:center;justify-content:space-between;font:9px 'DM Mono';letter-spacing:.6px;color:#bfc0ca}
+.python-editor-label span{color:#777b88;letter-spacing:0}
+.python-code{width:100%;min-height:280px;resize:vertical;background:#111216;color:#d7d7e0;border:1px solid #30323c;border-radius:6px;padding:14px;font:12px/1.65 'DM Mono',monospace;outline:none}
+.python-run-row{justify-content:flex-end}.python-run-row>span{margin-right:auto}
+.python-output{border:1px solid #30323c;border-radius:6px;background:#101115;min-height:130px}
+.python-output-head{padding:9px 12px;border-bottom:1px solid #292b32;justify-content:flex-start;gap:7px}
+.python-output pre{margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;color:#bfc6c2;font:11px/1.6 'DM Mono',monospace;min-height:80px}
+.python-warning{font-size:9px;line-height:1.6;color:#d2a67d;margin:0}
+@media(max-width:760px){.python-settings{grid-template-columns:1fr}.python-settings-actions{grid-column:auto}.python-console-head{flex-direction:column}}
