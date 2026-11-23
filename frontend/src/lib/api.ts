@@ -24,23 +24,25 @@ function escapeXml(value: unknown) {
 }
 
 function bibtexToHtml(bibtex: string) {
-  const entries = [...bibtex.matchAll(/@[a-z]+\\s*\\{\\s*([^,]+),([\\s\\S]*?)\\}\\s*(?=@|$)/gi)];
-  if (!entries.length) return "";
+  const starts = [...bibtex.matchAll(/@[a-z]+\s*\{\s*([^,]+),/gi)];
+  if (!starts.length) return "";
   const field = (source: string, name: string) => {
-    const pattern = new RegExp(name + "\\\\s*=\\\\s*(?:\\\\{([\\\\s\\\\S]*?)\\\\}|\\\"([\\\\s\\\\S]*?)\\\")\\\\s*,?", "i");
+    const pattern = new RegExp("(?:^|,)\\s*" + name + "\\s*=\\s*(?:\\{([\\s\\S]*?)\\}|\"([\\s\\S]*?)\")\\s*,?", "i");
     const match = pattern.exec(source);
     return (match?.[1] || match?.[2] || "").replace(/[{}]/g, "").trim();
   };
-  const rows = entries.map((entry, index) => {
-    const source = entry[2] || "";
-    const author = field(source, "author").replace(/\\\\s+and\\\\s+/gi, ", ");
+  const rows = starts.map((entry, index) => {
+    const bodyStart = entry.index! + entry[0].length;
+    const nextStart = starts[index + 1]?.index ?? bibtex.length;
+    const source = bibtex.slice(bodyStart, nextStart).replace(/\s*\}\s*$/, "");
+    const author = field(source, "author").replace(/\s+and\s+/gi, ", ");
     const year = field(source, "year");
-    const title = field(source, "title") || entry[1] || `Reference ${index + 1}`;
+    const title = field(source, "title") || entry[1] || \`Reference \${index + 1}\`;
     const venue = field(source, "journal") || field(source, "booktitle") || field(source, "publisher");
     const doi = field(source, "doi");
     const url = field(source, "url");
     const details = [author, year, venue, doi ? "DOI: " + doi : ""].filter(Boolean).join(". ");
-    const linked = url ? ' <a href="' + escapeXml(url) + '">' + escapeXml(url) + '</a>' : "";
+    const linked = /^https?:\/\//i.test(url) ? ' <a href="' + escapeXml(url) + '">' + escapeXml(url) + '</a>' : "";
     return "<li><strong>" + escapeXml(title) + "</strong>" + (details ? ". " + escapeXml(details) : "") + linked + "</li>";
   }).join("");
   return '<section class="references"><h2>References</h2><ol>' + rows + "</ol></section>";
