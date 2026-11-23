@@ -15,11 +15,13 @@ export default function App() {
     return <ProjectWorkspace
       projectId={view.projectId}
       onBack={() => setView({ page: "dashboard" })}
-      onOpenStudio={() => {
-        localStorage.setItem("paperorchestra:open-project", view.projectId);
-        setView({ page: "studio", projectId: view.projectId });
-      }}
+      onOpenStudio={() => setView({ page: "studio", projectId: view.projectId })}
     />;
   }
-  return <Studio onBack={() => setView({ page: "project", projectId: view.projectId })} />;
+  return <Studio
+    key={view.projectId}
+    projectId={view.projectId}
+    onBack={() => setView({ page: "project", projectId: view.projectId })}
+    onSelectProject={(projectId) => setView({ page: "studio", projectId })}
+  />;
 }
