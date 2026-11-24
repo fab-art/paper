@@ -72,3 +72,8 @@ test("opening a project moves focus to its project-name control", () => {
   assert.match(projectWorkspace, /ref=\{projectNameRef\}/);
   assert.match(projectWorkspace, /projectNameRef\.current\?\.focus\(\)/);
 });
+
+test("successful password and immediate sign-up sessions close the modal before focus restoration", () => {
+  const sessionSyncs = authPanel.match(/if \(data\.session\) \{ setSession\(data\.session\); setOpen\(false\); \}/g) || [];
+  assert.ok(sessionSyncs.length >= 2);
+});
