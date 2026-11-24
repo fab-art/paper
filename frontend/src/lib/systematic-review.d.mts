@@ -3,7 +3,6 @@ export type ReviewPaper = {
   authors?: string[];
   year?: number;
   doi?: string;
-  [key: string]: unknown;
 };
 export type ScreeningDecision = "pending" | "include" | "exclude" | "maybe";
 export type FullTextDecision = "pending" | "include" | "exclude";
