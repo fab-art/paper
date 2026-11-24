@@ -81,7 +81,7 @@ export default function ProjectWorkspace({
 
   const saveDiscoveredPaper = async (paper: Paper) => {
     if (!project) return false;
-    const normalizeTitle = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalizeTitle = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
     const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
     const doi = normalizeDoi(paper.doi || "");
     const title = normalizeTitle(paper.title);
@@ -91,8 +91,8 @@ export default function ProjectWorkspace({
     );
     if (duplicate) return false;
     const next = { ...project, papers: [...project.papers, paper] };
-    setProject(next);
     await saveProject(next);
+    setProject(next);
     setNotice("Paper saved to the project library.");
     return true;
   };
