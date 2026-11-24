@@ -101,7 +101,7 @@ export default function ProjectWorkspace({
 
   useEffect(() => () => {
     const latest = projectRef.current;
-    if (latest?.id === projectId) void saveProject(latest);
+    if (latest?.id === projectId) void saveProject(latest).catch(() => undefined);
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => setProject(current => current ? { ...current, ...changes } : current);
