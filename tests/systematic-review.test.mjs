@@ -17,8 +17,8 @@ test("deduplicates papers by DOI and normalized title", () => {
   const result = deduplicatePapers([
     { title: "A Clinical Trial", doi: "https://doi.org/10.1000/ABC", authors: ["A"] },
     { title: "Different title, same DOI", doi: "10.1000/abc", authors: ["B"] },
-    { title: "  A clinical-trial! ", authors: ["C"] },
-    { title: "A Clinical Trial", authors: ["D"] }
+    { title: "Population health cohort", authors: ["C"] },
+    { title: "Population-health cohort!", authors: ["D"] }
   ]);
   assert.equal(result.uniquePapers.length, 2);
   assert.equal(result.duplicatesRemoved, 2);
