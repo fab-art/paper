@@ -223,3 +223,15 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
 .cloud-auth-dialog>small{display:flex;align-items:flex-start;gap:6px;margin-top:18px;color:#858790;font-size:9px;line-height:1.5}
 .cloud-auth-dialog>small svg{flex-shrink:0;margin-top:1px}
 @media(max-width:680px){.dash-top-right{flex-wrap:wrap;justify-content:flex-end}.cloud-auth-user>span{max-width:120px}.cloud-auth-dialog{padding:24px 20px}}
+
+
+/* Keyboard focus visibility for dashboard and account dialogs */
+.dash-modal button:focus-visible,
+.dash-modal input:focus-visible,
+.dash-modal textarea:focus-visible,
+.dash-search input:focus-visible,
+.cloud-auth-dialog button:focus-visible,
+.cloud-auth-dialog input:focus-visible {
+  outline: 2px solid #77749f;
+  outline-offset: 2px;
+}
