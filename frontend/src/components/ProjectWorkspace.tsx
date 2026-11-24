@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import "./project-workspace.css";
 import ResearchDiscovery from "./ResearchDiscovery";
 import DataMethodsLab from "./DataMethodsLab";
+import SubmissionReadiness from "./SubmissionReadiness";
 import {
   ArrowLeft, BookOpen, Check, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
-  UploadCloud, X, FlaskConical
+  UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
 import type { Paper, Project, ProjectAttachment, ProjectNote, ProjectStatus, ResearchMilestone } from "../lib/types";
 import {
@@ -22,7 +23,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "methods">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "methods" | "submission">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -224,6 +225,7 @@ export default function ProjectWorkspace({
         <button className={section === "notes" ? "selected" : ""} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
         <button className={section === "discover" ? "selected" : ""} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
         <button className={section === "methods" ? "selected" : ""} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
+        <button className={section === "submission" ? "selected" : ""} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
       </nav>
       {notice && <div className="pw-global-notice" role="status"><Check size={14}/><span>{notice}</span></div>}
 
@@ -295,6 +297,8 @@ export default function ProjectWorkspace({
       {section === "discover" && <ResearchDiscovery projectId={projectId} papers={papers} onSavePaper={saveDiscoveredPaper} onOpenLibrary={() => setSection("library")}/>}
 
       {section === "methods" && <DataMethodsLab attachments={attachments}/>}
+
+      {section === "submission" && <SubmissionReadiness project={project} notes={notes} attachments={attachments} onUpdateProject={patch}/>}
 
       {section === "notes" && <div className="pw-notes-layout">
         <section className="pw-panel pw-note-editor"><div className="pw-panel-title"><div><span>✎</span><h2>{editingNote ? "Edit note" : "New project note"}</h2></div>{editingNote && <button className="pw-text-action" onClick={() => { setEditingNote(null); setNoteTitle(""); setNoteContent(""); }}>Cancel edit</button>}</div>
