@@ -4,7 +4,8 @@ import {
   searchCacheKey,
   readSearchCache,
   writeSearchCache,
-  retryAfterSeconds
+  retryAfterSeconds,
+  createRateLimitGate
 } from "../api/search-cache.mjs";
 
 test("normalizes equivalent queries into one cache key", () => {
@@ -37,4 +38,20 @@ test("parses Retry-After seconds and HTTP-date values safely", () => {
   assert.equal(retryAfterSeconds("invalid", 0), 30);
   assert.equal(retryAfterSeconds(null, 0), 30);
   assert.equal(retryAfterSeconds(new Date(60000).toUTCString(), 0), 60);
+});
+
+test("rate-limit gate blocks repeated upstream calls until the cooldown expires", () => {
+  const gate = createRateLimitGate();
+  assert.equal(gate.retryAfter(1000), 0);
+  gate.blockFor(45, 1000);
+  assert.equal(gate.retryAfter(1000), 45);
+  assert.equal(gate.retryAfter(16000), 30);
+  assert.equal(gate.retryAfter(46000), 0);
+});
+
+test("rate-limit gate never shortens a longer active cooldown", () => {
+  const gate = createRateLimitGate();
+  gate.blockFor(60, 1000);
+  gate.blockFor(10, 2000);
+  assert.equal(gate.retryAfter(2000), 59);
 });
