@@ -33,6 +33,7 @@ export default function ProjectWorkspace({
   const [notice, setNotice] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const projectRef = useRef<Project | null>(null);
+  const paperSaveQueue = useRef<Promise<void>>(Promise.resolve());
   projectRef.current = project;
 
   const refreshRelated = async () => {
@@ -81,21 +82,27 @@ export default function ProjectWorkspace({
   ), [papers, sourceQuery]);
 
   const saveDiscoveredPaper = async (paper: Paper) => {
-    if (!project) return false;
-    const normalizeTitle = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-    const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
-    const doi = normalizeDoi(paper.doi || "");
-    const title = normalizeTitle(paper.title);
-    const duplicate = project.papers.some(item =>
-      (doi && normalizeDoi(item.doi || "") === doi) ||
-      (title && normalizeTitle(item.title) === title)
-    );
-    if (duplicate) return false;
-    const next = { ...project, papers: [...project.papers, paper] };
-    await saveProject(next);
-    setProject(next);
-    setNotice("Paper saved to the project library.");
-    return true;
+    const saveTask = paperSaveQueue.current.then(async () => {
+      const latest = projectRef.current;
+      if (!latest || latest.id !== projectId) return false;
+      const normalizeTitle = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]/gu, "");
+      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "").replace(/^doi:\\s*/, "");
+      const doi = normalizeDoi(paper.doi || "");
+      const title = normalizeTitle(paper.title);
+      const duplicate = latest.papers.some(item =>
+        (doi && normalizeDoi(item.doi || "") === doi) ||
+        (title && normalizeTitle(item.title) === title)
+      );
+      if (duplicate) return false;
+      const next = { ...latest, papers: [...latest.papers, paper] };
+      await saveProject(next);
+      projectRef.current = next;
+      setProject(next);
+      setNotice("Paper saved to the project library.");
+      return true;
+    });
+    paperSaveQueue.current = saveTask.then(() => undefined, () => undefined);
+    return saveTask;
   };
 
   const addSource = async (event: FormEvent) => {
