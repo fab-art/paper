@@ -1,3 +1,5 @@
+import { assertDatasetColumnCount } from "../lib/phase6-regressions.mjs";
+
 type ParseMessage = { source: string; delimiter: string; maxRows: number };
 type ParseResult = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean } | { error: string };
 
@@ -12,6 +14,7 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
     let totalRows = 0;
 
     const commitRow = () => {
+      assertDatasetColumnCount(row.length + 1);
       row.push(field.replace(/\r$/, ""));
       field = "";
       const physicallyBlank = row.length === 1 && row[0].trim() === "";
@@ -32,7 +35,7 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
         else if (char === '"') quoted = false;
         else field += char;
       } else if (char === '"' && field.length === 0) quoted = true;
-      else if (char === delimiter) { row.push(field); field = ""; }
+      else if (char === delimiter) { assertDatasetColumnCount(row.length + 2); row.push(field); field = ""; }
       else if (char === "\n") commitRow();
       else field += char;
     }
