@@ -75,3 +75,8 @@ test("Studio offers a confirmed reload after a cross-tab revision conflict", () 
   assert.match(studio, /Reload latest/);
   assert.match(studio, /notice\.includes\("updated in another tab"\)/);
 });
+
+test("best-effort workspace cleanup saves do not create unhandled rejections", () => {
+  assert.match(workspace, /void saveProject\(latest\)\.catch\(\(\) => undefined\)/);
+  assert.match(studio, /void saveProject\(latest\)\.catch\(\(\) => undefined\)/);
+});
