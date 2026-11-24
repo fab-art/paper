@@ -170,7 +170,7 @@ export default function ProjectWorkspace({
         (title && normalizeTitle(item.title) === title)
       );
       if (duplicate) return false;
-      const next = { ...latest, papers: [...latest.papers, paper] };
+      const next = { ...latest, papers: [...latest.papers, { ...paper, source: "semantic-scholar" as const }] };
       projectRef.current = next;
       setProject(next);
       await persistProject(next);
@@ -191,7 +191,8 @@ export default function ProjectWorkspace({
       venue: source.venue.trim() || undefined,
       doi: source.doi.trim() || undefined,
       url: source.url.trim() || undefined,
-      abstract: source.abstract.trim() || undefined
+      abstract: source.abstract.trim() || undefined,
+      source: "manual"
     };
     const next = { ...project, papers: [...project.papers, paper] };
     try {
@@ -364,7 +365,7 @@ export default function ProjectWorkspace({
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
           {filteredPapers.length === 0 ? <div className="pw-empty">{sourceQuery.trim() ? <>No references match your search.<button type="button" className="pw-empty-action" onClick={clearSourceSearch}>Clear reference search</button></> : "No references yet. Add a reference manually or import one through a future discovery workflow."}</div> :
             filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
-              <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
+              <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p><div className="pw-ref-provenance">{paper.source === "semantic-scholar" ? <small className="pw-source-tag semantic">Semantic Scholar</small> : paper.source === "manual" ? <small className="pw-source-tag manual">Manually added</small> : paper.source === "imported" ? <small className="pw-source-tag imported">Imported reference</small> : <small className="pw-source-tag unrecorded">Source not recorded</small>}</div>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
               <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button type="button" title="Remove reference" aria-label={`Remove reference ${paper.title}`} onClick={() => {
                 if (window.confirm("Remove this reference from the project?")) patch({ papers: project.papers.filter((item) => item !== paper) });
               }}><Trash2 size={14}/></button></div>
