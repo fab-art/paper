@@ -19,7 +19,7 @@ export default defineConfig({
         navigateFallback: "/index.html",
         maximumFileSizeToCacheInBytes: 1024 * 1024,
         runtimeCaching: [{
-          urlPattern: /\\/assets\\/(?:webllm\\.worker|lib)-[^/]+\\.js$/,
+          urlPattern: /\/assets\/(?:webllm\.worker|lib)-[^/]+\.js$/,
           handler: "CacheFirst",
           options: {
             cacheName: "optional-local-ai-runtime",
