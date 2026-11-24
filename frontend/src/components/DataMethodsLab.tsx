@@ -31,7 +31,7 @@ function profileColumn(name: string, values: string[], total: number): ColumnPro
 export default function DataMethodsLab({ attachments }: { attachments: ProjectAttachment[] }) {
   const csvFiles = useMemo(() => attachments.filter(file =>
     file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".tsv") ||
-    file.mimeType.includes("csv") || file.mimeType.includes("tab-separated")
+    file.mimeType.toLowerCase().includes("csv") || file.mimeType.toLowerCase().includes("tab-separated")
   ), [attachments]);
   const [selectedId, setSelectedId] = useState("");
   const [dataset, setDataset] = useState<Dataset | null>(null);
