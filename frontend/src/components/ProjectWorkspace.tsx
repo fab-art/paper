@@ -284,7 +284,7 @@ export default function ProjectWorkspace({
     <main className="pw-main">
       <div className="pw-breadcrumb">YOUR PROJECTS <span>/</span> PROJECT WORKSPACE</div>
       <section className="pw-heading">
-        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><input ref={projectNameRef} className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name"/>
+        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><h1 className="pw-project-heading"><input ref={projectNameRef} className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name" maxLength={100}/></h1>
           <p>Keep your research question, sources, files and working notes together.</p></div>
         <label className="pw-status">PROJECT STATUS
           <select value={status} onChange={e => patch({ status: e.target.value as ProjectStatus })}>
@@ -293,14 +293,14 @@ export default function ProjectWorkspace({
         </label>
       </section>
 
-      <nav className="pw-tabs">
-        <button className={section === "overview" ? "selected" : ""} onClick={() => setSection("overview")}><ClipboardList size={15}/> Overview</button>
-        <button className={section === "library" ? "selected" : ""} onClick={() => setSection("library")}><FolderOpen size={15}/> Research library <span>{papers.length + attachments.length}</span></button>
-        <button className={section === "notes" ? "selected" : ""} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
-        <button className={section === "discover" ? "selected" : ""} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
-        <button className={section === "review" ? "selected" : ""} onClick={() => setSection("review")}><ClipboardCheck size={15}/> Systematic review</button>
-        <button className={section === "methods" ? "selected" : ""} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
-        <button className={section === "submission" ? "selected" : ""} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
+      <nav className="pw-tabs" role="group" aria-label="Project workspace sections">
+        <button className={section === "overview" ? "selected" : ""} aria-pressed={section === "overview"} onClick={() => setSection("overview")}><ClipboardList size={15}/> Overview</button>
+        <button className={section === "library" ? "selected" : ""} aria-pressed={section === "library"} onClick={() => setSection("library")}><FolderOpen size={15}/> Research library <span>{papers.length + attachments.length}</span></button>
+        <button className={section === "notes" ? "selected" : ""} aria-pressed={section === "notes"} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
+        <button className={section === "discover" ? "selected" : ""} aria-pressed={section === "discover"} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
+        <button className={section === "review" ? "selected" : ""} aria-pressed={section === "review"} onClick={() => setSection("review")}><ClipboardCheck size={15}/> Systematic review</button>
+        <button className={section === "methods" ? "selected" : ""} aria-pressed={section === "methods"} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
+        <button className={section === "submission" ? "selected" : ""} aria-pressed={section === "submission"} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
       </nav>
       {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="pw-notice-action" onClick={() => void reloadLatestProject()}>Load latest saved version</button>}</div>}
 
@@ -353,7 +353,7 @@ export default function ProjectWorkspace({
           <label>Abstract / description<textarea rows={3} value={source.abstract} onChange={e => setSource({ ...source, abstract: e.target.value })}/></label>
           <div className="pw-form-actions"><button type="button" className="pw-secondary" onClick={() => setShowSourceForm(false)}>Cancel</button><button className="pw-primary" type="submit"><Save size={14}/> Save reference</button></div>
         </form>}
-        <label className="pw-search"><Search size={14}/><input value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/></label>
+        <div className="pw-search" role="search" aria-label="Search project references"><Search size={14} aria-hidden="true"/><input id="pw-reference-search" aria-label="Search references" value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/></div>
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
           {filteredPapers.length === 0 ? <div className="pw-empty">No references yet. Add a reference manually or import one through a future discovery workflow.</div> :
             filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
