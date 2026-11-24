@@ -36,6 +36,8 @@ export default function ProjectWorkspace({
   const noticeIsError = /could not|failed|error|permanently deleted|no longer exists/i.test(notice);
   const fileInput = useRef<HTMLInputElement>(null);
   const projectRef = useRef<Project | null>(null);
+  const projectNameRef = useRef<HTMLInputElement | null>(null);
+  const focusedProjectIdRef = useRef<string | null>(null);
   const paperSaveQueue = useRef<Promise<void>>(Promise.resolve());
   projectRef.current = project;
 
@@ -59,6 +61,13 @@ export default function ProjectWorkspace({
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
   }, [projectId]);
+  useEffect(() => {
+    if (!loading && project && focusedProjectIdRef.current !== project.id) {
+      focusedProjectIdRef.current = project.id;
+      projectNameRef.current?.focus();
+    }
+  }, [loading, project?.id]);
+
 
   useEffect(() => {
     if (!project) return;
@@ -215,7 +224,7 @@ export default function ProjectWorkspace({
     <main className="pw-main">
       <div className="pw-breadcrumb">YOUR PROJECTS <span>/</span> PROJECT WORKSPACE</div>
       <section className="pw-heading">
-        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><input className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name"/>
+        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><input ref={projectNameRef} className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name"/>
           <p>Keep your research question, sources, files and working notes together.</p></div>
         <label className="pw-status">PROJECT STATUS
           <select value={status} onChange={e => patch({ status: e.target.value as ProjectStatus })}>
