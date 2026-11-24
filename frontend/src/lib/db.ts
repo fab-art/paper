@@ -25,8 +25,23 @@ class StudioDB extends Dexie {
 export const db = new StudioDB();
 
 export async function saveProject(project: Project) {
-  project.updatedAt = Date.now();
-  await db.projects.put(project);
+  await db.transaction("rw", db.projects, async () => {
+    const existing = await db.projects.get(project.id);
+    const next = { ...project };
+    // A stale tab must not silently unarchive a project after another tab archived it.
+    if (existing?.archivedAt && !next.archivedAt) next.archivedAt = existing.archivedAt;
+    next.updatedAt = Date.now();
+    await db.projects.put(next);
+  });
+}
+export async function restoreProject(project: Project) {
+  await db.transaction("rw", db.projects, async () => {
+    const existing = await db.projects.get(project.id);
+    if (!existing) return;
+    const restored = { ...existing, ...project, updatedAt: Date.now() };
+    delete restored.archivedAt;
+    await db.projects.put(restored);
+  });
 }
 export async function loadProject(id: string) { return db.projects.get(id); }
 export async function listProjects() { return db.projects.orderBy("updatedAt").reverse().toArray(); }
