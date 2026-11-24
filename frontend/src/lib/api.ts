@@ -27,9 +27,32 @@ function bibtexToHtml(bibtex: string) {
   const starts = [...bibtex.matchAll(/@[a-z]+\s*\{\s*([^,]+),/gi)];
   if (!starts.length) return "";
   const field = (source: string, name: string) => {
-    const pattern = new RegExp("(?:^|,)\\s*" + name + "\\s*=\\s*(?:\\{([\\s\\S]*?)\\}|\"([\\s\\S]*?)\")\\s*,?", "i");
-    const match = pattern.exec(source);
-    return (match?.[1] || match?.[2] || "").replace(/[{}]/g, "").trim();
+    const matcher = new RegExp("(?:^|,)\\\\s*" + name + "\\\\s*=\\\\s*", "i");
+    const match = matcher.exec(source);
+    if (!match) return "";
+    let index = match.index + match[0].length;
+    while (/\\\\s/.test(source[index] || "")) index++;
+    const opener = source[index];
+    if (opener !== "{" && opener !== '"') return "";
+    index++;
+    let value = "";
+    let depth = opener === "{" ? 1 : 0;
+    let quoted = opener === '"';
+    let escaped = false;
+    for (; index < source.length; index++) {
+      const char = source[index];
+      if (escaped) { value += char; escaped = false; continue; }
+      if (char === "\\\\") { value += char; escaped = true; continue; }
+      if (quoted) {
+        if (char === '"') break;
+        value += char;
+      } else {
+        if (char === "{") { depth++; if (depth > 1) value += char; }
+        else if (char === "}") { depth--; if (depth === 0) break; value += char; }
+        else value += char;
+      }
+    }
+    return value.replace(/[{}]/g, "").trim();
   };
   const rows = starts.map((entry, index) => {
     const bodyStart = entry.index! + entry[0].length;
