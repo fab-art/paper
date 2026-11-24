@@ -35,10 +35,39 @@ export default function ProjectWorkspace({
   const noticeIsError = /could not|failed|error|permanently deleted|no longer exists|another tab|not saved/i.test(notice);
   const fileInput = useRef<HTMLInputElement>(null);
   const projectRef = useRef<Project | null>(null);
+  const projectSaveQueue = useRef<Promise<void>>(Promise.resolve());
+  const lastSavedFingerprintRef = useRef("");
   const projectNameRef = useRef<HTMLInputElement | null>(null);
   const focusedProjectIdRef = useRef<string | null>(null);
   const paperSaveQueue = useRef<Promise<void>>(Promise.resolve());
   projectRef.current = project;
+
+  const persistProject = (snapshot: Project) => {
+    const task = projectSaveQueue.current.then(async () => {
+      const latest = projectRef.current;
+      if (!latest || latest.id !== snapshot.id) return latest;
+      const target = shouldSaveProjectSnapshot(snapshot, latest, lastSavedFingerprintRef.current)
+        ? snapshot
+        : latest;
+      if (!shouldSaveProjectSnapshot(target, latest, lastSavedFingerprintRef.current)) return latest;
+
+      const saved = await saveProject(target);
+      if (saved) {
+        lastSavedFingerprintRef.current = projectFingerprint(saved);
+        const current = projectRef.current;
+        if (current && current.id === saved.id) {
+          const updated = { ...current, revision: saved.revision, updatedAt: saved.updatedAt };
+          projectRef.current = updated;
+          setProject(value => value && value.id === saved.id
+            ? { ...value, revision: saved.revision, updatedAt: saved.updatedAt }
+            : value);
+        }
+      }
+      return saved;
+    });
+    projectSaveQueue.current = task.then(() => undefined, () => undefined);
+    return task;
+  };
 
   const refreshRelated = async () => {
     const [nextNotes, nextAttachments] = await Promise.all([
@@ -51,6 +80,7 @@ export default function ProjectWorkspace({
     if (!window.confirm("Load the latest saved version? Unsaved changes in this tab will be discarded.")) return;
     setLoading(true);
     try {
+      await projectSaveQueue.current;
       const [latest, latestNotes, latestAttachments] = await Promise.all([
         loadProject(projectId), listProjectNotes(projectId), listProjectAttachments(projectId)
       ]);
@@ -59,6 +89,7 @@ export default function ProjectWorkspace({
         return;
       }
       projectRef.current = latest;
+      lastSavedFingerprintRef.current = projectFingerprint(latest);
       setProject(latest);
       setNotes(latestNotes);
       setAttachments(latestAttachments);
@@ -76,7 +107,10 @@ export default function ProjectWorkspace({
     Promise.all([loadProject(projectId), listProjectNotes(projectId), listProjectAttachments(projectId)])
       .then(([saved, savedNotes, savedAttachments]) => {
         if (!live) return;
-        if (saved) setProject(saved);
+        if (saved) {
+          lastSavedFingerprintRef.current = projectFingerprint(saved);
+          setProject(saved);
+        }
         setNotes(savedNotes); setAttachments(savedAttachments);
       })
       .catch(error => setNotice((error as Error).message))
@@ -92,22 +126,23 @@ export default function ProjectWorkspace({
 
 
   useEffect(() => {
-    if (!project) return;
+    if (!project || loading) return;
     const timer = window.setTimeout(() => {
-      saveProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
+      persistProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
     }, 450);
     return () => window.clearTimeout(timer);
-  }, [project]);
+  }, [project, loading]);
 
   useEffect(() => () => {
     const latest = projectRef.current;
-    if (latest?.id === projectId) void saveProject(latest).catch(() => undefined);
+    if (latest?.id === projectId) void persistProject(latest).catch(() => undefined);
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => setProject(current => current ? { ...current, ...changes } : current);
   const navigateAfterSave = async (action: () => void) => {
-    if (!project) return;
-    try { await saveProject(project); action(); }
+    const latest = projectRef.current;
+    if (!latest) return;
+    try { await persistProject(latest); action(); }
     catch (error) { setNotice("Could not save the latest project changes: " + (error as Error).message); }
   };
   const papers = project?.papers || [];
@@ -129,9 +164,9 @@ export default function ProjectWorkspace({
       );
       if (duplicate) return false;
       const next = { ...latest, papers: [...latest.papers, paper] };
-      await saveProject(next);
       projectRef.current = next;
       setProject(next);
+      await persistProject(next);
       setNotice("Paper saved to the project library.");
       return true;
     });
@@ -153,8 +188,9 @@ export default function ProjectWorkspace({
     };
     const next = { ...project, papers: [...project.papers, paper] };
     try {
-      await saveProject(next);
+      projectRef.current = next;
       setProject(next);
+      await persistProject(next);
       setSource(emptyPaper); setShowSourceForm(false);
       setNotice("Source added to this project's library.");
     } catch (error) {
