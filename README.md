@@ -101,3 +101,17 @@ The optional Windows companion adds a desktop window for the Vercel PWA and runs
 The local engine binds only to `127.0.0.1:8765`. It creates `%USERPROFILE%\\PaperOrchestra\\workspace` as the default working directory. The pairing token is stored under `%USERPROFILE%\\PaperOrchestra\\local-engine-token`.
 
 See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python scripts run with the permissions of the signed-in Windows account; the workspace is not a security sandbox. Only execute code you trust. Never forward port 8765 to the internet.
+
+
+## Phase 7 — Optional cloud collaboration
+
+PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
+
+To enable the optional account UI during local development, copy `frontend/.env.example` to `frontend/.env.local` and set:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY` (preferred; the legacy `VITE_SUPABASE_ANON_KEY` is also accepted)
+
+Use only the Supabase publishable key in browser configuration. Never place a Supabase service-role or secret key in a `VITE_*` variable, frontend source, or Vercel client environment. Configure the exact production and preview callback URLs in Supabase Auth before testing email links.
+
+The collaboration migrations in `supabase/migrations/` have been applied to the dedicated PaperOrchestra Supabase project. The Security and Health Advisors report no findings after the review-hardening migrations. Performance Advisor currently reports unused indexes because the collaboration tables are still empty. The sign-in UI is enabled on the Phase 7 Vercel preview only; project sharing, invitations, sync, comments UI and version restore are subsequent delivery slices. Existing local projects remain local until an explicit Share action is implemented.
