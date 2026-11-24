@@ -243,6 +243,28 @@ test("neutralizes spreadsheet formula prefixes in exported CSV cells", () => {
   );
   assert.ok(csv.includes("'=HYPERLINK"));
   assert.ok(csv.includes("'@SUM"));
-  assert.ok(csv.includes("'+SUM"));
+  assert.ok(csv.includes("' +SUM"));
   assert.ok(csv.includes("'-1+1"));
+});
+
+test("an explicit title-screening reset wins over older duplicate full-text decisions", () => {
+  const paper = { title: "A cross-tab cohort", doi: "10.1000/cross-tab" };
+  const key = "doi:10.1000/cross-tab";
+  const oldRecord = {
+    paperKey: key,
+    titleAbstractDecision: "include",
+    titleAbstractReason: "Previously eligible",
+    fullTextRetrieved: true,
+    fullTextDecision: "include",
+    fullTextReason: "Previously included",
+    updatedAt: 100
+  };
+  const resetRecord = updateTitleAbstractDecision(oldRecord, "exclude", 200);
+  const migrated = migrateReviewRecords([paper], {
+    [key]: oldRecord,
+    "title:a cross tab cohort": resetRecord
+  });
+  assert.equal(migrated[key].titleAbstractDecision, "exclude");
+  assert.equal(migrated[key].fullTextRetrieved, false);
+  assert.equal(migrated[key].fullTextDecision, "pending");
 });
