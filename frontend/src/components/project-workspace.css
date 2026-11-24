@@ -172,3 +172,12 @@ body:has(.project-workspace),body:has(.project-loading){min-width:320px;overflow
   .pw-stat-grid div{padding:10px 7px}
   .pw-stat-grid strong{font-size:20px}
 }
+
+
+/* Phase 3 — reference provenance labels */
+.pw-ref-provenance{display:flex;align-items:center;gap:6px;margin-top:7px}
+.pw-source-tag{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:3px 7px;border:1px solid var(--pw-border);border-radius:999px;background:#f7f7fa;color:#777982;font-size:9px;font-weight:650;line-height:1.3}
+.pw-source-tag.semantic{border-color:#e0def0;background:#f5f4fb;color:var(--pw-accent)}
+.pw-source-tag.manual{border-color:#e7e4d8;background:#faf8f0;color:#82724a}
+.pw-source-tag.imported{border-color:#dce8e8;background:#f3f8f8;color:#52777a}
+.pw-source-tag.unrecorded{color:#898b93}
