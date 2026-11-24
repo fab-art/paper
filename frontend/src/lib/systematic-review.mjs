@@ -239,20 +239,31 @@ function mergeReviewRecords(records) {
     }
   }
 
-  const retrievedRecord = latestRecord(
-    ordered.filter(record => hasTimestamp(record, "fullTextRetrievedUpdatedAt")),
-    "fullTextRetrievedUpdatedAt"
-  );
-  if (retrievedRecord) {
-    merged.fullTextRetrieved = Boolean(retrievedRecord.fullTextRetrieved);
-    merged.fullTextRetrievedUpdatedAt = retrievedRecord.fullTextRetrievedUpdatedAt;
-  } else if (fullTextDecisionRecord && hasTimestamp(fullTextDecisionRecord, "fullTextDecisionUpdatedAt")) {
-    merged.fullTextRetrieved = Boolean(fullTextDecisionRecord.fullTextRetrieved);
-  } else {
-    merged.fullTextRetrieved = ordered.some(record => record.fullTextRetrieved === true);
-  }
+  const updateTimes = ordered
+    .map(record => Number(record.updatedAt))
+    .filter(value => Number.isFinite(value));
+  if (updateTimes.length) merged.updatedAt = Math.max(...updateTimes);
 
-  merged.updatedAt = Math.max(...ordered.map(record => Number(record.updatedAt) || 0));
+  const hasFullTextState = ordered.some(record =>
+    "fullTextRetrieved" in record ||
+    "fullTextDecision" in record ||
+    hasTimestamp(record, "fullTextRetrievedUpdatedAt") ||
+    hasTimestamp(record, "fullTextDecisionUpdatedAt")
+  );
+  if (hasFullTextState) {
+    const retrievedRecord = latestRecord(
+      ordered.filter(record => hasTimestamp(record, "fullTextRetrievedUpdatedAt")),
+      "fullTextRetrievedUpdatedAt"
+    );
+    if (retrievedRecord) {
+      merged.fullTextRetrieved = Boolean(retrievedRecord.fullTextRetrieved);
+      merged.fullTextRetrievedUpdatedAt = retrievedRecord.fullTextRetrievedUpdatedAt;
+    } else if (fullTextDecisionRecord && hasTimestamp(fullTextDecisionRecord, "fullTextDecisionUpdatedAt")) {
+      merged.fullTextRetrieved = Boolean(fullTextDecisionRecord.fullTextRetrieved);
+    } else {
+      merged.fullTextRetrieved = ordered.some(record => record.fullTextRetrieved === true);
+    }
+  }
   return merged;
 }
 
@@ -264,7 +275,7 @@ export function migrateReviewRecords(papers, existing = {}) {
     const aliases = aliasesByReviewKey[key] || [key, ...paperReviewKeyAliases(paper)];
     const records = [...new Set(aliases.map(alias => existing[alias]).filter(Boolean))];
     const merged = mergeReviewRecords(records);
-    if (merged) migrated[key] = { ...merged, paperKey: key };
+    if (merged) migrated[key] = merged;
   }
   return migrated;
 }
