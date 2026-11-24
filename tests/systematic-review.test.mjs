@@ -79,3 +79,62 @@ test("exports an evidence matrix as correctly escaped CSV", () => {
   assert.match(csv, /"Population, intervention"/);
   assert.match(csv, /"Primary outcome\nSecondary outcome"/);
 });
+
+
+test("preserves screening decisions when a title-keyed paper later receives a DOI", () => {
+  const original = [{ title: "A longitudinal study of diabetes care" }];
+  const first = syncReviewRecords(original, {});
+  const oldKey = "title:a longitudinal study of diabetes care";
+  const existing = {
+    ...first.screening,
+    [oldKey]: {
+      ...first.screening[oldKey],
+      titleAbstractDecision: "include",
+      titleAbstractReason: "Meets the population criteria"
+    }
+  };
+
+  const enriched = syncReviewRecords([
+    { title: "A longitudinal study of diabetes care", doi: "10.1000/diabetes.1" }
+  ], existing);
+
+  assert.equal(enriched.screening["doi:10.1000/diabetes.1"].titleAbstractDecision, "include");
+  assert.equal(enriched.screening["doi:10.1000/diabetes.1"].titleAbstractReason, "Meets the population criteria");
+});
+
+test("migrates title-keyed screening decisions when DOI metadata is added through a duplicate alias", () => {
+  const papers = [
+    { title: "A cohort study", doi: "10.1000/cohort" },
+    { title: "A cohort study" }
+  ];
+  const existing = {
+    "title:a cohort study": {
+      paperKey: "title:a cohort study",
+      titleAbstractDecision: "exclude",
+      titleAbstractReason: "Wrong study design",
+      fullTextRetrieved: false,
+      fullTextDecision: "pending",
+      fullTextReason: "",
+      notes: "",
+      updatedAt: 1
+    }
+  };
+
+  const result = syncReviewRecords(papers, existing);
+  assert.equal(result.screening["doi:10.1000/cohort"].titleAbstractDecision, "exclude");
+  assert.equal(result.screening["doi:10.1000/cohort"].titleAbstractReason, "Wrong study design");
+});
+
+
+test("migrates extraction and risk-of-bias records with a paper's canonical review key", async () => {
+  const { migrateReviewRecords } = await import("../frontend/src/lib/systematic-review.mjs");
+  const papers = [{ title: "A pragmatic trial", doi: "10.1000/pragmatic" }];
+  const oldKey = "title:a pragmatic trial";
+  const migrated = migrateReviewRecords(papers, {
+    [oldKey]: { studyDesign: "Cluster randomized trial", sampleSize: "240" }
+  });
+
+  assert.deepEqual(migrated, {
+    "doi:10.1000/pragmatic": { studyDesign: "Cluster randomized trial", sampleSize: "240" }
+  });
+});
