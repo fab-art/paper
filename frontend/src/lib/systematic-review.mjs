@@ -23,6 +23,15 @@ function paperReviewKey(paper) {
   return `title:${title || "untitled"}`;
 }
 
+function paperReviewKeyAliases(paper) {
+  const aliases = [];
+  const doi = normalizeDoi(paper.doi);
+  const title = normalizeTitle(paper.title);
+  if (doi) aliases.push(`doi:${doi}`);
+  if (title) aliases.push(`title:${title}`);
+  return aliases;
+}
+
 export function deduplicatePapers(papers) {
   const seenDois = new Set();
   const seenTitles = new Set();
@@ -47,20 +56,37 @@ export function deduplicatePapers(papers) {
   return { uniquePapers, duplicatesRemoved };
 }
 
+export function migrateReviewRecords(papers, existing = {}) {
+  const { uniquePapers } = deduplicatePapers(papers);
+  const migrated = {};
+  for (const paper of uniquePapers) {
+    const key = paper.reviewKey;
+    const previous = paperReviewKeyAliases(paper)
+      .map(alias => existing[alias])
+      .find(Boolean);
+    const record = existing[key] || previous;
+    if (record) migrated[key] = record;
+  }
+  return migrated;
+}
+
 export function syncReviewRecords(papers, existing = {}) {
   const { uniquePapers, duplicatesRemoved } = deduplicatePapers(papers);
+  const migrated = migrateReviewRecords(uniquePapers, existing);
   const screening = {};
   for (const paper of uniquePapers) {
     const key = paper.reviewKey;
-    screening[key] = existing[key] || {
-      paperKey: key,
-      titleAbstractDecision: "pending",
-      titleAbstractReason: "",
-      fullTextRetrieved: false,
-      fullTextDecision: "pending",
-      fullTextReason: "",
-      notes: "",
-      updatedAt: Date.now()
+    screening[key] = {
+      ...(migrated[key] || {
+        titleAbstractDecision: "pending",
+        titleAbstractReason: "",
+        fullTextRetrieved: false,
+        fullTextDecision: "pending",
+        fullTextReason: "",
+        notes: "",
+        updatedAt: Date.now()
+      }),
+      paperKey: key
     };
   }
   return { uniquePapers, screening, duplicatesRemoved };
