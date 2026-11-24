@@ -69,7 +69,7 @@ export default function ProjectWorkspace({
 
   const saveDiscoveredPaper = async (paper: Paper) => {
     if (!project) return false;
-    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalize = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
     const doi = normalize(paper.doi || "");
     const title = normalize(paper.title);
     const duplicate = project.papers.some(item =>
@@ -78,8 +78,8 @@ export default function ProjectWorkspace({
     );
     if (duplicate) return false;
     const next = { ...project, papers: [...project.papers, paper] };
-    setProject(next);
     await saveProject(next);
+    setProject(next);
     setNotice("Paper saved to the project library.");
     return true;
   };
