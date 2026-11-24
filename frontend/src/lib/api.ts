@@ -1,5 +1,17 @@
 import type { Paper, FigureAsset } from "./types";
 
+export class ApiRequestError extends Error {
+  status: number;
+  retryAfterSeconds: number;
+
+  constructor(message: string, status: number, retryAfterSeconds = 0) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch("/api/" + path, {
     method: "POST",
@@ -8,7 +20,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
-    throw new Error(payload?.detail || "API error " + response.status);
+    const headerRetry = Number(response.headers.get("Retry-After")) || 0;
+    const bodyRetry = Number(payload?.retryAfterSeconds) || 0;
+    throw new ApiRequestError(
+      payload?.detail || "API error " + response.status,
+      response.status,
+      Math.max(headerRetry, bodyRetry, 0)
+    );
   }
   return response.json();
 }
