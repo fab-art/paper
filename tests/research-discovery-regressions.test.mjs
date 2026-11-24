@@ -60,7 +60,8 @@ test("paper save actions have result-specific accessible names and explicit butt
 
 
 test("saved references preserve their origin in the shared Paper type and project library", () => {
-  assert.ok(types.includes('source?: "semantic-scholar" | "manual" | "imported"'));
+  assert.ok(types.includes('export type PaperSource = "semantic-scholar" | "manual" | "imported"'));
+  assert.ok(types.includes("source?: PaperSource"));
   assert.ok(projectWorkspace.includes('source: "semantic-scholar"'));
   assert.ok(projectWorkspace.includes('source: "manual"'));
   assert.ok(projectWorkspace.includes("Semantic Scholar"));
