@@ -15,6 +15,11 @@ jobs:
         run: npm install
       - name: Install frontend dependencies
         run: npm --prefix frontend install
+      - name: Apply compatible dependency security fixes
+        continue-on-error: true
+        run: |
+          npm audit fix || true
+          npm --prefix frontend audit fix || true
       - name: Dependency vulnerability summary
         continue-on-error: true
         run: |
@@ -34,6 +39,14 @@ jobs:
             }
           }
           NODE
+      - name: Upload generated npm lockfiles
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperorchestra-npm-lockfiles
+          path: |
+            package-lock.json
+            frontend/package-lock.json
+          if-no-files-found: error
       - name: Regression tests
         run: npm run test:regression
       - name: Typecheck and build
