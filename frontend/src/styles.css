@@ -310,3 +310,45 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
   background:#fff;color:#555281;font-size:10px;font-weight:650;cursor:pointer
 }
 .dash-empty-clear:hover{border-color:#b9b7d2;background:#f8f8fc}
+
+
+/* Phase 7 — Writing Studio keyboard focus and reduced motion */
+.app-shell :is(button,input,select,textarea):focus-visible{
+  outline:2px solid #9a90ff;
+  outline-offset:2px;
+}
+.app-shell button:disabled{cursor:not-allowed}
+.progress-track:focus-visible{outline:2px solid #9a90ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  .app-shell *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+@media(max-width:760px){
+  .app-shell{height:auto;min-height:100vh;overflow-x:hidden}
+  .topbar{height:auto;min-height:58px;flex-wrap:wrap;gap:10px;padding:10px 12px}
+  .project-title{order:2;flex:1 1 100%;min-width:0}
+  .project-title input{width:100%;min-width:0}
+  .top-actions{flex:1 1 auto;justify-content:flex-end;flex-wrap:wrap;gap:7px}
+  .gpu-pill,.telemetry{font-size:9px}
+  .hardware-row{height:auto;min-height:39px;flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .hardware-left,.hardware-right{flex-wrap:wrap;gap:7px}
+  .memory-est{margin-left:0}
+  .workspace{display:flex;flex-direction:column;min-height:0}
+  .left-pane{order:1;max-height:220px;border-right:0;border-bottom:1px solid #292b32}
+  .center-pane{order:2;min-height:620px}
+  .right-pane{order:3;min-height:440px;border-left:0;border-top:1px solid #292b32}
+  .agent-stepper{justify-content:flex-start;overflow-x:auto}
+  .center-tabs{overflow-x:auto;gap:14px;padding:0 12px}
+  .center-content{padding:16px 13px}
+  .settings-pop{right:8px;left:8px;top:62px;width:auto}
+  .statusbar{height:auto;min-height:25px;flex-wrap:wrap;gap:7px;padding:7px 10px}
+}
+@media(max-width:420px){
+  .brand{font-size:13px}
+  .studio-tag{display:none}
+  .top-actions .gpu-pill,.top-actions .telemetry{display:none}
+  .agent-heading{align-items:flex-start;gap:12px;flex-direction:column}
+  .agent-heading .primary-button{width:100%}
+  .feedback-box>div{flex-direction:column}
+  .feedback-box .secondary-button{width:100%}
+  .center-footer{height:auto;min-height:31px;gap:8px;flex-wrap:wrap;padding:7px 10px}
+}
