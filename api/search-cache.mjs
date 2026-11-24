@@ -4,7 +4,7 @@ export const DEFAULT_RETRY_AFTER_SECONDS = 30;
 export const MAX_RETRY_AFTER_SECONDS = 60 * 60;
 
 export function searchCacheKey(query, limit) {
-  const normalized = String(query || "").trim().toLocaleLowerCase().replace(/\\s+/g, " ");
+  const normalized = String(query || "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
   return normalized + "::" + Number(limit);
 }
 
