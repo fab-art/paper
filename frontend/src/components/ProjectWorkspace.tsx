@@ -86,8 +86,8 @@ export default function ProjectWorkspace({
     const saveTask = paperSaveQueue.current.then(async () => {
       const latest = projectRef.current;
       if (!latest || latest.id !== projectId) return false;
-      const normalizeTitle = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]/gu, "");
-      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "").replace(/^doi:\\s*/, "");
+      const normalizeTitle = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+      const normalizeDoi = (value: string) => value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
       const doi = normalizeDoi(paper.doi || "");
       const title = normalizeTitle(paper.title);
       const duplicate = latest.papers.some(item =>
