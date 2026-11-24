@@ -1,5 +1,5 @@
 type ParseMessage = { source: string; delimiter: string; maxRows: number };
-type ParseResult = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean; error?: string };
+type ParseResult = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean } | { error: string };
 
 self.onmessage = (event: MessageEvent<ParseMessage>) => {
   const { source, delimiter, maxRows } = event.data;
@@ -44,10 +44,10 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
     }
     const width = headers.length;
     const rows = retained.map(record => Array.from({ length: width }, (_, index) => record[index] ?? ""));
-    (self as DedicatedWorkerGlobalScope).postMessage({
+    self.postMessage({
       headers, rows, totalRows, truncated: totalRows > maxRows
     } satisfies ParseResult);
   } catch (error) {
-    (self as DedicatedWorkerGlobalScope).postMessage({ error: error instanceof Error ? error.message : "Could not parse this dataset." } satisfies ParseResult);
+    self.postMessage({ error: error instanceof Error ? error.message : "Could not parse this dataset." } satisfies ParseResult);
   }
 };
