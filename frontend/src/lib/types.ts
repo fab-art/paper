@@ -2,7 +2,8 @@ export type AgentId = "outline" | "literature" | "plots" | "writing" | "refine";
 export type AgentStatus = "idle" | "running" | "done" | "error";
 export type ProjectStatus = "planning" | "active" | "on-hold" | "completed";
 export interface OutlineSection { id: string; title: string; description: string; children?: OutlineSection[] }
-export interface Paper { title: string; authors: string[]; year?: number; abstract?: string; url?: string; doi?: string; venue?: string; citationCount?: number; openAccessPdf?: string; publicationDate?: string; bibtex?: string }
+export type PaperSource = "semantic-scholar" | "manual" | "imported";
+export interface Paper { title: string; authors: string[]; source?: PaperSource; year?: number; abstract?: string; url?: string; doi?: string; venue?: string; citationCount?: number; openAccessPdf?: string; publicationDate?: string; bibtex?: string }
 export interface FigureAsset { name: string; png?: string; mime?: string; pdf?: string; code?: string }
 export interface AgentRecord { id: AgentId; status: AgentStatus; summary: string; updatedAt: number }
 export interface ResearchMilestone { id: string; title: string; dueDate?: string; completed: boolean }
