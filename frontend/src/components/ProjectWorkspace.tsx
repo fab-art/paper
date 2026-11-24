@@ -258,7 +258,7 @@ export default function ProjectWorkspace({
         <div className="pw-library-head"><div><h2>Research library</h2><p>Sources and files attached to this project.</p></div><div className="pw-library-actions">
           <button className="pw-secondary" onClick={() => fileInput.current?.click()}><UploadCloud size={14}/> Upload files</button>
           <button className="pw-primary" onClick={() => setShowSourceForm(v => !v)}><FilePlus2 size={14}/> Add source</button>
-          <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.csv,.xlsx,.xls,.txt,.md,.ris,.bib,.json" hidden onChange={e => void uploadFiles(e.target.files)}/>
+          <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.csv,.tsv,.xlsx,.xls,.txt,.md,.ris,.bib,.json" hidden onChange={e => void uploadFiles(e.target.files)}/>
         </div></div>
         {showSourceForm && <form className="pw-source-form" onSubmit={addSource}>
           <div className="pw-form-head"><strong>Add a reference</strong><button type="button" onClick={() => setShowSourceForm(false)}><X size={15}/></button></div>
