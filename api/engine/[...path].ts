@@ -56,8 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader("Retry-After", String(WINDOW_SECONDS));
       return res.status(429).json({ detail: `Rate limit reached: ${rate.limit} ${path === "compile-latex" ? "compilations" : "plot requests"} per minute per IP.` });
     }
-  } catch (error) {
-    return res.status(503).json({ detail: error instanceof Error ? error.message : "Compute abuse protection is unavailable." });
+  } catch {
+    return res.status(503).json({ detail: "Rate-limit service is temporarily unavailable. Remote compute is blocked; use the browser fallback or try again shortly." });
   }
 
   const token = process.env.PAPERORCHESTRA_ENGINE_TOKEN;
