@@ -81,7 +81,7 @@ export async function generatePlot(data: unknown[], x: string, y: string, title:
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
+    if (!message.includes("Rate-limit service is temporarily unavailable") && !message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
     return browserSvg(data,x,y,title);
   }
 }
