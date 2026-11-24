@@ -125,7 +125,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   return <div className="dashboard-shell">
     <header className="dash-topbar">
       <div className="dash-brand"><div className="dash-mark"><Sparkles size={18}/></div><span>Paper<span>Orchestra</span></span><small>RESEARCH STATION</small></div>
-      <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button ref={createTriggerRef} className="dash-new" onClick={() => setShowCreate(true)}><FilePlus2 size={15}/> New project</button></div>
+      <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button ref={createTriggerRef} className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setShowCreate(true); }}><FilePlus2 size={15}/> New project</button></div>
     </header>
     <main className="dash-main">
       <section className="dash-welcome">
@@ -143,7 +143,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
           <button role="tab" aria-selected={scope === "active"} className={scope === "active" ? "selected" : ""} onClick={() => {setScope("active");setQuery("");}}>Active <span>{activeProjects.length}</span></button>
           <button role="tab" aria-selected={scope === "archived"} className={scope === "archived" ? "selected" : ""} onClick={() => {setScope("archived");setQuery("");}}>Archived <span>{archivedProjects.length}</span></button>
         </div>
-        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? "Try another search term." : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={()=>setShowCreate(true)}><FilePlus2 size={14}/> Create first project</button>}</div> :
+        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? "Try another search term." : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
           <div className="dash-project-grid">{filtered.map(project => {
             const done = project.agentRecords.filter(agent=>agent.status==="done").length;
             const pct = Math.round(done / 5 * 100);
