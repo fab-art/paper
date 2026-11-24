@@ -264,6 +264,21 @@ function mergeReviewRecords(records) {
       merged.fullTextRetrieved = ordered.some(record => record.fullTextRetrieved === true);
     }
   }
+
+  // Full-text eligibility is downstream of title/abstract screening. Reconcile
+  // legacy records that still contain full-text decisions after a pending or
+  // excluded title decision, while duplicate aliases with an eligible title
+  // decision are merged before reaching this check.
+  if (merged.titleAbstractDecision === "pending" || merged.titleAbstractDecision === "exclude") {
+    merged.fullTextRetrieved = false;
+    merged.fullTextDecision = "pending";
+    merged.fullTextReason = "";
+    const resetAt = Number(merged.titleAbstractDecisionUpdatedAt ?? merged.updatedAt ?? 0);
+    if (resetAt > 0) {
+      merged.fullTextDecisionUpdatedAt = resetAt;
+      merged.fullTextRetrievedUpdatedAt = resetAt;
+    }
+  }
   return merged;
 }
 
