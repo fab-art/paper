@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 
 const api = readFileSync(new URL("../api/search-papers.ts", import.meta.url), "utf8");
 const discovery = readFileSync(new URL("../frontend/src/components/ResearchDiscovery.tsx", import.meta.url), "utf8");
+const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
+const types = readFileSync(new URL("../frontend/src/lib/types.ts", import.meta.url), "utf8");
 
 test("Semantic Scholar handler applies an instance cooldown after HTTP 429", () => {
   assert.match(api, /rateLimitGate\.retryAfter\(\)/);
@@ -54,4 +56,14 @@ test("search errors offer a retry action", () => {
 test("paper save actions have result-specific accessible names and explicit button types", () => {
   assert.ok(discovery.includes('type="button"'));
   assert.ok(discovery.includes("Save ${paper.title} to this project's library"));
+});
+
+
+test("saved references preserve their origin in the shared Paper type and project library", () => {
+  assert.ok(types.includes('source?: "semantic-scholar" | "manual" | "imported"'));
+  assert.ok(projectWorkspace.includes('source: "semantic-scholar"'));
+  assert.ok(projectWorkspace.includes('source: "manual"'));
+  assert.ok(projectWorkspace.includes("Semantic Scholar"));
+  assert.ok(projectWorkspace.includes("Manually added"));
+  assert.ok(projectWorkspace.includes("Source not recorded"));
 });
