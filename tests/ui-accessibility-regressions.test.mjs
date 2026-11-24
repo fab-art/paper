@@ -123,3 +123,35 @@ test("clearing dashboard search keeps keyboard focus in the search field", () =>
   assert.match(dashboard, /searchInputRef\.current\?\.focus\(\)/);
   assert.doesNotMatch(dashboard, /<label className=["']dash-search["']/);
 });
+
+
+test("project workspace section navigation is a named toggle group with exposed active state", () => {
+  assert.match(projectWorkspace, /role="group" aria-label="Project workspace sections"/);
+  assert.match(projectWorkspace, /aria-pressed={section === "overview"}/);
+  assert.match(projectWorkspace, /aria-pressed={section === "submission"}/);
+});
+
+test("project name is a bounded, semantic page heading", () => {
+  assert.match(projectWorkspace, /<h1 className="pw-project-heading">/);
+  assert.match(projectWorkspace, /className="pw-project-name"[^>]*maxLength={100}/);
+  assert.match(projectWorkspace, /aria-label="Project name"/);
+});
+
+test("research library search has a programmatic label and search landmark", () => {
+  assert.match(projectWorkspace, /role="search" aria-label="Search project references"/);
+  assert.match(projectWorkspace, /aria-label="Search references"/);
+});
+
+test("project workspace controls expose visible focus and minimum touch sizing", () => {
+  const workspaceStyles = readFileSync(new URL("../frontend/src/components/project-workspace.css", import.meta.url), "utf8");
+  assert.match(workspaceStyles, /\.project-workspace :is\(button, a, input, select, textarea\):focus-visible/);
+  assert.match(workspaceStyles, /min-height:\s*40px/);
+  assert.match(workspaceStyles, /@media\s*\(max-width:\s*560px\)/);
+});
+
+test("project workspace narrow layouts avoid page-level horizontal overflow", () => {
+  const workspaceStyles = readFileSync(new URL("../frontend/src/components/project-workspace.css", import.meta.url), "utf8");
+  assert.match(workspaceStyles, /\.pw-tabs\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(workspaceStyles, /\.pw-overview,\.pw-notes-layout\s*\{\s*grid-template-columns:\s*1fr/s);
+  assert.match(workspaceStyles, /\.pw-project-name\s*\{[^}]*max-width:\s*100%/s);
+});
