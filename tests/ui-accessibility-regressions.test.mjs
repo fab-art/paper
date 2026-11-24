@@ -155,3 +155,21 @@ test("project workspace narrow layouts avoid page-level horizontal overflow", ()
   assert.match(workspaceStyles, /\.pw-overview,\.pw-notes-layout\s*\{\s*grid-template-columns:\s*1fr/s);
   assert.match(workspaceStyles, /\.pw-project-name\s*\{[^}]*max-width:\s*100%/s);
 });
+
+test("project milestone controls have item-specific accessible names", () => {
+  assert.match(projectWorkspace, /aria-label={`Mark \$\{item\.title\} complete`}/);
+  assert.match(projectWorkspace, /aria-label={`Remove milestone \$\{item\.title\}`}/);
+});
+
+test("project milestone completion is exposed as a semantic progress bar", () => {
+  assert.match(projectWorkspace, /role="progressbar" aria-label="Milestone completion"/);
+  assert.match(projectWorkspace, /aria-valuemin={0} aria-valuemax={100}/);
+  assert.match(projectWorkspace, /aria-valuenow={milestoneProgress}/);
+});
+
+test("reference search can be cleared and filtered empty states explain how to recover", () => {
+  assert.match(projectWorkspace, /aria-label="Clear reference search"/);
+  assert.match(projectWorkspace, /setSourceQuery\("")/);
+  assert.match(projectWorkspace, /No references match your search/);
+  assert.match(projectWorkspace, /Clear reference search/);
+});
