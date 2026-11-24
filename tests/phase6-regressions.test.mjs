@@ -67,7 +67,7 @@ test("rewrites extensionless LaTeX figure references", () => {
 test("ignores citation commands in LaTeX comments but keeps escaped percent signs", () => {
   const result = parseCitationUsage(
     String.raw`% \nocite{*}
-Text \% literal percent and \cite{alpha}`
+Text \% literal percent and \cite{alpha}`,
     "@article{alpha, title={A}}\n@article{beta, title={B}}"
   );
   assert.deepEqual(result.citedKeys, ["alpha"]);
