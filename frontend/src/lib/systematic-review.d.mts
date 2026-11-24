@@ -3,6 +3,8 @@ export type ReviewPaper = {
   authors?: string[];
   year?: number;
   doi?: string;
+  id?: string;
+  url?: string;
 };
 export type ScreeningDecision = "pending" | "include" | "exclude" | "maybe";
 export type FullTextDecision = "pending" | "include" | "exclude";
@@ -15,11 +17,15 @@ export type ScreeningRecord = {
   fullTextReason: string;
   notes: string;
   updatedAt: number;
+  titleAbstractDecisionUpdatedAt?: number;
+  fullTextDecisionUpdatedAt?: number;
+  fullTextRetrievedUpdatedAt?: number;
 };
 export function normalizeDoi(value: string | undefined): string;
 export function normalizeTitle(value: string): string;
-export function deduplicatePapers<T extends ReviewPaper>(papers: T[]): { uniquePapers: Array<T & { reviewKey: string }>; duplicatesRemoved: number };
+export function deduplicatePapers<T extends ReviewPaper>(papers: T[]): { uniquePapers: Array<T & { reviewKey: string }>; duplicatesRemoved: number; aliasesByReviewKey: Record<string, string[]> };
 export function migrateReviewRecords<T extends ReviewPaper, R>(papers: T[], existing?: Record<string, R>): Record<string, R>;
+export function updateTitleAbstractDecision<T extends ScreeningRecord>(record: T, decision: ScreeningDecision, now?: number): T;
 export function syncReviewRecords<T extends ReviewPaper>(papers: T[], existing?: Record<string, ScreeningRecord>): {
   uniquePapers: Array<T & { reviewKey: string }>;
   screening: Record<string, ScreeningRecord>;
