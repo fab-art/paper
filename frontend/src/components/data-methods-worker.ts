@@ -1,4 +1,4 @@
-import { assertDatasetColumnCount } from "../lib/phase6-regressions.mjs";
+import { assertDatasetColumnCount, canRetainDatasetRow } from "../lib/phase6-regressions.mjs";
 
 type ParseMessage = { source: string; delimiter: string; maxRows: number };
 type ParseResult = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean } | { error: string };
@@ -12,6 +12,7 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
     let quoted = false;
     let headers: string[] = [];
     let totalRows = 0;
+    let retainedCells = 0;
 
     const commitRow = () => {
       assertDatasetColumnCount(row.length + 1);
@@ -22,7 +23,13 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
         if (!headers.length) headers = row.map((value, index) => value.trim() || "Column " + (index + 1));
         else {
           totalRows += 1;
-          if (retained.length < maxRows) retained.push(row);
+          // Normalize each retained row in place and keep a strict cell budget.
+          if (row.length > headers.length) row.length = headers.length;
+          while (row.length < headers.length) row.push("");
+          if (retained.length < maxRows && canRetainDatasetRow(retainedCells, row.length)) {
+            retained.push(row);
+            retainedCells += row.length;
+          }
         }
       }
       row = [];
@@ -45,10 +52,10 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
       self.postMessage({ error: "This file needs a header row and at least one data row." } satisfies ParseResult);
       return;
     }
-    const width = headers.length;
-    const rows = retained.map(record => Array.from({ length: width }, (_, index) => record[index] ?? ""));
+    // Rows are already normalized and retained by reference. Avoid a second
+    // full matrix allocation before postMessage performs its one structured clone.
     self.postMessage({
-      headers, rows, totalRows, truncated: totalRows > maxRows
+      headers, rows: retained, totalRows, truncated: totalRows > retained.length
     } satisfies ParseResult);
   } catch (error) {
     self.postMessage({ error: error instanceof Error ? error.message : "Could not parse this dataset." } satisfies ParseResult);
