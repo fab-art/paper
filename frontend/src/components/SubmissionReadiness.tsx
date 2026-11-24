@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { AlertCircle, Archive, CheckCircle2, ClipboardCheck, Download, FileText, ShieldCheck, Sparkles } from "lucide-react";
 import type { Project, ProjectAttachment, ProjectNote } from "../lib/types";
 import "./submission-readiness.css";
-import { createUniqueFigureAssets, parseCitationUsage, rewriteFigureReferences } from "../lib/phase6-regressions.mjs";
+import { createUniqueFigureAssets, parseCitationUsage, rewriteFigureReferences, safeTemplatePath } from "../lib/phase6-regressions.mjs";
 
 type Props = { project: Project; notes: ProjectNote[]; attachments: ProjectAttachment[]; onUpdateProject: (changes: Partial<Project>) => void };
 type Finding = { id: string; title: string; detail: string; status: "pass" | "warning" | "action" };
@@ -84,7 +84,7 @@ export default function SubmissionReadiness({ project, notes, attachments, onUpd
       const exportNameByIndex = new Map(figureAssets.map(asset => [asset.sourceIndex, asset.exportName]));
       zip.file("README-SUBMISSION.txt", [
         "PaperOrchestra project export", "Project: " + project.name, "Exported: " + new Date().toISOString(), "",
-        "Contents: manuscript.tex, references.bib, quality-report.md, project.json, notes/, figures/, templates/, supporting-files/",
+        "Contents: manuscript.tex, references.bib, quality-report.md, project.json, notes/, figures/, template dependencies at manuscript-relative paths, supporting-files/",
         "Review the quality report. Automated checks do not certify scientific validity or ethical compliance.",
         "Project data in the browser is local to this device; this ZIP is a portable copy."
       ].join("\n"));
@@ -99,8 +99,7 @@ export default function SubmissionReadiness({ project, notes, attachments, onUpd
         const encoded = asset.png!.includes(",") ? asset.png!.split(",").pop()! : asset.png!;
         figureFolder?.file(asset.exportName, encoded, { base64: true });
       });
-      const templateFolder = zip.folder("templates");
-      Object.entries(project.templateFiles || {}).forEach(([name, content]) => templateFolder?.file(name, content));
+      Object.entries(project.templateFiles || {}).forEach(([name, content]) => zip.file(safeTemplatePath(name), content));
       const attachmentFolder = zip.folder("supporting-files");
       for (const [index, attachment] of attachments.entries()) attachmentFolder?.file(String(index + 1).padStart(3, "0") + "-" + cleanFileName(attachment.name), attachment.blob);
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 5 } });
