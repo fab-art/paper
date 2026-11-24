@@ -5,7 +5,7 @@ import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import {
-  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
+  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
@@ -286,7 +286,7 @@ export default function ProjectWorkspace({
     <main className="pw-main">
       <div className="pw-breadcrumb">YOUR PROJECTS <span>/</span> PROJECT WORKSPACE</div>
       <section className="pw-heading">
-        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><h1 className="pw-project-heading"><input ref={projectNameRef} className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name" maxLength={100}/></h1>
+        <div><div className="pw-eyebrow">RESEARCH PROJECT</div><input ref={projectNameRef} className="pw-project-name" value={project.name} onChange={e => patch({ name: e.target.value })} aria-label="Project name"/>
           <p>Keep your research question, sources, files and working notes together.</p></div>
         <label className="pw-status">PROJECT STATUS
           <select value={status} onChange={e => patch({ status: e.target.value as ProjectStatus })}>

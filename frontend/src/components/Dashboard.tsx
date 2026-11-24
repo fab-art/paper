@@ -67,6 +67,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       )
     );
     focusableElements()[0]?.focus();
+
     const handleDialogKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -74,10 +75,12 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
         return;
       }
       if (event.key !== "Tab") return;
+
       const focusable = focusableElements();
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (!first || !last) return;
+
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
@@ -86,6 +89,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
         first.focus();
       }
     };
+
     dialog.addEventListener("keydown", handleDialogKeyDown);
     return () => dialog.removeEventListener("keydown", handleDialogKeyDown);
   }, [showCreate]);
@@ -102,8 +106,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const completed = activeProjects.filter(project => project.agentRecords.length > 0 && project.agentRecords.every(agent => agent.status === "done")).length;
 
   const create = async () => {
-    if (!name.trim()) return;
-    const project = makeProject(name.trim(), question.trim());
+    const project = makeProject(name.trim() || "Untitled research project", question.trim());
     try {
       await saveProject(project);
       setActionError("");
@@ -150,7 +153,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button ref={createTriggerRef} className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setActionError(""); setShowCreate(true); }}><FilePlus2 size={15}/> New project</button></div>
     </header>
     <main className="dash-main">
-      {actionError && !showCreate && <div role="alert" className="dash-action-error"><span>{actionError}</span><button type="button" onClick={() => setActionError("")}>Dismiss</button></div>}
+      {actionError && <div role="alert" className="dash-action-error"><span>{actionError}</span><button type="button" onClick={() => setActionError("")}>Dismiss</button></div>}
       <section className="dash-welcome">
         <div className="dash-welcome-copy"><div className="dash-kicker">YOUR RESEARCH DESK</div><h1>Good research starts<br/>with a clear workspace.</h1><p>Pick up where you left off, or start a new research project.</p><div className="dash-welcome-note"><span className="dash-welcome-note-dot"/> A considered space for every stage of discovery</div></div>
         <div className="dash-orbit"><div className="orbit-ring ring-one"/><div className="orbit-ring ring-two"/><div className="orbit-core"><BookOpen size={34}/></div><span className="orbit-dot dot-a"/><span className="orbit-dot dot-b"/><span className="orbit-dot dot-c"/></div>
@@ -161,12 +164,12 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
         <div><span><Archive size={15}/> COMPLETED PROJECTS</span><strong>{completed}</strong><small>All recorded stages finished</small></div>
       </section>
       <section className="dash-project-section">
-        <div className="dash-section-head"><div><div className="dash-kicker">PROJECT LIBRARY</div><h2>{scope === "active" ? "Your research projects" : "Archived projects"}</h2></div><div className="dash-search" role="search"><Search size={15} aria-hidden="true"/><input ref={searchInputRef} aria-label="Search projects" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/>{query && <button type="button" className="dash-search-clear" aria-label="Clear project search" onClick={() => { setQuery(""); searchInputRef.current?.focus(); }}><X size={14}/></button>}</div></div>
+        <div className="dash-section-head"><div><div className="dash-kicker">PROJECT LIBRARY</div><h2>{scope === "active" ? "Your research projects" : "Archived projects"}</h2></div><label className="dash-search"><Search size={15}/><input aria-label="Search projects" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/></label></div>
         <div className="dash-scope-tabs" role="group" aria-label="Project lists">
           <button type="button" aria-pressed={scope === "active"} className={scope === "active" ? "selected" : ""} onClick={() => {setScope("active");setQuery("");}}>Active <span>{activeProjects.length}</span></button>
           <button type="button" aria-pressed={scope === "archived"} className={scope === "archived" ? "selected" : ""} onClick={() => {setScope("archived");setQuery("");}}>Archived <span>{archivedProjects.length}</span></button>
         </div>
-        {loading ? <div className="dash-empty" role="status">Loading your project library…</div> : <><div className="dash-results" role="status" aria-live="polite">{query ? `${filtered.length} ${filtered.length === 1 ? "result" : "results"} for “${query}”` : `${filtered.length} ${filtered.length === 1 ? "project" : "projects"} ${scope === "active" ? "in your library" : "archived"}`}</div>{filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? "Try another search term." : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{query ? <button type="button" className="dash-empty-action" onClick={() => { setQuery(""); searchInputRef.current?.focus(); }}>Clear search</button> : scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
+        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? "Try another search term." : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
           <div className="dash-project-grid">{filtered.map(project => {
             const done = project.agentRecords.filter(agent=>agent.status==="done").length;
             const totalStages = project.agentRecords.length || 1;
@@ -188,9 +191,9 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
     </main>
     {showCreate && <div className="dash-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}><form ref={createDialogRef} className="dash-modal" role="dialog" aria-modal={true} aria-labelledby="dash-create-title" aria-describedby="dash-create-description" onSubmit={e=>{e.preventDefault();void create();}}>
       <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
-      <label htmlFor="projectName">Project name<input id="projectName" name="projectName" autoFocus required maxLength={100} value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
-      <label htmlFor="researchQuestion">Research question <span>OPTIONAL</span><textarea id="researchQuestion" name="researchQuestion" maxLength={1200} value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
-      <div className="dash-modal-actions"><button type="button" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</button><button type="submit" className="dash-new" disabled={!name.trim()}><FilePlus2 size={14}/> Create project</button></div>
+      <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
+      <label>Research question <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
+      <div className="dash-modal-actions"><button type="button" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</button><button type="submit" className="dash-new"><FilePlus2 size={14}/> Create project</button></div>
     </form></div>}
   </div>;
 }
