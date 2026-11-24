@@ -77,3 +77,34 @@ test("successful password and immediate sign-up sessions close the modal before 
   const sessionSyncs = authPanel.match(/if \(data\.session\) \{ setSession\(data\.session\); setOpen\(false\); \}/g) || [];
   assert.ok(sessionSyncs.length >= 2);
 });
+
+
+test("dashboard project-grid conditional has balanced JSX fragments", () => {
+  assert.doesNotMatch(dashboard, /\\)\\}<\\/div>\\}\\s*<\\/?>\\s*\\}/);
+  assert.doesNotMatch(dashboard, /<\\/div>\\}\\s*<\\/>\\s*\\}/);
+});
+
+test("project workspace milestone controls and progress expose accessible names and values", () => {
+  assert.match(projectWorkspace, /aria-label={`Mark \\$\\{item\\.title\\} complete`}/);
+  assert.match(projectWorkspace, /aria-label={`Remove milestone \\$\\{item\\.title\\}`}/);
+  assert.match(projectWorkspace, /role="progressbar" aria-label="Milestone completion"/);
+  assert.match(projectWorkspace, /aria-valuenow={milestoneProgress}/);
+});
+
+test("project library icon actions identify their target", () => {
+  assert.match(projectWorkspace, /aria-label={`Remove reference \\$\\{paper\\.title\\}`}/);
+  assert.match(projectWorkspace, /aria-label={`Download \\$\\{file\\.name\\}`}/);
+  assert.match(projectWorkspace, /aria-label={`Delete \\$\\{file\\.name\\}`}/);
+  assert.match(projectWorkspace, /aria-label="Close add reference form"/);
+});
+
+test("clearing project reference search restores keyboard focus to the search field", () => {
+  assert.match(projectWorkspace, /sourceSearchRef/);
+  assert.match(projectWorkspace, /sourceSearchRef\\.current\\?\\.focus\\(\\)/);
+  assert.match(projectWorkspace, /clearSourceSearch/);
+  assert.match(projectWorkspace, /aria-label="Clear reference search"/);
+});
+
+test("systematic review tab uses an imported icon", () => {
+  assert.match(projectWorkspace, /import \\{[^}]*ClipboardCheck[^}]*\\} from "lucide-react"/s);
+});
