@@ -37,6 +37,37 @@ function insertSection(latex: string, title: string, body: string) {
   return latex.slice(0, index) + block + latex.slice(index);
 }
 
+function normalizeReferenceTitle(value: string) {
+  return value.replace(/[{}]/g, "").normalize("NFKC").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]/gu, "");
+}
+function extractBibtexTitles(source: string): string[] {
+  const titles: string[] = [];
+  const matcher = /\\btitle\\s*=\\s*([{"'])/gi;
+  let match: RegExpExecArray | null;
+  while ((match = matcher.exec(source))) {
+    const opener = match[1];
+    let value = "";
+    let depth = opener === "{" ? 1 : 0;
+    let quote = opener === '"' ? true : false;
+    let escaped = false;
+    for (let index = matcher.lastIndex; index < source.length; index++) {
+      const char = source[index];
+      if (escaped) { value += char; escaped = false; continue; }
+      if (char === "\\\\") { value += char; escaped = true; continue; }
+      if (quote) {
+        if (char === '"') break;
+        value += char;
+      } else {
+        if (char === "{") { depth++; if (depth > 1) value += char; }
+        else if (char === "}") { depth--; if (depth === 0) break; value += char; }
+        else value += char;
+      }
+    }
+    titles.push(normalizeReferenceTitle(value));
+  }
+  return titles;
+}
+
 const parseJson = <T,>(text: string): T => {
   const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
   return JSON.parse(clean);
@@ -221,8 +252,8 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       const discovered = mergePaperLists([], found).slice(0, 12);
       const newPapers = discovered.filter(paper => !project.papers.some(existing => samePaper(existing, paper)));
       const mergedPapers = mergePaperLists(project.papers, discovered);
-      const currentBibTitles = project.bibtex.toLowerCase();
-      const papersNeedingBibtex = mergedPapers.filter(paper => !currentBibTitles.includes(paper.title.toLowerCase()));
+      const currentBibTitles = new Set(extractBibtexTitles(project.bibtex));
+      const papersNeedingBibtex = mergedPapers.filter(paper => !currentBibTitles.has(normalizeReferenceTitle(paper.title)));
       const bib = papersToBibtex(papersNeedingBibtex);
       patch({ papers: mergedPapers, bibtex: [project.bibtex, bib].filter(Boolean).join("\n\n") });
       setAgent("literature", "done", `Found ${discovered.length} candidate papers; added ${newPapers.length} new papers and preserved ${project.papers.length} existing library entries.`);
