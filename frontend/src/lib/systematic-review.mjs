@@ -56,19 +56,28 @@ export function deduplicatePapers(papers) {
   return { uniquePapers, duplicatesRemoved };
 }
 
-export function syncReviewRecords(papers, existing = {}) {
-  const { uniquePapers, duplicatesRemoved } = deduplicatePapers(papers);
-  const screening = {};
+export function migrateReviewRecords(papers, existing = {}) {
+  const { uniquePapers } = deduplicatePapers(papers);
+  const migrated = {};
   for (const paper of uniquePapers) {
     const key = paper.reviewKey;
-    // A record may have been screened before DOI metadata was enriched (or
-    // before a title was corrected). Re-key that decision instead of silently
-    // resetting the review when the canonical identifier changes.
     const previous = paperReviewKeyAliases(paper)
       .map(alias => existing[alias])
       .find(Boolean);
+    const record = existing[key] || previous;
+    if (record) migrated[key] = record;
+  }
+  return migrated;
+}
+
+export function syncReviewRecords(papers, existing = {}) {
+  const { uniquePapers, duplicatesRemoved } = deduplicatePapers(papers);
+  const migrated = migrateReviewRecords(uniquePapers, existing);
+  const screening = {};
+  for (const paper of uniquePapers) {
+    const key = paper.reviewKey;
     screening[key] = {
-      ...(existing[key] || previous || {
+      ...(migrated[key] || {
         titleAbstractDecision: "pending",
         titleAbstractReason: "",
         fullTextRetrieved: false,
