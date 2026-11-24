@@ -2,7 +2,7 @@ name: Frontend build and UI regression checks
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/systematic-review-phase8]
 jobs:
   build:
     runs-on: ubuntu-latest
