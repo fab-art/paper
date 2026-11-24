@@ -35,6 +35,9 @@ export interface ReviewScreeningRecord {
   fullTextReason: string;
   notes: string;
   updatedAt: number;
+  titleAbstractDecisionUpdatedAt?: number;
+  fullTextDecisionUpdatedAt?: number;
+  fullTextRetrievedUpdatedAt?: number;
 }
 export interface StudyExtraction {
   studyDesign: string;
