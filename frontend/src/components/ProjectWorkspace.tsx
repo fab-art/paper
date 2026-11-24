@@ -5,7 +5,7 @@ import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import {
-  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardList, Download, FilePlus2,
+  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
@@ -40,6 +40,7 @@ export default function ProjectWorkspace({
   const projectSaveQueue = useRef<Promise<void>>(Promise.resolve());
   const lastSavedFingerprintRef = useRef("");
   const projectNameRef = useRef<HTMLInputElement | null>(null);
+  const sourceSearchRef = useRef<HTMLInputElement | null>(null);
   const focusedProjectIdRef = useRef<string | null>(null);
   const paperSaveQueue = useRef<Promise<void>>(Promise.resolve());
   projectRef.current = project;
@@ -141,6 +142,10 @@ export default function ProjectWorkspace({
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => setProject(current => current ? { ...current, ...changes } : current);
+  const clearSourceSearch = () => {
+    setSourceQuery("");
+    sourceSearchRef.current?.focus();
+  };
   const navigateAfterSave = async (action: () => void) => {
     const latest = projectRef.current;
     if (!latest) return;
@@ -355,9 +360,9 @@ export default function ProjectWorkspace({
           <label>Abstract / description<textarea rows={3} value={source.abstract} onChange={e => setSource({ ...source, abstract: e.target.value })}/></label>
           <div className="pw-form-actions"><button type="button" className="pw-secondary" onClick={() => setShowSourceForm(false)}>Cancel</button><button className="pw-primary" type="submit"><Save size={14}/> Save reference</button></div>
         </form>}
-        <div className="pw-search" role="search" aria-label="Search project references"><Search size={14} aria-hidden="true"/><input id="pw-reference-search" aria-label="Search references" value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/>{sourceQuery && <button type="button" className="pw-search-clear" aria-label="Clear reference search" onClick={() => setSourceQuery("")}><X size={14}/></button>}</div>
+        <div className="pw-search" role="search" aria-label="Search project references"><Search size={14} aria-hidden="true"/><input ref={sourceSearchRef} id="pw-reference-search" aria-label="Search references" value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/>{sourceQuery && <button type="button" className="pw-search-clear" aria-label="Clear reference search" onClick={clearSourceSearch}><X size={14}/></button>}</div>
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
-          {filteredPapers.length === 0 ? <div className="pw-empty">{sourceQuery.trim() ? <>No references match your search.<button type="button" className="pw-empty-action" onClick={() => setSourceQuery("")}>Clear reference search</button></> : "No references yet. Add a reference manually or import one through a future discovery workflow."}</div> :
+          {filteredPapers.length === 0 ? <div className="pw-empty">{sourceQuery.trim() ? <>No references match your search.<button type="button" className="pw-empty-action" onClick={clearSourceSearch}>Clear reference search</button></> : "No references yet. Add a reference manually or import one through a future discovery workflow."}</div> :
             filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
               <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
               <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button type="button" title="Remove reference" aria-label={`Remove reference ${paper.title}`} onClick={() => {
