@@ -104,8 +104,16 @@ export function deduplicatePapers(papers) {
   });
 
   const mergeGroup = indices => {
-    for (let position = 1; position < indices.length; position++) {
-      union(indices[0], indices[position]);
+    const compatibleRoots = [];
+    for (const index of indices) {
+      let merged = false;
+      for (const candidate of compatibleRoots) {
+        if (union(candidate, index)) {
+          merged = true;
+          break;
+        }
+      }
+      if (!merged) compatibleRoots.push(index);
     }
   };
 
