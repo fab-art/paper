@@ -136,7 +136,7 @@ export default function AuthPanel() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (authError) throw authError;
-        if (data.session) setSession(data.session);
+        if (data.session) { setSession(data.session); setOpen(false); }
         if (!data.session) setMessage("Check your email to confirm your account before signing in.");
       } else {
         const { error: authError } = await supabase.auth.signInWithOtp({
