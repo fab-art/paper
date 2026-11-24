@@ -19,7 +19,7 @@ body:has(.project-workspace),body:has(.project-loading){min-width:320px;overflow
 .pw-status{display:grid;gap:7px;font-size:9px;font-weight:700;letter-spacing:.08em;color:#858790;min-width:150px}
 .pw-status select,.pw-field input,.pw-field textarea,.pw-source-form input,.pw-source-form textarea{width:100%;border:1px solid #dedfe4;border-radius:9px;background:#fff;color:#24252a;padding:10px 11px;outline:0;font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;resize:vertical}
 .pw-status select:focus,.pw-field input:focus,.pw-field textarea:focus,.pw-source-form input:focus,.pw-source-form textarea:focus{border-color:#9290bd;box-shadow:0 0 0 3px #8d8ab51b}
-.pw-tabs{display:flex;gap:7px;border-bottom:1px solid var(--pw-border);margin-bottom:24px}
+.pw-tabs{display:flex;gap:7px;overflow-x:auto;border-bottom:1px solid var(--pw-border);margin-bottom:24px}.pw-tabs button{flex:0 0 auto;white-space:nowrap}
 .pw-tabs button{display:flex;align-items:center;gap:8px;position:relative;padding:16px 13px 14px;border:0;background:transparent;color:#858790;font-size:11px;cursor:pointer}
 .pw-tabs button.selected{color:#4f4c80;font-weight:650}
 .pw-tabs button.selected:after{content:"";position:absolute;bottom:-1px;left:10px;right:10px;height:2px;background:#716d9e}
