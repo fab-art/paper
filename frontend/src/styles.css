@@ -261,3 +261,18 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+
+.pw-global-notice .pw-notice-action {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  padding: 5px 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
