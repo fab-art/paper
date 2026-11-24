@@ -32,12 +32,15 @@ export function deduplicatePapers(papers) {
   for (const paper of papers || []) {
     const doi = normalizeDoi(paper.doi);
     const title = normalizeTitle(paper.title);
-    if ((doi && seenDois.has(doi)) || (title && seenTitles.has(title))) {
+    const duplicate = (doi && seenDois.has(doi)) || (title && seenTitles.has(title));
+    // Record aliases even for duplicates so a later record matching either
+    // identifier is also recognized as the same study.
+    if (doi) seenDois.add(doi);
+    if (title) seenTitles.add(title);
+    if (duplicate) {
       duplicatesRemoved += 1;
       continue;
     }
-    if (doi) seenDois.add(doi);
-    if (title) seenTitles.add(title);
     uniquePapers.push({ ...paper, reviewKey: paperReviewKey(paper) });
   }
 
