@@ -18,7 +18,7 @@ test("create-project overlay exposes a named, described modal dialog", () => {
 
 test("create-project dialog supports Escape and keeps keyboard focus inside", () => {
   assert.match(dashboard, /event\.key\s*===?\s*["']Escape["']/);
-  assert.match(dashboard, /event\.key\s*===?\s*["']Tab["']/);
+  assert.match(dashboard, /event\.key\s*!==\s*["']Tab["']/);
   assert.match(dashboard, /document\.activeElement/);
   assert.match(dashboard, /\.focus\(\)/);
 });
@@ -30,7 +30,7 @@ test("sign-in dialog has a programmatic description", () => {
 
 test("sign-in dialog supports Escape and keeps keyboard focus inside", () => {
   assert.match(authPanel, /event\.key\s*===?\s*["']Escape["']/);
-  assert.match(authPanel, /event\.key\s*===?\s*["']Tab["']/);
+  assert.match(authPanel, /event\.key\s*!==\s*["']Tab["']/);
   assert.match(authPanel, /document\.activeElement/);
   assert.match(authPanel, /\.focus\(\)/);
 });
