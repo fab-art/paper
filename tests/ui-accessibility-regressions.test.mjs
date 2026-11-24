@@ -6,6 +6,8 @@ const dashboard = readFileSync(new URL("../frontend/src/components/Dashboard.tsx
 const authPanel = readFileSync(new URL("../frontend/src/components/AuthPanel.tsx", import.meta.url), "utf8");
 const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
 const systematicReview = readFileSync(new URL("../frontend/src/components/SystematicReviewWorkspace.tsx", import.meta.url), "utf8");
+const dataMethodsLab = readFileSync(new URL("../frontend/src/components/DataMethodsLab.tsx", import.meta.url), "utf8");
+const dataMethodsStyles = readFileSync(new URL("../frontend/src/components/data-methods-lab.css", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
@@ -145,4 +147,38 @@ test("risk-of-bias domain removal names its study and domain", () => {
 test("risk-of-bias domain actions use migrated records so identifier upgrades do not hide edits", () => {
   assert.match(systematicReview, /const current = migratedRiskOfBias\[key\] \|\| \{ tool: "JBI", domains: \[\] \};/);
   assert.match(systematicReview, /const current = migratedRiskOfBias\[key\];\s*if \(current\) updateRisk\(key, \{ domains: current\.domains\.filter/);
+});
+
+
+test("data methods loading state and dataset region expose busy and status semantics", () => {
+  assert.match(dataMethodsLab, /aria-busy={loading}/);
+  assert.match(dataMethodsLab, /className="dml-loading" role="status" aria-live="polite"/);
+  assert.match(dataMethodsLab, /className="dml-error" role="alert"/);
+});
+
+test("data methods variable filter has a clear action that restores focus", () => {
+  assert.match(dataMethodsLab, /variableFilterRef/);
+  assert.match(dataMethodsLab, /variableFilterRef\.current\?\.focus\(\)/);
+  assert.match(dataMethodsLab, /aria-label="Filter variables"/);
+  assert.match(dataMethodsLab, /aria-label="Clear variable filter"/);
+  assert.match(dataMethodsLab, /Clear variable filter/);
+});
+
+test("data methods tables have captions, column scopes and keyboard-scrollable regions", () => {
+  assert.match(dataMethodsLab, /<caption className="dml-visually-hidden">Variable profile/);
+  assert.match(dataMethodsLab, /<caption className="dml-visually-hidden">Data preview/);
+  assert.match(dataMethodsLab, /<th scope="col">Variable<\/th>/);
+  assert.match(dataMethodsLab, /role="region" aria-label="Variable profile table" tabIndex={0}/);
+  assert.match(dataMethodsLab, /role="region" aria-label="Data preview table" tabIndex={0}/);
+});
+
+test("data methods result and truncation summaries are announced to assistive technology", () => {
+  assert.match(dataMethodsLab, /role="status" aria-live="polite" className="dml-counts"/);
+  assert.match(dataMethodsLab, /className="dml-warning" role="status"/);
+});
+
+test("data methods filter recovery and reduced-motion styling are present", () => {
+  assert.match(dataMethodsStyles, /\.dml-clear-filter/);
+  assert.match(dataMethodsStyles, /\.dml-visually-hidden/);
+  assert.match(dataMethodsStyles, /prefers-reduced-motion:reduce/);
 });
