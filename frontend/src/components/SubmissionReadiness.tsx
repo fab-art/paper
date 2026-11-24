@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import { AlertCircle, Archive, CheckCircle2, ClipboardCheck, Download, FileText, ShieldCheck, Sparkles } from "lucide-react";
 import type { Project, ProjectAttachment, ProjectNote } from "../lib/types";
 import "./submission-readiness.css";
+import { createUniqueFigureAssets, parseCitationUsage, rewriteFigureReferences } from "../lib/phase6-regressions.mjs";
 
 type Props = { project: Project; notes: ProjectNote[]; attachments: ProjectAttachment[]; onUpdateProject: (changes: Partial<Project>) => void };
 type Finding = { id: string; title: string; detail: string; status: "pass" | "warning" | "action" };
@@ -14,12 +15,6 @@ const manualItems = [
   { id: "reporting", label: "The correct reporting guideline has been selected and followed (e.g. CONSORT, STROBE, PRISMA)." },
   { id: "journal", label: "Target journal or institution instructions, formatting and submission requirements have been checked." }
 ];
-function citationKeys(tex: string) {
-  const keys = new Set<string>();
-  for (const match of tex.matchAll(/\\(?:[a-zA-Z]*cite[a-zA-Z]*|nocite)\s*\{([^}]+)\}/g)) match[1].split(",").map(value => value.trim()).filter(Boolean).forEach(value => keys.add(value));
-  return [...keys];
-}
-function bibKeys(bib: string) { return [...bib.matchAll(/@[a-zA-Z]+\s*\{\s*([^,\s]+)\s*,/g)].map(match => match[1]); }
 function cleanFileName(value: string) { return value.normalize("NFKC").replace(/[^\p{L}\p{N}._-]+/gu, "_").replace(/^_+|_+$/g, "").slice(0, 100) || "file"; }
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
@@ -49,9 +44,10 @@ export default function SubmissionReadiness({ project, notes, attachments, onUpd
   const findings = useMemo<Finding[]>(() => {
     const tex = project.latex || "", bib = project.bibtex || "";
     const title = /\\title\s*\{([^}]*)\}/i.exec(tex)?.[1]?.trim() || "";
-    const citations = citationKeys(tex), bibliography = bibKeys(bib), bibSet = new Set(bibliography);
-    const missing = citations.filter(key => !bibSet.has(key));
-    const uncited = bibliography.filter(key => !citations.includes(key));
+    const citationAudit = parseCitationUsage(tex, bib);
+    const citations = citationAudit.citedKeys, bibliography = citationAudit.bibliography;
+    const missing = citationAudit.missing;
+    const uncited = citationAudit.uncited;
     const figureNames = project.figures.map(item => item.name);
     const figureRefs = [...tex.matchAll(/\\includegraphics(?:\[[^\]]*\])?\s*\{([^}]+)\}/g)].map(match => match[1].split("/").pop() || match[1]);
     const missingFigures = figureRefs.filter(name => !figureNames.some(asset => asset === name || asset.endsWith(name)));
@@ -83,24 +79,25 @@ export default function SubmissionReadiness({ project, notes, attachments, onUpd
     setExporting(true); setError(""); setMessage("");
     try {
       const zip = new JSZip(), root = cleanFileName(project.name);
+      const figureAssets = createUniqueFigureAssets(project.figures);
+      const exportedLatex = rewriteFigureReferences(project.latex || "", figureAssets);
+      const exportNameByIndex = new Map(figureAssets.map(asset => [asset.sourceIndex, asset.exportName]));
       zip.file("README-SUBMISSION.txt", [
         "PaperOrchestra project export", "Project: " + project.name, "Exported: " + new Date().toISOString(), "",
         "Contents: manuscript.tex, references.bib, quality-report.md, project.json, notes/, figures/, templates/, supporting-files/",
         "Review the quality report. Automated checks do not certify scientific validity or ethical compliance.",
         "Project data in the browser is local to this device; this ZIP is a portable copy."
       ].join("\n"));
-      zip.file("manuscript.tex", project.latex || "");
+      zip.file("manuscript.tex", exportedLatex);
       zip.file("references.bib", project.bibtex || "");
       zip.file("quality-report.md", report);
-      zip.file("project.json", JSON.stringify({ ...project, figures: project.figures.map(({ png, ...figure }) => figure), exportCreatedAt: new Date().toISOString() }, null, 2));
+      zip.file("project.json", JSON.stringify({ ...project, figures: project.figures.map(({ png, ...figure }, index) => ({ ...figure, name: exportNameByIndex.get(index) || figure.name })), exportCreatedAt: new Date().toISOString() }, null, 2));
       const noteFolder = zip.folder("notes");
       notes.forEach((note, index) => noteFolder?.file(String(index + 1).padStart(3, "0") + "-" + cleanFileName(note.title) + ".md", "# " + note.title + "\n\n" + note.content));
       const figureFolder = zip.folder("figures");
-      project.figures.forEach((figure, index) => {
-        if (!figure.png) return;
-        const ext = figure.mime === "image/svg+xml" ? "svg" : "png";
-        const encoded = figure.png.includes(",") ? figure.png.split(",").pop()! : figure.png;
-        figureFolder?.file(cleanFileName(figure.name || ("figure-" + (index + 1) + "." + ext)), encoded, { base64: true });
+      figureAssets.forEach(asset => {
+        const encoded = asset.png!.includes(",") ? asset.png!.split(",").pop()! : asset.png!;
+        figureFolder?.file(asset.exportName, encoded, { base64: true });
       });
       const templateFolder = zip.folder("templates");
       Object.entries(project.templateFiles || {}).forEach(([name, content]) => templateFolder?.file(name, content));
