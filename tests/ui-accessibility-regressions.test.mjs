@@ -255,3 +255,8 @@ test("Writing Studio uses visible keyboard focus and reduced-motion styling", ()
   assert.match(styles, /\.app-shell :is\(button,input,select,textarea\):focus-visible/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
 });
+
+
+test("Writing Studio buttons never repeat the same JSX type attribute", () => {
+  assert.doesNotMatch(studio, /<button\\b[^>]*\\btype=(["'])button\\1[^>]*\\btype=(["'])button\\2/);
+});
