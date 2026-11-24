@@ -28,7 +28,7 @@ export function createUniqueFigureAssets(figures) {
       exportName = `${stem}-${suffix++}${extension}`;
     }
     used.add(exportName.toLocaleLowerCase());
-    return [{ ...figure, exportName }];
+    return [{ ...figure, exportName, sourceIndex: index }];
   });
 }
 
