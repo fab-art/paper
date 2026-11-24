@@ -86,6 +86,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const [feedback, setFeedback] = useState("");
   const [plotData, setPlotData] = useState("");
   const [notice, setNotice] = useState("Ready for this research project.");
+  const noticeIsError = /could not|failed|error|another tab|not saved|permanently deleted/i.test(notice);
   const [showSettings, setShowSettings] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -420,7 +421,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
-            <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
+            <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
           </>}
           {tab==="latex"&&<div className="editor-wrap"><div className="editor-toolbar"><span><FileText size={14}/> manuscript.tex</span><span className="muted">LaTeX · UTF-8</span></div><textarea className="latex-editor" spellCheck={false} value={project.latex} onChange={e=>patch({latex:e.target.value})}/></div>}
           {tab==="literature"&&<div className="editor-wrap"><div className="editor-toolbar"><span><BookOpen size={14}/> references.bib</span><span className="muted">{project.papers.length} papers</span></div><textarea className="latex-editor" spellCheck={false} value={project.bibtex} onChange={e=>patch({bibtex:e.target.value})}/></div>}
