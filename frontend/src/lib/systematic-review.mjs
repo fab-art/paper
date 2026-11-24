@@ -23,6 +23,15 @@ function paperReviewKey(paper) {
   return `title:${title || "untitled"}`;
 }
 
+function paperReviewKeyAliases(paper) {
+  const aliases = [];
+  const doi = normalizeDoi(paper.doi);
+  const title = normalizeTitle(paper.title);
+  if (doi) aliases.push(`doi:${doi}`);
+  if (title) aliases.push(`title:${title}`);
+  return aliases;
+}
+
 export function deduplicatePapers(papers) {
   const seenDois = new Set();
   const seenTitles = new Set();
@@ -52,15 +61,23 @@ export function syncReviewRecords(papers, existing = {}) {
   const screening = {};
   for (const paper of uniquePapers) {
     const key = paper.reviewKey;
-    screening[key] = existing[key] || {
-      paperKey: key,
-      titleAbstractDecision: "pending",
-      titleAbstractReason: "",
-      fullTextRetrieved: false,
-      fullTextDecision: "pending",
-      fullTextReason: "",
-      notes: "",
-      updatedAt: Date.now()
+    // A record may have been screened before DOI metadata was enriched (or
+    // before a title was corrected). Re-key that decision instead of silently
+    // resetting the review when the canonical identifier changes.
+    const previous = paperReviewKeyAliases(paper)
+      .map(alias => existing[alias])
+      .find(Boolean);
+    screening[key] = {
+      ...(existing[key] || previous || {
+        titleAbstractDecision: "pending",
+        titleAbstractReason: "",
+        fullTextRetrieved: false,
+        fullTextDecision: "pending",
+        fullTextReason: "",
+        notes: "",
+        updatedAt: Date.now()
+      }),
+      paperKey: key
     };
   }
   return { uniquePapers, screening, duplicatesRemoved };
