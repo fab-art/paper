@@ -116,3 +116,10 @@ test("dashboard dark premium palette is scoped to Research Station and responsiv
   assert.match(phaseOneStyles, /@media\s*\(max-width:\s*720px\)/);
   assert.match(phaseOneStyles, /\.dashboard-shell\s+button:focus-visible/);
 });
+
+
+test("clearing dashboard search keeps keyboard focus in the search field", () => {
+  assert.match(dashboard, /const searchInputRef = useRef<HTMLInputElement \| null>\(null\)/);
+  assert.match(dashboard, /searchInputRef\.current\?\.focus\(\)/);
+  assert.doesNotMatch(dashboard, /<label className=["']dash-search["']/);
+});
