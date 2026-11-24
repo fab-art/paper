@@ -139,7 +139,7 @@ test("screening search can be cleared with focus restored to its input", () => {
 });
 
 test("risk-of-bias domain removal names its study and domain", () => {
-  assert.match(systematicReview, /aria-label={`Remove \\$\{domain\.name \|\| "unnamed"} domain for \\$\{paper\.title\}`}/);
+  assert.ok(systematicReview.includes('aria-label={`Remove ${domain.name || "unnamed"} domain for ${paper.title}`}'));
 });
 
 test("risk-of-bias domain actions use migrated records so identifier upgrades do not hide edits", () => {
