@@ -5,7 +5,7 @@ import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import {
-  ArrowLeft, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
+  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
@@ -33,6 +33,7 @@ export default function ProjectWorkspace({
   const [noteContent, setNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const noticeIsError = /^(Could not|This project|Failed|Error)|permanently deleted|no longer exists/i.test(notice);
   const fileInput = useRef<HTMLInputElement>(null);
   const projectRef = useRef<Project | null>(null);
   const paperSaveQueue = useRef<Promise<void>>(Promise.resolve());
@@ -184,8 +185,11 @@ export default function ProjectWorkspace({
   const downloadAttachment = (file: ProjectAttachment) => {
     const url = URL.createObjectURL(file.blob);
     const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = file.name; anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.href = url; anchor.download = file.name;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const addMilestone = () => {
@@ -229,7 +233,7 @@ export default function ProjectWorkspace({
         <button className={section === "methods" ? "selected" : ""} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
       </nav>
-      {notice && <div className="pw-global-notice" role="status"><Check size={14}/><span>{notice}</span></div>}
+      {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span></div>}
 
       {section === "overview" && <div className="pw-overview">
         <div className="pw-main-column">
