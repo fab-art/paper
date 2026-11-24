@@ -139,8 +139,14 @@ async def search_papers(request: SearchRequest):
         _search_cache[cache_key] = (time.monotonic() + SEARCH_CACHE_TTL_SECONDS, result)
         if len(_search_cache) > 500:
             current_time = time.monotonic()
-            for key in [key for key, value in _search_cache.items() if value[0] <= current_time]:
+            expired = [key for key, value in _search_cache.items() if value[0] <= current_time]
+            for key in expired:
                 _search_cache.pop(key, None)
+            overflow = len(_search_cache) - 500
+            if overflow > 0:
+                oldest = sorted(_search_cache.items(), key=lambda item: item[1][0])[:overflow]
+                for key, _ in oldest:
+                    _search_cache.pop(key, None)
     return result
 
 
