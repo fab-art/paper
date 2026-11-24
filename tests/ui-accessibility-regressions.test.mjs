@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 const dashboard = readFileSync(new URL("../frontend/src/components/Dashboard.tsx", import.meta.url), "utf8");
 const authPanel = readFileSync(new URL("../frontend/src/components/AuthPanel.tsx", import.meta.url), "utf8");
+const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
   assert.match(dashboard, /<input[^>]*aria-label=["']Search projects["']/s);
@@ -50,4 +51,24 @@ test("sign-in method switcher uses toggle-group semantics", () => {
   assert.match(authPanel, /role=["']group["'] aria-label=["']Sign-in method["']/);
   assert.match(authPanel, /aria-pressed={mode === "magic"}/);
   assert.doesNotMatch(authPanel, /role=["']tablist["']/);
+});
+
+test("sign-in dialog keeps a document-level focus guard active during submission", () => {
+  assert.match(authPanel, /document\.addEventListener\("keydown", handleDialogKeyDown, true\)/);
+  assert.match(authPanel, /!dialog\.contains\(document\.activeElement\)/);
+});
+
+test("sign-in restores focus to a stable control after authentication", () => {
+  assert.match(authPanel, /signedInControlRef/);
+  assert.match(authPanel, /signInTriggerRef\.current \?\? signedInControlRef\.current/);
+});
+
+test("sign-out returns focus to the newly rendered sign-in button", () => {
+  assert.match(authPanel, /wasSignedInRef/);
+  assert.match(authPanel, /wasSignedInRef\.current && !session\?\.user/);
+});
+
+test("opening a project moves focus to its project-name control", () => {
+  assert.match(projectWorkspace, /ref=\{projectNameRef\}/);
+  assert.match(projectWorkspace, /projectNameRef\.current\?\.focus\(\)/);
 });
