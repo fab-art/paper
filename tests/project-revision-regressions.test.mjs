@@ -105,6 +105,6 @@ test("workspace autosaves route through the stale-snapshot guard and persist ret
 });
 
 test("best-effort workspace cleanup saves do not create unhandled rejections", () => {
-  assert.match(workspace, /void saveProject\(latest\)\.catch\(\(\) => undefined\)/);
-  assert.match(studio, /void saveProject\(latest\)\.catch\(\(\) => undefined\)/);
+  assert.match(workspace, /void persistProject(latest).catch(() => undefined)/);
+  assert.match(studio, /void persistProject(latest).catch(() => undefined)/);
 });
