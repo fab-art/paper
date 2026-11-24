@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, BookOpen, CheckCircle2, ClipboardCheck, FileSpreadsheet, Filter, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import type { Project, Paper, SystematicReviewData, SystematicReviewProtocol, ReviewScreeningRecord, StudyExtraction, RiskOfBiasDomain, ScreeningDecision, FullTextDecision, RiskJudgement } from "../lib/types";
-import { calculatePrismaFlow, syncReviewRecords, toEvidenceMatrixCsv } from "../lib/systematic-review.mjs";
+import { calculatePrismaFlow, migrateReviewRecords, syncReviewRecords, toEvidenceMatrixCsv } from "../lib/systematic-review.mjs";
 import "./systematic-review.css";
 
 type Props = { project: Project; onUpdate: (changes: Partial<Project>) => void };
@@ -37,15 +37,23 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   const [selectedPaperKey, setSelectedPaperKey] = useState("");
   const review = project.systematicReview || emptyReview();
   const synced = useMemo(() => syncReviewRecords(project.papers, review.screening), [project.papers, review.screening]);
+  const migratedExtraction = useMemo(() => migrateReviewRecords(project.papers, review.extraction), [project.papers, review.extraction]);
+  const migratedRiskOfBias = useMemo(() => migrateReviewRecords(project.papers, review.riskOfBias), [project.papers, review.riskOfBias]);
   const flow = useMemo(() => calculatePrismaFlow(project.papers, synced.screening), [project.papers, synced.screening]);
   const includedPapers = synced.uniquePapers.filter(paper => synced.screening[paper.reviewKey]?.fullTextDecision === "include");
   const selectedPaper = includedPapers.find(paper => paper.reviewKey === selectedPaperKey) || includedPapers[0];
 
   useEffect(() => {
-    if (!project.systematicReview || JSON.stringify(project.systematicReview.screening) !== JSON.stringify(synced.screening)) {
-      onUpdate({ systematicReview: { ...review, screening: synced.screening } });
+    const nextReview = {
+      ...review,
+      screening: synced.screening,
+      extraction: migratedExtraction,
+      riskOfBias: migratedRiskOfBias
+    };
+    if (JSON.stringify(project.systematicReview) !== JSON.stringify(nextReview)) {
+      onUpdate({ systematicReview: nextReview });
     }
-  }, [project.id, project.papers, project.systematicReview, synced.screening]);
+  }, [project.id, project.papers, project.systematicReview, synced.screening, migratedExtraction, migratedRiskOfBias]);
 
   const updateReview = (changes: Partial<SystematicReviewData>) => onUpdate({ systematicReview: { ...review, ...changes } });
   const updateProtocol = (changes: Partial<SystematicReviewProtocol>) => updateReview({ protocol: { ...review.protocol, ...changes } });
@@ -55,11 +63,11 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     updateReview({ screening: { ...synced.screening, [key]: { ...current, ...changes, updatedAt: Date.now() } } });
   };
   const updateExtraction = (key: string, changes: Partial<StudyExtraction>) => {
-    updateReview({ extraction: { ...review.extraction, [key]: { ...emptyExtraction(), ...review.extraction[key], ...changes } } });
+    updateReview({ extraction: { ...migratedExtraction, [key]: { ...emptyExtraction(), ...migratedExtraction[key], ...changes } } });
   };
   const updateRisk = (key: string, changes: { tool?: string; domains?: RiskOfBiasDomain[] }) => {
-    const current = review.riskOfBias[key] || { tool: "JBI", domains: [] };
-    updateReview({ riskOfBias: { ...review.riskOfBias, [key]: { ...current, ...changes } } });
+    const current = migratedRiskOfBias[key] || { tool: "JBI", domains: [] };
+    updateReview({ riskOfBias: { ...migratedRiskOfBias, [key]: { ...current, ...changes } } });
   };
   const visiblePapers = synced.uniquePapers.filter(paper => {
     const record = synced.screening[paper.reviewKey];
@@ -71,8 +79,8 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   const exportMatrix = () => {
     const csv = toEvidenceMatrixCsv(
       project.papers, synced.screening,
-      review.extraction as unknown as Record<string, Record<string, unknown>>,
-      review.riskOfBias as unknown as Record<string, Record<string, unknown>>
+      migratedExtraction as unknown as Record<string, Record<string, unknown>>,
+      migratedRiskOfBias as unknown as Record<string, Record<string, unknown>>
     );
     downloadFile("paperorchestra-evidence-matrix.csv", csv, "text/csv;charset=utf-8");
   };
@@ -87,7 +95,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     updateRisk(key, { domains: [...current.domains, { id: makeId(), name: "", judgement: "unclear", rationale: "" }] });
   };
   const updateRiskDomain = (key: string, domainId: string, changes: Partial<RiskOfBiasDomain>) => {
-    const current = review.riskOfBias[key];
+    const current = migratedRiskOfBias[key];
     if (current) updateRisk(key, { domains: current.domains.map(domain => domain.id === domainId ? { ...domain, ...changes } : domain) });
   };
   const removeRiskDomain = (key: string, domainId: string) => {
