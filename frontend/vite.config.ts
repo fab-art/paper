@@ -32,6 +32,7 @@ export default defineConfig({
         rewrite: path => path.replace(/^\/api\/engine\//, "/api/"),
         configure: proxy => {
           proxy.on("proxyReq", proxyReq => {
+            // Keep the local engine secret on the dev server; never expose it in browser code.
             if (localEngineToken) proxyReq.setHeader("Authorization", "Bearer " + localEngineToken);
           });
         }
