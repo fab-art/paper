@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownToLine, BookOpen, CheckCircle2, ClipboardCheck, FileSpreadsheet, Filter, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import type { Project, Paper, SystematicReviewData, SystematicReviewProtocol, ReviewScreeningRecord, StudyExtraction, RiskOfBiasDomain, ScreeningDecision, FullTextDecision, RiskJudgement } from "../lib/types";
 import { calculatePrismaFlow, migrateReviewRecords, syncReviewRecords, toEvidenceMatrixCsv, updateTitleAbstractDecision } from "../lib/systematic-review.mjs";
@@ -33,6 +33,7 @@ function paperLabel(paper: Paper) {
 export default function SystematicReviewWorkspace({ project, onUpdate }: Props) {
   const [tab, setTab] = useState<ReviewTab>("overview");
   const [search, setSearch] = useState("");
+  const screeningSearchRef = useRef<HTMLInputElement | null>(null);
   const [filter, setFilter] = useState<ScreeningFilter>("all");
   const [selectedPaperKey, setSelectedPaperKey] = useState("");
   const review = project.systematicReview || emptyReview();
@@ -56,6 +57,11 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   }, [project.id, project.papers, project.systematicReview, synced.screening, migratedExtraction, migratedRiskOfBias]);
 
   const updateReview = (changes: Partial<SystematicReviewData>) => onUpdate({ systematicReview: { ...review, ...changes } });
+  const clearScreeningFilters = () => {
+    setSearch("");
+    setFilter("all");
+    screeningSearchRef.current?.focus();
+  };
   const updateProtocol = (changes: Partial<SystematicReviewProtocol>) => updateReview({ protocol: { ...review.protocol, ...changes } });
   const updateScreening = (key: string, changes: Partial<ReviewScreeningRecord>) => {
     const current = synced.screening[key];
@@ -101,7 +107,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     updateReview({ screening: { ...synced.screening, [key]: next } });
   };
   const addRiskDomain = (key: string) => {
-    const current = review.riskOfBias[key] || { tool: "JBI", domains: [] };
+    const current = migratedRiskOfBias[key] || { tool: "JBI", domains: [] };
     updateRisk(key, { domains: [...current.domains, { id: makeId(), name: "", judgement: "unclear", rationale: "" }] });
   };
   const updateRiskDomain = (key: string, domainId: string, changes: Partial<RiskOfBiasDomain>) => {
@@ -109,7 +115,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     if (current) updateRisk(key, { domains: current.domains.map(domain => domain.id === domainId ? { ...domain, ...changes } : domain) });
   };
   const removeRiskDomain = (key: string, domainId: string) => {
-    const current = review.riskOfBias[key];
+    const current = migratedRiskOfBias[key];
     if (current) updateRisk(key, { domains: current.domains.filter(domain => domain.id !== domainId) });
   };
 
@@ -123,12 +129,14 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   return <section className="srw-shell">
     <header className="srw-header">
       <div><div className="srw-eyebrow"><ClipboardCheck size={14}/> SYSTEMATIC REVIEW WORKSPACE</div><h2>Move from search results to traceable evidence.</h2><p>Screen the papers in this project, document decisions and build an evidence matrix. Decisions remain under researcher control.</p></div>
-      <div className="srw-header-actions"><button className="srw-secondary" onClick={exportFlow}><ArrowDownToLine size={14}/> Export flow</button><button className="srw-primary" onClick={exportMatrix}><FileSpreadsheet size={14}/> Export evidence matrix</button></div>
+      <div className="srw-header-actions"><button type="button" className="srw-secondary" onClick={exportFlow}><ArrowDownToLine size={14}/> Export flow</button><button type="button" className="srw-primary" onClick={exportMatrix}><FileSpreadsheet size={14}/> Export evidence matrix</button></div>
     </header>
-    <nav className="srw-tabs" aria-label="Systematic review sections">
-      {([["overview","Overview"],["protocol","Protocol"],["screening","Screening"],["extraction","Data extraction"],["bias","Risk of bias"]] as [ReviewTab,string][]).map(([id,label]) =>
-        <button key={id} className={tab===id?"active":""} aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}</button>
-      )}
+    <nav className="srw-tabs" aria-label="Review workspace navigation">
+      <div className="srw-tab-list" role="group" aria-label="Systematic review sections">
+        {([["overview","Overview"],["protocol","Protocol"],["screening","Screening"],["extraction","Data extraction"],["bias","Risk of bias"]] as [ReviewTab,string][]).map(([id,label]) =>
+          <button type="button" key={id} className={tab===id?"active":""} aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}</button>
+        )}
+      </div>
     </nav>
 
     {tab === "overview" && <div className="srw-overview">
@@ -169,10 +177,10 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     </section>}
 
     {tab === "screening" && <section className="srw-panel">
-      <div className="srw-panel-heading"><div><span className="srw-kicker">TITLE & ABSTRACT</span><h3>Screen project library</h3></div><small>{synced.uniquePapers.length} unique records · {synced.duplicatesRemoved} duplicates removed</small></div>
+      <div className="srw-panel-heading"><div><span className="srw-kicker">TITLE & ABSTRACT</span><h3>Screen project library</h3></div><small role="status" aria-live="polite">{synced.uniquePapers.length} unique records · {synced.duplicatesRemoved} duplicates removed</small></div>
       {project.papers.length===0 ? <div className="srw-empty">Add papers in Research library or use Discover. They will appear here automatically.</div> : <>
         <div className="srw-screen-tools">
-          <label className="srw-search"><Search size={14}/><input aria-label="Search papers by title, author, DOI or abstract" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search titles, authors, abstracts…"/></label>
+          <div className="srw-search" role="search" aria-label="Search screening records"><Search size={14} aria-hidden="true"/><input ref={screeningSearchRef} aria-label="Search papers by title, author, DOI or abstract" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search titles, authors, abstracts…"/>{search && <button type="button" className="srw-search-clear" aria-label="Clear screening search" onClick={()=>{setSearch("");screeningSearchRef.current?.focus();}}><X size={13}/></button>}</div>
           <label className="srw-filter"><Filter size={13}/><select aria-label="Filter screening decisions" value={filter} onChange={e=>setFilter(e.target.value as ScreeningFilter)}><option value="all">All decisions</option><option value="pending">Pending</option><option value="include">Include</option><option value="maybe">Maybe</option><option value="exclude">Exclude</option></select></label>
         </div>
         <div className="srw-screen-list">{visiblePapers.map(paper=>{
@@ -195,7 +203,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
               </>}
             </div>}
           </article>;
-        })}{visiblePapers.length===0&&<div className="srw-empty">No records match this search and filter.</div>}</div>
+        })}{visiblePapers.length===0&&<div className="srw-empty">No records match this search and filter.<button type="button" className="srw-empty-action" onClick={clearScreeningFilters}>Clear search and filter</button></div>}</div>
       </>}
     </section>}
 
@@ -226,9 +234,9 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
             <label>Domain<input value={domain.name} onChange={e=>updateRiskDomain(key,domain.id,{name:e.target.value})} placeholder="e.g. Selection bias"/></label>
             <label>Judgement<select value={domain.judgement} onChange={e=>updateRiskDomain(key,domain.id,{judgement:e.target.value as RiskJudgement})}><option value="low">Low risk</option><option value="some-concerns">Some concerns</option><option value="high">High risk</option><option value="unclear">Unclear</option></select></label>
             <label>Rationale<textarea rows={2} value={domain.rationale} onChange={e=>updateRiskDomain(key,domain.id,{rationale:e.target.value})} placeholder="Evidence supporting this judgement…"/></label>
-            <button className="srw-icon-button" type="button" aria-label="Remove appraisal domain" title="Remove domain" onClick={()=>removeRiskDomain(key,domain.id)}><Trash2 size={14}/></button>
+            <button className="srw-icon-button" type="button" aria-label={`Remove ${domain.name || "unnamed"} domain for ${paper.title}`} title="Remove domain" onClick={()=>removeRiskDomain(key,domain.id)}><Trash2 size={14}/></button>
           </div>)}
-          <button className="srw-link" onClick={()=>addRiskDomain(key)}><Plus size={14}/> Add appraisal domain</button>
+          <button type="button" className="srw-link" onClick={()=>addRiskDomain(key)}><Plus size={14}/> Add appraisal domain</button>
         </article>;
       })}
     </section>}
