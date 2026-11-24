@@ -34,14 +34,20 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const [name, setName] = useState("");
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState("");
   const createTriggerRef = useRef<HTMLButtonElement | null>(null);
   const createDialogRef = useRef<HTMLFormElement | null>(null);
   const wasCreateOpenRef = useRef(false);
 
   const refresh = async () => {
     setLoading(true);
-    try { setProjects(await listProjects()); }
-    finally { setLoading(false); }
+    try {
+      setProjects(await listProjects());
+    } catch (error) {
+      setActionError("Could not load projects: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { void refresh(); }, []);
 
@@ -102,23 +108,43 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
 
   const create = async () => {
     const project = makeProject(name.trim() || "Untitled research project", question.trim());
-    await saveProject(project);
-    setName(""); setQuestion(""); setShowCreate(false);
-    await refresh();
-    onOpen(project);
+    try {
+      await saveProject(project);
+      setActionError("");
+      setName(""); setQuestion(""); setShowCreate(false);
+      await refresh();
+      onOpen(project);
+    } catch (error) {
+      setActionError("Could not create project: " + (error as Error).message);
+    }
   };
   const archive = async (project: Project) => {
     if (!window.confirm(`Archive "${project.name}"? Its research data and files will be preserved. You can restore it later.`)) return;
-    await saveProject({ ...project, archivedAt: Date.now() });
+    try {
+      await saveProject({ ...project, archivedAt: Date.now() });
+      setActionError("");
+    } catch (error) {
+      setActionError("Could not archive project: " + (error as Error).message);
+    }
     await refresh();
   };
   const restore = async (project: Project) => {
-    await restoreProject(project);
+    try {
+      await restoreProject(project);
+      setActionError("");
+    } catch (error) {
+      setActionError("Could not restore project: " + (error as Error).message);
+    }
     await refresh();
   };
   const permanentlyDelete = async (project: Project) => {
     if (!window.confirm(`Permanently delete "${project.name}" and all its notes, uploaded files and search history? This cannot be undone.`)) return;
-    await deleteProjectAndData(project.id);
+    try {
+      await deleteProjectAndData(project.id, project.revision ?? 0);
+      setActionError("");
+    } catch (error) {
+      setActionError("Could not delete project: " + (error as Error).message);
+    }
     await refresh();
   };
 
@@ -128,6 +154,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button ref={createTriggerRef} className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setShowCreate(true); }}><FilePlus2 size={15}/> New project</button></div>
     </header>
     <main className="dash-main">
+      {actionError && <div role="alert" className="dash-action-error"><span>{actionError}</span><button type="button" onClick={() => setActionError("")}>Dismiss</button></div>}
       <section className="dash-welcome">
         <div><div className="dash-kicker">YOUR RESEARCH DESK</div><h1>Good research starts<br/>with a clear workspace.</h1><p>Pick up where you left off, or start a new research project.</p></div>
         <div className="dash-orbit"><div className="orbit-ring ring-one"/><div className="orbit-ring ring-two"/><div className="orbit-core"><BookOpen size={34}/></div><span className="orbit-dot dot-a"/><span className="orbit-dot dot-b"/><span className="orbit-dot dot-c"/></div>
@@ -163,7 +190,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <footer className="dash-footer"><span>PaperOrchestra Research Station</span><span>Private by default · Projects stored locally in this browser</span></footer>
     </main>
     {showCreate && <div className="dash-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}><form ref={createDialogRef} className="dash-modal" role="dialog" aria-modal={true} aria-labelledby="dash-create-title" aria-describedby="dash-create-description" onSubmit={e=>{e.preventDefault();void create();}}>
-      <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>
+      <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
       <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
       <label>Research question <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
       <div className="dash-modal-actions"><button type="button" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</button><button type="submit" className="dash-new"><FilePlus2 size={14}/> Create project</button></div>
