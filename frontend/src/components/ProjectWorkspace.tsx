@@ -13,6 +13,7 @@ import {
   deleteProjectAttachment, deleteProjectNote, listProjectAttachments, listProjectNotes,
   loadProject, saveProject, saveProjectAttachment, saveProjectNote
 } from "../lib/db";
+import { projectFingerprint, shouldSaveProjectSnapshot } from "../lib/project-save-guard.mjs";
 
 const uid = () => Math.random().toString(36).slice(2, 11);
 const emptyPaper = { title: "", authors: "", year: "", venue: "", doi: "", url: "", abstract: "" };
