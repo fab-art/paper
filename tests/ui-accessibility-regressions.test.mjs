@@ -144,7 +144,7 @@ test("research library search has a programmatic label and search landmark", () 
 
 test("project workspace controls expose visible focus and minimum touch sizing", () => {
   const workspaceStyles = readFileSync(new URL("../frontend/src/components/project-workspace.css", import.meta.url), "utf8");
-  assert.match(workspaceStyles, /\.project-workspace :is\(button, a, input, select, textarea\):focus-visible/);
+  assert.match(workspaceStyles, /\.project-workspace :is\(button,\s*a,\s*input,\s*select,\s*textarea\):focus-visible/);
   assert.match(workspaceStyles, /min-height:\s*40px/);
   assert.match(workspaceStyles, /@media\s*\(max-width:\s*560px\)/);
 });
