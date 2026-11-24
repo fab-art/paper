@@ -99,19 +99,20 @@ test("dashboard project search provides a keyboard-accessible clear action", () 
 });
 
 test("dashboard announces result changes and gives the user a way out of filtered empty states", () => {
-  assert.match(dashboard, /aria-live=["']polite["'][^>]*className=["']dash-results/);
+  assert.match(dashboard, /className="dash-results" role="status" aria-live="polite"/);
   assert.match(dashboard, /Clear search/);
 });
 
 test("new project name is explicitly required and bounded", () => {
   assert.match(dashboard, /name=["']projectName["']/);
   assert.match(dashboard, /required/);
-  assert.match(dashboard, /maxLength={100}/);
+  assert.match(dashboard, /maxLength=\{100\}/);
 });
 
 test("dashboard dark premium palette is scoped to Research Station and responsive", () => {
-  assert.match(dashboardStyles, /\.dashboard-shell\s*\{[^}]*--dash-bg:\s*#0f1015/s);
-  assert.match(dashboardStyles, /\.dashboard-shell\s*\{[^}]*--dash-surface:/s);
-  assert.match(dashboardStyles, /@media\s*\(max-width:\s*720px\)/);
-  assert.match(dashboardStyles, /\.dashboard-shell\s+button:focus-visible/);
+  const phaseOneStyles = dashboardStyles.slice(dashboardStyles.lastIndexOf("/* Phase 1 — premium dark Research Station */"));
+  assert.match(phaseOneStyles, /\.dashboard-shell\s*\{[^}]*--dash-bg:\s*#0f1015/s);
+  assert.match(phaseOneStyles, /--dash-surface:/);
+  assert.match(phaseOneStyles, /@media\s*\(max-width:\s*720px\)/);
+  assert.match(phaseOneStyles, /\.dashboard-shell\s+button:focus-visible/);
 });
