@@ -32,7 +32,7 @@ export default function ProjectWorkspace({
   const [noteContent, setNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const noticeIsError = /could not|failed|error|permanently deleted|no longer exists/i.test(notice);
+  const noticeIsError = /could not|failed|error|permanently deleted|no longer exists|another tab|not saved/i.test(notice);
   const fileInput = useRef<HTMLInputElement>(null);
   const projectRef = useRef<Project | null>(null);
   const projectNameRef = useRef<HTMLInputElement | null>(null);
