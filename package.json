@@ -8,7 +8,8 @@
   },
   "scripts": {
     "install:frontend": "npm --prefix frontend install",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "test:regression": "node --test tests/*.test.mjs"
   },
   "engines": {
     "node": "22.x"
