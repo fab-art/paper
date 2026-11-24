@@ -1,4 +1,4 @@
-name: Frontend build
+name: Frontend build and UI regression checks
 on:
   pull_request:
   push:
