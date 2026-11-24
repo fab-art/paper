@@ -16,7 +16,7 @@ const manualItems = [
 ];
 function citationKeys(tex: string) {
   const keys = new Set<string>();
-  for (const match of tex.matchAll(/\\cite[a-zA-Z]*\s*\{([^}]+)\}/g)) match[1].split(",").map(value => value.trim()).filter(Boolean).forEach(value => keys.add(value));
+  for (const match of tex.matchAll(/\\(?:[a-zA-Z]*cite[a-zA-Z]*|nocite)\s*\{([^}]+)\}/g)) match[1].split(",").map(value => value.trim()).filter(Boolean).forEach(value => keys.add(value));
   return [...keys];
 }
 function bibKeys(bib: string) { return [...bib.matchAll(/@[a-zA-Z]+\s*\{\s*([^,\s]+)\s*,/g)].map(match => match[1]); }
@@ -105,7 +105,7 @@ export default function SubmissionReadiness({ project, notes, attachments, onUpd
       const templateFolder = zip.folder("templates");
       Object.entries(project.templateFiles || {}).forEach(([name, content]) => templateFolder?.file(name, content));
       const attachmentFolder = zip.folder("supporting-files");
-      for (const attachment of attachments) attachmentFolder?.file(cleanFileName(attachment.name), attachment.blob);
+      for (const [index, attachment] of attachments.entries()) attachmentFolder?.file(String(index + 1).padStart(3, "0") + "-" + cleanFileName(attachment.name), attachment.blob);
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 5 } });
       downloadBlob(blob, root + "-paperorchestra-submission.zip");
       setMessage("Submission package exported. Review the included quality report before submitting.");
