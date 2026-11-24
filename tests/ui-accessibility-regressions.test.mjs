@@ -10,6 +10,7 @@ const dataMethodsLab = readFileSync(new URL("../frontend/src/components/DataMeth
 const dataMethodsStyles = readFileSync(new URL("../frontend/src/components/data-methods-lab.css", import.meta.url), "utf8");
 const submissionReadiness = readFileSync(new URL("../frontend/src/components/SubmissionReadiness.tsx", import.meta.url), "utf8");
 const submissionStyles = readFileSync(new URL("../frontend/src/components/submission-readiness.css", import.meta.url), "utf8");
+const studio = readFileSync(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
@@ -214,4 +215,41 @@ test("submission readiness progress and export controls support reduced motion a
   assert.match(submissionStyles, /\.sr-manual-progress/);
   assert.match(submissionStyles, /focus-visible/);
   assert.match(submissionStyles, /prefers-reduced-motion:reduce/);
+});
+
+
+test("Writing Studio agent stages and workspace views expose toggle-group state", () => {
+  assert.match(studio, /role="group" aria-label="Agent stages"/);
+  assert.match(studio, /role="group" aria-label="Writing Studio views"/);
+  assert.match(studio, /aria-pressed={activeAgent===a\.id}/);
+  assert.match(studio, /aria-pressed={tab===t}/);
+});
+
+test("Writing Studio runtime settings and icon-only actions have accessible names", () => {
+  assert.match(studio, /aria-label="Runtime settings"/);
+  assert.match(studio, /aria-label="Close runtime settings"/);
+  assert.match(studio, /aria-label={`Remove outline section \\$\{s\.title\}`}/);
+  assert.match(studio, /aria-label="Refresh print preview"/);
+});
+
+test("Writing Studio model progress and agent execution expose busy and progress semantics", () => {
+  assert.match(studio, /role="progressbar" aria-label="Local model loading progress"/);
+  assert.match(studio, /aria-valuenow={Math\.round\(progress\*100\)}/);
+  assert.match(studio, /className="agent-card" aria-busy={busy}/);
+  assert.match(studio, /className="runtime-log"[^>]*role="status" aria-live="polite"/);
+});
+
+test("Writing Studio manuscript editors and plot feedback have programmatic labels", () => {
+  assert.match(studio, /aria-label="LaTeX manuscript source"/);
+  assert.match(studio, /aria-label="BibTeX references"/);
+  assert.match(studio, /aria-label="Plot regeneration instructions"/);
+});
+
+test("Writing Studio buttons explicitly declare button type", () => {
+  assert.equal((studio.match(/<button(?![^>]*type=)/g) || []).length, 0);
+});
+
+test("Writing Studio uses visible keyboard focus and reduced-motion styling", () => {
+  assert.match(styles, /\.app-shell :is\(button,input,select,textarea\):focus-visible/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
 });
