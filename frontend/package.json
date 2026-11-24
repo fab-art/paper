@@ -18,7 +18,8 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.3",
     "react-resizable-panels": "^2.1.7",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "@supabase/supabase-js": "2.119.2"
   },
   "devDependencies": {
     "@types/react": "^19.0.3",
