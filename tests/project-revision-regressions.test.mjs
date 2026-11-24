@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { assertProjectRevision, PROJECT_CONFLICT_MESSAGE } from "../frontend/src/lib/project-revision-guard.mjs";
+import { projectFingerprint, shouldSaveProjectSnapshot } from "../frontend/src/lib/project-save-guard.mjs";
 
 const dbSource = readFileSync(new URL("../frontend/src/lib/db.ts", import.meta.url), "utf8");
 const typesSource = readFileSync(new URL("../frontend/src/lib/types.ts", import.meta.url), "utf8");
@@ -29,22 +30,40 @@ test("Project records carry an optional backward-compatible revision", () => {
   assert.match(typesSource, /revision\?: number/);
 });
 
-test("saveProject compares the last known revision and increments it atomically", () => {
+test("saveProject captures the snapshot revision before waiting on IndexedDB", () => {
   const source = functionSource("saveProject");
-  assert.match(source, /knownProjectRevisions/);
-  assert.match(source, /assertProjectRevision/);
+  const expectedAt = source.indexOf("const expectedRevision = project.revision ?? 0;");
+  const transactionAt = source.indexOf("await db.transaction");
+  assert.ok(expectedAt >= 0 && expectedAt < transactionAt);
+  assert.match(source, /assertProjectRevision\(expectedRevision, actualRevision\)/);
   assert.match(source, /revision: actualRevision \+ 1/);
+  assert.match(source, /return savedProject/);
 });
 
-test("loadProject and listProjects refresh the per-tab revision baseline", () => {
-  assert.match(functionSource("loadProject"), /knownProjectRevisions\.set/);
-  assert.match(functionSource("listProjects"), /knownProjectRevisions\.set/);
-});
-
-test("restoreProject refuses to restore a stale project snapshot", () => {
+test("restoreProject captures its revision before waiting on IndexedDB", () => {
   const source = functionSource("restoreProject");
-  assert.match(source, /assertProjectRevision/);
+  const expectedAt = source.indexOf("const expectedRevision = project.revision ?? 0;");
+  const transactionAt = source.indexOf("await db.transaction");
+  assert.ok(expectedAt >= 0 && expectedAt < transactionAt);
+  assert.match(source, /assertProjectRevision\(expectedRevision, actualRevision\)/);
   assert.match(source, /revision: actualRevision \+ 1/);
+  assert.match(source, /return restoredProject/);
+});
+
+test("project fingerprints ignore persistence metadata but detect content changes", () => {
+  const first = { id: "p1", name: "Protocol", revision: 1, updatedAt: 100 };
+  const saved = { id: "p1", name: "Protocol", revision: 2, updatedAt: 200 };
+  const edited = { id: "p1", name: "Updated protocol", revision: 2, updatedAt: 200 };
+  assert.equal(projectFingerprint(first), projectFingerprint(saved));
+  assert.notEqual(projectFingerprint(saved), projectFingerprint(edited));
+});
+
+test("stale debounce snapshots are skipped while the current project remains saveable", () => {
+  const stale = { id: "p1", name: "Old title", revision: 1 };
+  const current = { id: "p1", name: "New title", revision: 2 };
+  assert.equal(shouldSaveProjectSnapshot(stale, current, ""), false);
+  assert.equal(shouldSaveProjectSnapshot(current, current, ""), true);
+  assert.equal(shouldSaveProjectSnapshot(current, current, projectFingerprint(current)), false);
 });
 
 test("permanent deletion checks the revision shown in the dashboard", () => {
@@ -74,6 +93,15 @@ test("Studio offers a confirmed reload after a cross-tab revision conflict", () 
   assert.match(studio, /window\.confirm\(/);
   assert.match(studio, /Reload latest/);
   assert.match(studio, /notice\.includes\("updated in another tab"\)/);
+});
+
+test("workspace autosaves route through the stale-snapshot guard and persist returned revisions", () => {
+  assert.match(workspace, /persistProject\(project\)/);
+  assert.match(workspace, /lastSavedFingerprintRef/);
+  assert.match(workspace, /revision: saved\.revision/);
+  assert.match(studio, /persistProject\(project\)/);
+  assert.match(studio, /lastSavedFingerprintRef/);
+  assert.match(studio, /revision: saved\.revision/);
 });
 
 test("best-effort workspace cleanup saves do not create unhandled rejections", () => {
