@@ -1,4 +1,5 @@
 import Dexie, { type Table } from "dexie";
+import { assertProjectWritable } from "./project-write-guard.mjs";
 import type { Project, ProjectNote, ProjectAttachment, ProjectSearchHistory } from "./types";
 
 class StudioDB extends Dexie {
@@ -71,20 +72,42 @@ export async function deleteProjectAndData(projectId: string) {
 export async function listProjectNotes(projectId: string) {
   return db.notes.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a,b)=>b.updatedAt-a.updatedAt));
 }
-export async function saveProjectNote(note: ProjectNote) { note.updatedAt = Date.now(); await db.notes.put(note); }
+export async function saveProjectNote(note: ProjectNote) {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.notes, async () => {
+    await assertProjectWritable(note.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.notes.put({ ...note, updatedAt: Date.now() });
+  });
+}
 export async function deleteProjectNote(id: string) { await db.notes.delete(id); }
 export async function listProjectAttachments(projectId: string) {
   return db.attachments.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a,b)=>b.createdAt-a.createdAt));
 }
-export async function saveProjectAttachment(file: ProjectAttachment) { await db.attachments.put(file); }
+export async function saveProjectAttachment(file: ProjectAttachment) {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.attachments, async () => {
+    await assertProjectWritable(file.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.attachments.put(file);
+  });
+}
 export async function deleteProjectAttachment(id: string) { await db.attachments.delete(id); }
 export async function listProjectSearchHistory(projectId: string) {
   const entries = await db.searches.where("projectId").equals(projectId).toArray();
   return entries.sort((a, b) => b.searchedAt - a.searchedAt);
 }
 export async function recordProjectSearch(entry: ProjectSearchHistory) {
-  await db.searches.put(entry);
-  const history = await listProjectSearchHistory(entry.projectId);
-  const stale = history.slice(12);
-  if (stale.length) await db.searches.bulkDelete(stale.map(item => item.id));
+  await db.transaction("rw", db.projects, db.deletedProjects, db.searches, async () => {
+    await assertProjectWritable(entry.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.searches.put(entry);
+    const history = await db.searches.where("projectId").equals(entry.projectId).toArray();
+    const stale = history.sort((a, b) => b.searchedAt - a.searchedAt).slice(12);
+    if (stale.length) await db.searches.bulkDelete(stale.map(item => item.id));
+  });
 }
