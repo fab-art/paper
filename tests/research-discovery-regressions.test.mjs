@@ -16,3 +16,42 @@ test("discovery explains when search history could not be persisted", () => {
   assert.match(discovery, /Recent-search history could not be saved:/);
   assert.match(discovery, /rd-notice \$\{noticeIsWarning \? "warning" : ""\}/);
 });
+
+
+test("discovery search exposes search and busy semantics", () => {
+  assert.ok(discovery.includes('role="search"'));
+  assert.ok(discovery.includes('aria-label="Search academic literature"'));
+  assert.ok(discovery.includes("aria-busy={loading}"));
+});
+
+test("clearing discovery search returns focus to its input", () => {
+  assert.ok(discovery.includes("searchInputRef"));
+  assert.ok(discovery.includes("searchInputRef.current?.focus()"));
+  assert.ok(discovery.includes('aria-label="Clear search query"'));
+});
+
+test("discovery loading and result updates are announced politely", () => {
+  assert.ok(discovery.includes('role="status" aria-live="polite"'));
+  assert.ok(discovery.includes("aria-live=\"polite\""));
+});
+
+test("discovery results show venue, date, citations and open-access links when available", () => {
+  assert.ok(discovery.includes("paper.venue"));
+  assert.ok(discovery.includes("paper.publicationDate"));
+  assert.ok(discovery.includes("paper.citationCount"));
+  assert.ok(discovery.includes("paper.openAccessPdf"));
+});
+
+test("each discovery result identifies Semantic Scholar as its metadata source", () => {
+  assert.ok(discovery.includes("Semantic Scholar record"));
+});
+
+test("search errors offer a retry action", () => {
+  assert.ok(discovery.includes("Try search again"));
+  assert.ok(discovery.includes("onClick={() => void runSearch(query)}"));
+});
+
+test("paper save actions have result-specific accessible names and explicit button types", () => {
+  assert.ok(discovery.includes('type="button"'));
+  assert.ok(discovery.includes("Save ${paper.title} to this project's library"));
+});
