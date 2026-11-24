@@ -6,6 +6,8 @@ import { assertProjectRevision, PROJECT_CONFLICT_MESSAGE } from "../frontend/src
 const dbSource = readFileSync(new URL("../frontend/src/lib/db.ts", import.meta.url), "utf8");
 const typesSource = readFileSync(new URL("../frontend/src/lib/types.ts", import.meta.url), "utf8");
 const dashboard = readFileSync(new URL("../frontend/src/components/Dashboard.tsx", import.meta.url), "utf8");
+const workspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
+const studio = readFileSync(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
 
 function functionSource(name) {
   const start = dbSource.indexOf(`export async function ${name}`);
@@ -58,4 +60,18 @@ test("dashboard reports stale archive, restore, and delete actions instead of le
   assert.match(dashboard, /Could not archive project/);
   assert.match(dashboard, /Could not restore project/);
   assert.match(dashboard, /Could not delete project/);
+});
+
+test("ProjectWorkspace offers a confirmed reload after a cross-tab revision conflict", () => {
+  assert.match(workspace, /reloadLatestProject/);
+  assert.match(workspace, /window\.confirm\(/);
+  assert.match(workspace, /Load latest saved version/);
+  assert.match(workspace, /notice\.includes\("updated in another tab"\)/);
+});
+
+test("Studio offers a confirmed reload after a cross-tab revision conflict", () => {
+  assert.match(studio, /reloadLatestProject/);
+  assert.match(studio, /window\.confirm\(/);
+  assert.match(studio, /Reload latest/);
+  assert.match(studio, /notice\.includes\("updated in another tab"\)/);
 });
