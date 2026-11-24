@@ -54,12 +54,12 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   );
 
   const runSearch = async (value: string) => {
-    const requestId = ++searchSequence.current;
     const clean = value.trim();
     if (clean.length < 3) {
       setError("Enter at least 3 characters to search academic literature.");
       return;
     }
+    const requestId = ++searchSequence.current;
     setQuery(clean);
     setLoading(true);
     setError("");
