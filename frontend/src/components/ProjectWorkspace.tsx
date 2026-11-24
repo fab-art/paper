@@ -3,8 +3,9 @@ import "./project-workspace.css";
 import ResearchDiscovery from "./ResearchDiscovery";
 import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
+import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import {
-  ArrowLeft, BookOpen, Check, ClipboardList, Download, FilePlus2,
+  ArrowLeft, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
@@ -23,7 +24,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "methods" | "submission">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -224,6 +225,7 @@ export default function ProjectWorkspace({
         <button className={section === "library" ? "selected" : ""} onClick={() => setSection("library")}><FolderOpen size={15}/> Research library <span>{papers.length + attachments.length}</span></button>
         <button className={section === "notes" ? "selected" : ""} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
         <button className={section === "discover" ? "selected" : ""} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
+        <button className={section === "review" ? "selected" : ""} onClick={() => setSection("review")}><ClipboardCheck size={15}/> Systematic review</button>
         <button className={section === "methods" ? "selected" : ""} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
       </nav>
@@ -259,7 +261,7 @@ export default function ProjectWorkspace({
           </div><div className="pw-summary-line"><span>Milestones complete</span><b>{completedMilestones}/{(project.milestones || []).length}</b></div>
           <div className="pw-mini-progress"><i style={{ width: (project.milestones?.length ? completedMilestones / project.milestones.length * 100 : 0) + "%" }}/></div>
           <button className="pw-open-studio" onClick={() => void navigateAfterSave(onOpenStudio)}>Continue to Writing Studio <BookOpen size={14}/></button></section>
-          <section className="pw-tip"><strong>Research library</strong><p>Keep papers and original documents here. Later workspaces will reuse these materials for screening, evidence extraction and manuscript writing.</p><button onClick={() => setSection("library")}>Manage sources <Link2 size={13}/></button></section>
+          <section className="pw-tip"><strong>Research library</strong><p>Keep papers and original documents here. Use the Systematic Review workspace to screen these papers, extract study data and assess evidence quality.</p><button onClick={() => setSection("library")}>Manage sources <Link2 size={13}/></button></section>
         </aside>
       </div>}
 
@@ -295,6 +297,8 @@ export default function ProjectWorkspace({
       </div>}
 
       {section === "discover" && <ResearchDiscovery projectId={projectId} papers={papers} onSavePaper={saveDiscoveredPaper} onOpenLibrary={() => setSection("library")}/>}
+
+      {section === "review" && <SystematicReviewWorkspace project={project} onUpdate={patch}/>}
 
       {section === "methods" && <DataMethodsLab attachments={attachments}/>}
 
