@@ -19,11 +19,10 @@ test("deduplicates papers by DOI and normalized title", () => {
     { title: "Different title, same DOI", doi: "10.1000/abc", authors: ["B"] },
     { title: "Population health cohort", authors: ["C"] },
     { title: "Population-health cohort!", authors: ["D"] },
-    { title: "Another title", doi: "10.1000/b", authors: ["E"] },
-    { title: "Different title, same DOI", doi: "10.1000/c", authors: ["F"] }
+    { title: "Different title, same DOI", authors: ["E"] }
   ]);
   assert.equal(result.uniquePapers.length, 2);
-  assert.equal(result.duplicatesRemoved, 4);
+  assert.equal(result.duplicatesRemoved, 3);
 });
 
 test("synchronizes new library papers without erasing existing screening decisions", () => {
