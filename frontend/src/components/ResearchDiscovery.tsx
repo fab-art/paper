@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
-  ArrowUpRight, BookOpen, Check, Clock3, FileSearch, LoaderCircle,
+  AlertTriangle, ArrowUpRight, BookOpen, Check, Clock3, FileSearch, LoaderCircle,
   Search, Sparkles
 } from "lucide-react";
 import type { Paper, ProjectSearchHistory } from "../lib/types";
@@ -37,6 +37,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const noticeIsWarning = /could not|failed|no longer exists|permanently deleted/i.test(notice);
   const [searched, setSearched] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const searchSequence = useRef(0);
@@ -75,8 +76,9 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
         await recordProjectSearch({ id: crypto.randomUUID(), projectId, query: clean, searchedAt: Date.now() });
         const savedHistory = await listProjectSearchHistory(projectId);
         if (requestId === searchSequence.current) setHistory(savedHistory);
-      } catch {
-        setNotice("Search completed. Recent-search history could not be saved in this browser.");
+      } catch (historyError) {
+        const reason = historyError instanceof Error ? historyError.message : "Unknown local storage error.";
+        setNotice("Search completed. Recent-search history could not be saved: " + reason);
       }
     } catch (cause) {
       if (requestId === searchSequence.current) {
@@ -132,7 +134,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     </div>}
 
     {error && <div className="rd-alert" role="alert">{error}</div>}
-    {notice && <div className="rd-notice"><Check size={15}/>{notice}<button onClick={onOpenLibrary}>View library <ArrowUpRight size={13}/></button></div>}
+    {notice && <div className={`rd-notice ${noticeIsWarning ? "warning" : ""}`} role="status" aria-live="polite">{noticeIsWarning ? <AlertTriangle size={15}/> : <Check size={15}/>}<span>{notice}</span>{!noticeIsWarning && <button onClick={onOpenLibrary}>View library <ArrowUpRight size={13}/></button>}</div>}
 
     <div className="rd-results-heading">
       <div><div className="rd-section-label"><FileSearch size={14}/> SEARCH RESULTS</div>
