@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
 import { listProjects, loadProject, saveProject } from "../lib/db";
+import { projectFingerprint, shouldSaveProjectSnapshot } from "../lib/project-save-guard.mjs";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
 import { exportProject } from "../lib/export";
