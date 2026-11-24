@@ -415,10 +415,10 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       </div>
     </header>
 
-    {noticeIsError && <div className="studio-error-banner" role="alert" aria-live="assertive"><span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" type="button" className="secondary-button" onClick={() => void reloadLatestProject()}>Reload latest</button>}</div>}
+    {noticeIsError && <div className="studio-error-banner" role="alert" aria-live="assertive"><span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="secondary-button" onClick={() => void reloadLatestProject()}>Reload latest</button>}</div>}
 
     {showSettings && <div className="settings-pop" id="studio-settings-panel" role="region" aria-label="Runtime settings">
-      <div className="panel-heading">Runtime settings <button type="button" type="button" className="icon-button" aria-label="Close runtime settings" onClick={() => setShowSettings(false)}>×</button></div>
+      <div className="panel-heading">Runtime settings <button type="button" className="icon-button" aria-label="Close runtime settings" onClick={() => setShowSettings(false)}>×</button></div>
       <label>WebLLM model<select value={model} onChange={e => { setModel(e.target.value); if (modelReady) void unload(); }}>{MODEL_OPTIONS.map(m=><option value={m.id} key={m.id}>{m.label}</option>)}</select></label>
       <label>Context window<select value={context} onChange={e => setContext(e.target.value)}><option value="8192">8,192 tokens (recommended)</option><option value="12288">12,288 tokens (higher memory)</option></select></label>
       <p className="hint">8K is recommended for 16 GB systems. 12K increases KV-cache memory use and may cause WebGPU allocation failures on integrated graphics.</p>
@@ -457,11 +457,11 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       </aside>
 
       <section className="center-pane">
-        <div className="agent-stepper" role="group" aria-label="Agent stages">{AGENTS.map((a,i)=><button type="button" type="button" key={a.id} aria-pressed={activeAgent===a.id} className={`step ${activeAgent===a.id?"selected":""}`} onClick={()=>setActiveAgent(a.id)}>
+        <div className="agent-stepper" role="group" aria-label="Agent stages">{AGENTS.map((a,i)=><button type="button" key={a.id} aria-pressed={activeAgent===a.id} className={`step ${activeAgent===a.id?"selected":""}`} onClick={()=>setActiveAgent(a.id)}>
           <span className={`step-num ${records[a.id]?.status==="done"?"complete":""}`}>{records[a.id]?.status==="done"?<Check size={12}/>:i+1}</span><span>{a.label}</span>{i<4&&<span className="step-line"/>}
         </button>)}</div>
         <div className="center-tabs" role="group" aria-label="Writing Studio views">
-          {(["workspace","latex","literature","plots","python"] as const).map(t=><button type="button" type="button" key={t} aria-pressed={tab===t} className={tab===t?"tab active-tab":"tab"} onClick={()=>setTab(t)}>{t==="workspace"?"Agent workspace":t==="latex"?"LaTeX editor":t==="literature"?"Literature":t==="plots"?"Plot gallery":"Python console"}</button>)}
+          {(["workspace","latex","literature","plots","python"] as const).map(t=><button type="button" key={t} aria-pressed={tab===t} className={tab===t?"tab active-tab":"tab"} onClick={()=>setTab(t)}>{t==="workspace"?"Agent workspace":t==="latex"?"LaTeX editor":t==="literature"?"Literature":t==="plots"?"Plot gallery":"Python console"}</button>)}
         </div>
         <div className="center-content">
           {tab==="python" && <LocalPythonPanel/>}
@@ -471,7 +471,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
             <div className="agent-card" aria-busy={busy}>
               <div className="card-top"><span className="card-title"><Sparkles size={14}/> {activeAgent==="outline"?"Research blueprint":activeAgent==="literature"?"Literature discovery":activeAgent==="plots"?"Experiment visualization":activeAgent==="writing"?"Section drafting":"Manuscript quality review"}</span><span className={`status ${records[activeAgent]?.status}`}>{records[activeAgent]?.status || "idle"}</span></div>
               {activeAgent==="outline" ? <div className="outline-list">
-                {project.outline.map((s,i)=><div className="outline-row" key={s.id}><span className="drag-handle">⠿</span><span className="outline-index">{String(i+1).padStart(2,"0")}</span><input value={s.title} onChange={e=>updateSection(s.id,e.target.value)}/><button type="button" type="button" className="icon-button" aria-label={`Remove outline section ${s.title}`} title={`Remove ${s.title}`} onClick={()=>removeSection(s.id)}><Trash2 size={13}/></button></div>)}
+                {project.outline.map((s,i)=><div className="outline-row" key={s.id}><span className="drag-handle">⠿</span><span className="outline-index">{String(i+1).padStart(2,"0")}</span><input value={s.title} onChange={e=>updateSection(s.id,e.target.value)}/><button type="button" className="icon-button" aria-label={`Remove outline section ${s.title}`} title={`Remove ${s.title}`} onClick={()=>removeSection(s.id)}><Trash2 size={13}/></button></div>)}
                 <button type="button" className="add-row" onClick={addSection}><Plus size={14}/> Add section</button>
               </div> : activeAgent==="literature" ? <div className="literature-list">
                 {project.papers.map((p,i)=><div className="paper-row" key={i}><div className="paper-icon"><BookOpen size={15}/></div><div><strong>{p.title}</strong><p>{p.authors?.slice(0,4).join(", ")} {p.year?`· ${p.year}`:""}</p>{p.url&&<a href={p.url} target="_blank" rel="noreferrer">Open source ↗</a>}</div></div>)}
@@ -491,7 +491,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       </section>
 
       <aside className="right-pane">
-        <div className="preview-header"><div><FileText size={14}/> PRINT PREVIEW</div><div className="preview-actions"><button type="button" type="button" className="icon-button" aria-label="Refresh print preview" title="Print / Save PDF" onClick={doCompile}><RefreshCw size={14}/></button></div></div>
+        <div className="preview-header"><div><FileText size={14}/> PRINT PREVIEW</div><div className="preview-actions"><button type="button" className="icon-button" aria-label="Refresh print preview" title="Print / Save PDF" onClick={doCompile}><RefreshCw size={14}/></button></div></div>
         <div className="pdf-toolbar"><span>manuscript</span><span className="muted">Browser print output</span><button type="button" className="compile-button" onClick={doCompile}>Print / Save PDF <Play size={11}/></button></div>
         <div className="pdf-view">{pdf?<iframe title="Compiled PDF" src={`data:application/pdf;base64,${pdf}#toolbar=1&view=FitH`}/>:<div className="pdf-empty"><div className="pdf-sheet"><div className="fake-line wide"/><div className="fake-line"/><div className="fake-title"/><div className="fake-line wide"/><div className="fake-line"/><div className="fake-block"/><div className="fake-line wide"/></div><strong>PDF preview</strong><p>Open a print-ready browser rendering of your manuscript. For submission-quality output, compile the exported .tex file with a TeX distribution and the official conference template.</p><button type="button" className="primary-button" onClick={doCompile}><RefreshCw size={13}/> Print / Save PDF</button></div>}</div>
         <div className="preview-bottom"><span><CircleAlert size={13}/> {pdf?"Latest build available":"Awaiting first build"}</span><span>Local compile</span></div>
