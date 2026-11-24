@@ -4,7 +4,7 @@ import {
   Search, Sparkles, X
 } from "lucide-react";
 import type { Paper, ProjectSearchHistory } from "../lib/types";
-import { searchPapers } from "../lib/api";
+import { ApiRequestError, searchPapers } from "../lib/api";
 import { listProjectSearchHistory, recordProjectSearch } from "../lib/db";
 import "./research-discovery.css";
 
@@ -58,12 +58,21 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   const [history, setHistory] = useState<ProjectSearchHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const [notice, setNotice] = useState("");
   const noticeIsWarning = /could not|failed|no longer exists|permanently deleted/i.test(notice);
   const [searched, setSearched] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const searchSequence = useRef(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (retryAfterSeconds <= 0) return;
+    const timeout = window.setTimeout(() => {
+      setRetryAfterSeconds(current => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearTimeout(timeout);
+  }, [retryAfterSeconds]);
 
   useEffect(() => {
     let active = true;
@@ -93,6 +102,10 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
 
   const runSearch = async (value: string) => {
     const clean = value.trim();
+    if (retryAfterSeconds > 0) {
+      setError("Semantic Scholar search is temporarily paused. Try again in " + retryAfterSeconds + " seconds.");
+      return;
+    }
     if (clean.length < 3) {
       setError("Enter at least 3 characters to search academic literature.");
       return;
@@ -105,6 +118,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     setQuery(clean);
     setLoading(true);
     setError("");
+    setRetryAfterSeconds(0);
     setNotice("");
     setSearched(true);
     setResults([]);
@@ -123,7 +137,13 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     } catch (cause) {
       if (requestId === searchSequence.current) {
         setResults([]);
-        setError((cause as Error).message || "We couldn't complete the literature search. Please try again.");
+        const retrySeconds = cause instanceof ApiRequestError ? cause.retryAfterSeconds : 0;
+        if (retrySeconds > 0) {
+          setRetryAfterSeconds(retrySeconds);
+          setError("Semantic Scholar rate limit reached. You can retry when the cooldown ends in " + retrySeconds + " seconds.");
+        } else {
+          setError((cause as Error).message || "We couldn't complete the literature search. Please try again.");
+        }
       }
     } finally {
       if (requestId === searchSequence.current) setLoading(false);
@@ -183,7 +203,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
         aria-label="Search academic literature"
       />
       {query && <button type="button" className="rd-clear-search" aria-label="Clear search query" onClick={clearSearch}><X size={15}/></button>}
-      <button type="submit" disabled={loading || query.trim().length < 3}>
+      <button type="submit" disabled={loading || retryAfterSeconds > 0 || query.trim().length < 3}>
         {loading ? <><LoaderCircle className="rd-spin" size={16}/> Searching</> : "Search papers"}
       </button>
     </form>
@@ -192,13 +212,13 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     {recentSearches.length > 0 && <div className="rd-history">
       <div className="rd-section-label"><Clock3 size={14}/> RECENT SEARCHES</div>
       <div className="rd-history-list">{recentSearches.map(item =>
-        <button type="button" key={item.id} disabled={loading} aria-label={`Search again for ${item.query}`} onClick={() => void runSearch(item.query)}>{item.query}</button>
+        <button type="button" key={item.id} disabled={loading || retryAfterSeconds > 0} aria-label={`Search again for ${item.query}`} onClick={() => void runSearch(item.query)}>{item.query}</button>
       )}</div>
     </div>}
 
     {error && <div className="rd-alert" role="alert">
       <span>{error}</span>
-      {query.trim().length >= 3 && <button type="button" onClick={() => void runSearch(query)}>Try search again</button>}
+      {query.trim().length >= 3 && <button type="button" disabled={retryAfterSeconds > 0} onClick={() => void runSearch(query)}>{retryAfterSeconds > 0 ? "Retry in " + retryAfterSeconds + "s" : "Try search again"}</button>}
     </div>}
     {notice && <div className={`rd-notice ${noticeIsWarning ? "warning" : ""}`} role="status" aria-live="polite">
       {noticeIsWarning ? <AlertTriangle size={15}/> : <Check size={15}/>}
