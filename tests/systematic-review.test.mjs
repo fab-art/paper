@@ -124,3 +124,17 @@ test("migrates title-keyed screening decisions when DOI metadata is added throug
   assert.equal(result.screening["doi:10.1000/cohort"].titleAbstractDecision, "exclude");
   assert.equal(result.screening["doi:10.1000/cohort"].titleAbstractReason, "Wrong study design");
 });
+
+
+test("migrates extraction and risk-of-bias records with a paper's canonical review key", async () => {
+  const { migrateReviewRecords } = await import("../frontend/src/lib/systematic-review.mjs");
+  const papers = [{ title: "A pragmatic trial", doi: "10.1000/pragmatic" }];
+  const oldKey = "title:a pragmatic trial";
+  const migrated = migrateReviewRecords(papers, {
+    [oldKey]: { studyDesign: "Cluster randomized trial", sampleSize: "240" }
+  });
+
+  assert.deepEqual(migrated, {
+    "doi:10.1000/pragmatic": { studyDesign: "Cluster randomized trial", sampleSize: "240" }
+  });
+});
