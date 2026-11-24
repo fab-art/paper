@@ -146,6 +146,27 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     if ("latex" in changes || "bibtex" in changes || "templateFiles" in changes || "figures" in changes) setPdf(undefined);
     setProject(p => ({ ...p, ...changes }));
   };
+  const reloadLatestProject = async () => {
+    if (!window.confirm("Reload the latest saved version? Unsaved changes in this tab will be discarded.")) return;
+    setHydrated(false);
+    try {
+      const latest = await loadProject(projectId);
+      if (!latest) {
+        setLoadError("This project no longer exists in the local research library.");
+        setNotice("This project no longer exists in the local research library.");
+        return;
+      }
+      projectRef.current = latest;
+      setProject(latest);
+      setLoadError("");
+      setNotice("Loaded latest saved version.");
+    } catch (error) {
+      setNotice("Could not reload latest project: " + (error as Error).message);
+    } finally {
+      setHydrated(true);
+    }
+  };
+
   const handleBack = async () => {
     if (busy) return;
     try { await saveProject(project); onBack?.(); }
@@ -357,6 +378,8 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       </div>
     </header>
 
+    {noticeIsError && <div className="studio-error-banner" role="alert" aria-live="assertive"><span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="secondary-button" onClick={() => void reloadLatestProject()}>Reload latest</button>}</div>}
+
     {showSettings && <div className="settings-pop">
       <div className="panel-heading">Runtime settings <button className="icon-button" onClick={() => setShowSettings(false)}>×</button></div>
       <label>WebLLM model<select value={model} onChange={e => { setModel(e.target.value); if (modelReady) void unload(); }}>{MODEL_OPTIONS.map(m=><option value={m.id} key={m.id}>{m.label}</option>)}</select></label>
@@ -421,7 +444,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
-            <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
+            <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "presentation" : "status"} aria-live={noticeIsError ? "off" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
           </>}
           {tab==="latex"&&<div className="editor-wrap"><div className="editor-toolbar"><span><FileText size={14}/> manuscript.tex</span><span className="muted">LaTeX · UTF-8</span></div><textarea className="latex-editor" spellCheck={false} value={project.latex} onChange={e=>patch({latex:e.target.value})}/></div>}
           {tab==="literature"&&<div className="editor-wrap"><div className="editor-toolbar"><span><BookOpen size={14}/> references.bib</span><span className="muted">{project.papers.length} papers</span></div><textarea className="latex-editor" spellCheck={false} value={project.bibtex} onChange={e=>patch({bibtex:e.target.value})}/></div>}
