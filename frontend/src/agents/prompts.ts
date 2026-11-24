@@ -3,11 +3,14 @@ import type { Project, OutlineSection, Paper } from "../lib/types";
 const compact = (value: unknown) => JSON.stringify(value).slice(0, 12000);
 
 export function researchBrief(project: Project, maxLength = 6500) {
+  const additionalNotes = project.researchQuestion
+    ? project.notes.replace(/^Research question:[^\\r\\n]*(?:\\r?\\n)?/i, "").trim()
+    : project.notes;
   return [
     project.researchQuestion ? `RESEARCH QUESTION: ${project.researchQuestion}` : "",
     project.objectives?.length ? `RESEARCH OBJECTIVES:\n${project.objectives.map((item, index) => `${index + 1}. ${item}`).join("\n")}` : "",
     project.methodology ? `METHODOLOGY AND APPROACH: ${project.methodology}` : "",
-    project.notes ? `ADDITIONAL PROJECT NOTES: ${project.notes}` : ""
+    additionalNotes ? `ADDITIONAL PROJECT NOTES: ${additionalNotes}` : ""
   ].filter(Boolean).join("\n\n").slice(0, maxLength);
 }
 
