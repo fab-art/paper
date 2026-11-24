@@ -276,3 +276,19 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
   font-weight: 650;
   cursor: pointer;
 }
+
+
+.studio-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+  border-bottom: 1px solid #efcbc7;
+  background: #fff5f4;
+  color: #913f39;
+  font-size: 12px;
+}
+.studio-error-banner .secondary-button {
+  flex: 0 0 auto;
+}
