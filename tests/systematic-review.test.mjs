@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   normalizeDoi,
   deduplicatePapers,
+  migrateReviewRecords,
+  updateTitleAbstractDecision,
   syncReviewRecords,
   calculatePrismaFlow,
   toEvidenceMatrixCsv
@@ -137,4 +139,110 @@ test("migrates extraction and risk-of-bias records with a paper's canonical revi
   assert.deepEqual(migrated, {
     "doi:10.1000/pragmatic": { studyDesign: "Cluster randomized trial", sampleSize: "240" }
   });
+});
+
+test("clears full-text decisions when title/abstract screening is reset or excluded", () => {
+  const record = {
+    paperKey: "doi:10.1000/a",
+    titleAbstractDecision: "include",
+    titleAbstractReason: "Relevant",
+    fullTextRetrieved: true,
+    fullTextDecision: "include",
+    fullTextReason: "Meets full-text criteria",
+    notes: "Reviewer notes",
+    updatedAt: 100
+  };
+  const excluded = updateTitleAbstractDecision(record, "exclude", 200);
+  assert.equal(excluded.titleAbstractDecision, "exclude");
+  assert.equal(excluded.fullTextRetrieved, false);
+  assert.equal(excluded.fullTextDecision, "pending");
+  assert.equal(excluded.fullTextReason, "");
+
+  const reset = updateTitleAbstractDecision(record, "pending", 201);
+  assert.equal(reset.titleAbstractDecision, "pending");
+  assert.equal(reset.fullTextRetrieved, false);
+  assert.equal(reset.fullTextDecision, "pending");
+  assert.equal(reset.fullTextReason, "");
+
+  const maybe = updateTitleAbstractDecision(record, "maybe", 202);
+  assert.equal(maybe.fullTextRetrieved, true);
+  assert.equal(maybe.fullTextDecision, "include");
+});
+
+test("merges decisions from all duplicate aliases before choosing a canonical paper key", () => {
+  const papers = [
+    { title: "Corrected cohort study" },
+    { title: "Corrected cohort study", doi: "10.1000/cohort" }
+  ];
+  const titleKey = "title:corrected cohort study";
+  const existing = {
+    [titleKey]: {
+      paperKey: titleKey,
+      titleAbstractDecision: "pending",
+      titleAbstractReason: "",
+      fullTextRetrieved: false,
+      fullTextDecision: "pending",
+      fullTextReason: "",
+      notes: "",
+      updatedAt: 10
+    },
+    "doi:10.1000/cohort": {
+      paperKey: "doi:10.1000/cohort",
+      titleAbstractDecision: "include",
+      titleAbstractReason: "Meets eligibility criteria",
+      fullTextRetrieved: true,
+      fullTextDecision: "include",
+      fullTextReason: "Full text confirms eligibility",
+      notes: "DOI-keyed reviewer note",
+      updatedAt: 20
+    }
+  };
+
+  const result = syncReviewRecords(papers, existing);
+  assert.equal(result.uniquePapers.length, 1);
+  assert.equal(result.screening[titleKey].titleAbstractDecision, "include");
+  assert.equal(result.screening[titleKey].titleAbstractReason, "Meets eligibility criteria");
+  assert.equal(result.screening[titleKey].fullTextDecision, "include");
+  assert.equal(result.screening[titleKey].notes, "DOI-keyed reviewer note");
+});
+
+test("merges extraction fields and risk-of-bias domains across duplicate paper aliases", () => {
+  const papers = [
+    { title: "A pragmatic cohort" },
+    { title: "A pragmatic cohort", doi: "10.1000/pragmatic" }
+  ];
+  const titleKey = "title:a pragmatic cohort";
+  const extraction = migrateReviewRecords(papers, {
+    [titleKey]: { studyDesign: "", sampleSize: "240", setting: "" },
+    "doi:10.1000/pragmatic": { studyDesign: "Cluster randomized trial", setting: "Rwanda" }
+  });
+  assert.equal(extraction[titleKey].studyDesign, "Cluster randomized trial");
+  assert.equal(extraction[titleKey].sampleSize, "240");
+  assert.equal(extraction[titleKey].setting, "Rwanda");
+
+  const risk = migrateReviewRecords(papers, {
+    [titleKey]: { tool: "JBI", domains: [{ id: "random", name: "Randomization", judgement: "low", rationale: "Adequate" }] },
+    "doi:10.1000/pragmatic": { tool: "JBI", domains: [{ id: "blind", name: "Blinding", judgement: "high", rationale: "Not blinded" }] }
+  });
+  assert.equal(risk[titleKey].domains.length, 2);
+  assert.equal(risk[titleKey].domains.find(domain => domain.id === "blind").judgement, "high");
+});
+
+test("neutralizes spreadsheet formula prefixes in exported CSV cells", () => {
+  const csv = toEvidenceMatrixCsv(
+    [{ title: "=HYPERLINK(\"https://evil.invalid\",\"Open\")", authors: ["@SUM(1+1)"], year: 2025, doi: "10.1000/formula" }],
+    { "doi:10.1000/formula": {
+      titleAbstractDecision: "include",
+      titleAbstractReason: " +SUM(1,2)",
+      fullTextRetrieved: true,
+      fullTextDecision: "include",
+      fullTextReason: "-1+1"
+    } },
+    {},
+    {}
+  );
+  assert.ok(csv.includes("'=HYPERLINK"));
+  assert.ok(csv.includes("'@SUM"));
+  assert.ok(csv.includes("'+SUM"));
+  assert.ok(csv.includes("'-1+1"));
 });
