@@ -16,8 +16,11 @@ export default function AuthPanel() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const signInTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const signedInControlRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
+  const pendingFocusRestoreRef = useRef(false);
+  const wasSignedInRef = useRef(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -42,7 +45,18 @@ export default function AuthPanel() {
 
   useEffect(() => {
     if (!open) {
-      if (wasOpenRef.current) signInTriggerRef.current?.focus();
+      if (wasOpenRef.current) {
+        const target = signInTriggerRef.current ?? signedInControlRef.current;
+        if (target && !target.disabled) target.focus();
+        else pendingFocusRestoreRef.current = true;
+      }
+      if (pendingFocusRestoreRef.current && !busy) {
+        const target = signInTriggerRef.current ?? signedInControlRef.current;
+        if (target && !target.disabled) {
+          target.focus();
+          pendingFocusRestoreRef.current = false;
+        }
+      }
       wasOpenRef.current = false;
       return;
     }
@@ -58,6 +72,12 @@ export default function AuthPanel() {
     );
     focusableElements()[0]?.focus();
 
+    // A disabled submit button can cause focus to fall outside the dialog.
+    // Keep the guard on document so the next Tab key is still intercepted.
+    if (busy && !dialog.contains(document.activeElement)) {
+      dialog.querySelector<HTMLElement>(".cloud-auth-close")?.focus();
+    }
+
     const handleDialogKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -71,6 +91,12 @@ export default function AuthPanel() {
       const last = focusable[focusable.length - 1];
       if (!first || !last) return;
 
+      if (!dialog.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
@@ -80,9 +106,16 @@ export default function AuthPanel() {
       }
     };
 
-    dialog.addEventListener("keydown", handleDialogKeyDown);
-    return () => dialog.removeEventListener("keydown", handleDialogKeyDown);
-  }, [open]);
+    document.addEventListener("keydown", handleDialogKeyDown, true);
+    return () => document.removeEventListener("keydown", handleDialogKeyDown, true);
+  }, [open, busy]);
+
+  useEffect(() => {
+    if (wasSignedInRef.current && !session?.user) {
+      signInTriggerRef.current?.focus();
+    }
+    wasSignedInRef.current = Boolean(session?.user);
+  }, [session?.user?.id]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -135,7 +168,7 @@ export default function AuthPanel() {
   if (session?.user) {
     return <div className="cloud-auth-user">
       <span title={session.user.email || "Signed in"}><ShieldCheck size={14}/>{session.user.email || "Signed in"}</span>
-      <button type="button" className="cloud-auth-button" onClick={() => void signOut()} disabled={busy}>
+      <button ref={signedInControlRef} type="button" className="cloud-auth-button" onClick={() => void signOut()} disabled={busy}>
         <LogOut size={14}/> Sign out
       </button>
     </div>;
