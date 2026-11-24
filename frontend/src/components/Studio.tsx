@@ -139,7 +139,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
 
   useEffect(() => () => {
     const latest = projectRef.current;
-    if (latest?.id === projectId) void saveProject(latest);
+    if (latest?.id === projectId) void saveProject(latest).catch(() => undefined);
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => {
