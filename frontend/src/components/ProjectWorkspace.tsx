@@ -347,7 +347,7 @@ export default function ProjectWorkspace({
           <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.csv,.tsv,.xlsx,.xls,.txt,.md,.ris,.bib,.json" hidden onChange={e => void uploadFiles(e.target.files)}/>
         </div></div>
         {showSourceForm && <form className="pw-source-form" onSubmit={addSource}>
-          <div className="pw-form-head"><strong>Add a reference</strong><button type="button" onClick={() => setShowSourceForm(false)}><X size={15}/></button></div>
+          <div className="pw-form-head"><strong>Add a reference</strong><button type="button" aria-label="Close add reference form" onClick={() => setShowSourceForm(false)}><X size={15}/></button></div>
           <label>Title<input required value={source.title} onChange={e => setSource({ ...source, title: e.target.value })} placeholder="Article or book title"/></label>
           <div className="pw-form-row"><label>Authors<input value={source.authors} onChange={e => setSource({ ...source, authors: e.target.value })} placeholder="Separate authors with commas"/></label><label>Year<input type="number" min="1500" max="2200" value={source.year} onChange={e => setSource({ ...source, year: e.target.value })} placeholder="2026"/></label></div>
           <div className="pw-form-row"><label>Journal / publisher<input value={source.venue} onChange={e => setSource({ ...source, venue: e.target.value })}/></label><label>DOI<input value={source.doi} onChange={e => setSource({ ...source, doi: e.target.value })} placeholder="10.xxxx/xxxxx"/></label></div>
@@ -360,14 +360,14 @@ export default function ProjectWorkspace({
           {filteredPapers.length === 0 ? <div className="pw-empty">{sourceQuery.trim() ? <>No references match your search.<button type="button" className="pw-empty-action" onClick={() => setSourceQuery("")}>Clear reference search</button></> : "No references yet. Add a reference manually or import one through a future discovery workflow."}</div> :
             filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
               <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
-              <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button title="Remove reference" onClick={() => {
+              <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button type="button" title="Remove reference" aria-label={`Remove reference ${paper.title}`} onClick={() => {
                 if (window.confirm("Remove this reference from the project?")) patch({ papers: project.papers.filter((item) => item !== paper) });
               }}><Trash2 size={14}/></button></div>
             </article>)}
         </div>
         <div className="pw-library-section"><h3><FolderOpen size={15}/> Uploaded files <span>{attachments.length}</span></h3>
           {attachments.length === 0 ? <div className="pw-empty">PDFs, datasets and supporting documents uploaded here are stored in this browser.</div> :
-            attachments.map(file => <article className="pw-reference" key={file.id}><div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{file.name}</strong><p>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.mimeType}</p></div><div className="pw-ref-actions"><button title="Download file" onClick={() => downloadAttachment(file)}><Download size={14}/></button><button title="Delete file" onClick={async () => { if (window.confirm("Delete this uploaded file?")) { await deleteProjectAttachment(file.id); await refreshRelated(); } }}><Trash2 size={14}/></button></div></article>)}
+            attachments.map(file => <article className="pw-reference" key={file.id}><div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{file.name}</strong><p>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.mimeType}</p></div><div className="pw-ref-actions"><button type="button" title="Download file" aria-label={`Download ${file.name}`} onClick={() => downloadAttachment(file)}><Download size={14}/></button><button type="button" title="Delete file" aria-label={`Delete ${file.name}`} onClick={async () => { if (window.confirm("Delete this uploaded file?")) { await deleteProjectAttachment(file.id); await refreshRelated(); } }}><Trash2 size={14}/></button></div></article>)}
         </div>
       </div>}
 
