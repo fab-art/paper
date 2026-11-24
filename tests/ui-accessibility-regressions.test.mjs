@@ -79,32 +79,33 @@ test("successful password and immediate sign-up sessions close the modal before 
 });
 
 
+
 test("dashboard project-grid conditional has balanced JSX fragments", () => {
-  assert.doesNotMatch(dashboard, /\\)\\}<\\/div>\\}\\s*<\\/?>\\s*\\}/);
-  assert.doesNotMatch(dashboard, /<\\/div>\\}\\s*<\\/>\\s*\\}/);
+  assert.equal(dashboard.includes("</div>}</>}"), false);
 });
 
 test("project workspace milestone controls and progress expose accessible names and values", () => {
-  assert.match(projectWorkspace, /aria-label={`Mark \\$\\{item\\.title\\} complete`}/);
-  assert.match(projectWorkspace, /aria-label={`Remove milestone \\$\\{item\\.title\\}`}/);
-  assert.match(projectWorkspace, /role="progressbar" aria-label="Milestone completion"/);
-  assert.match(projectWorkspace, /aria-valuenow={milestoneProgress}/);
+  assert.ok(projectWorkspace.includes("aria-label={`Mark ${item.title} complete`}"));
+  assert.ok(projectWorkspace.includes("aria-label={`Remove milestone ${item.title}`}"));
+  assert.ok(projectWorkspace.includes('role="progressbar" aria-label="Milestone completion"'));
+  assert.ok(projectWorkspace.includes("aria-valuenow={milestoneProgress}"));
 });
 
 test("project library icon actions identify their target", () => {
-  assert.match(projectWorkspace, /aria-label={`Remove reference \\$\\{paper\\.title\\}`}/);
-  assert.match(projectWorkspace, /aria-label={`Download \\$\\{file\\.name\\}`}/);
-  assert.match(projectWorkspace, /aria-label={`Delete \\$\\{file\\.name\\}`}/);
-  assert.match(projectWorkspace, /aria-label="Close add reference form"/);
+  assert.ok(projectWorkspace.includes("aria-label={`Remove reference ${paper.title}`}"));
+  assert.ok(projectWorkspace.includes("aria-label={`Download ${file.name}`}"));
+  assert.ok(projectWorkspace.includes("aria-label={`Delete ${file.name}`}"));
+  assert.ok(projectWorkspace.includes('aria-label="Close add reference form"'));
 });
 
 test("clearing project reference search restores keyboard focus to the search field", () => {
-  assert.match(projectWorkspace, /sourceSearchRef/);
-  assert.match(projectWorkspace, /sourceSearchRef\\.current\\?\\.focus\\(\\)/);
-  assert.match(projectWorkspace, /clearSourceSearch/);
-  assert.match(projectWorkspace, /aria-label="Clear reference search"/);
+  assert.ok(projectWorkspace.includes("sourceSearchRef"));
+  assert.ok(projectWorkspace.includes("sourceSearchRef.current?.focus()"));
+  assert.ok(projectWorkspace.includes("clearSourceSearch"));
+  assert.ok(projectWorkspace.includes('aria-label="Clear reference search"'));
 });
 
 test("systematic review tab uses an imported icon", () => {
-  assert.match(projectWorkspace, /import \\{[^}]*ClipboardCheck[^}]*\\} from "lucide-react"/s);
+  const iconImport = projectWorkspace.slice(0, projectWorkspace.indexOf('from "lucide-react"'));
+  assert.ok(iconImport.includes("ClipboardCheck"));
 });
