@@ -166,14 +166,14 @@ test("data methods variable filter has a clear action that restores focus", () =
 
 test("data methods tables have captions, column scopes and keyboard-scrollable regions", () => {
   assert.match(dataMethodsLab, /<caption className="dml-visually-hidden">Variable profile/);
-  assert.match(dataMethodsLab, /<caption className="dml-visually-hidden">Data preview/);
+  assert.match(dataMethodsLab, /<caption className="dml-visually-hidden">First eight records/);
   assert.match(dataMethodsLab, /<th scope="col">Variable<\/th>/);
   assert.match(dataMethodsLab, /role="region" aria-label="Variable profile table" tabIndex={0}/);
   assert.match(dataMethodsLab, /role="region" aria-label="Data preview table" tabIndex={0}/);
 });
 
 test("data methods result and truncation summaries are announced to assistive technology", () => {
-  assert.match(dataMethodsLab, /role="status" aria-live="polite" className="dml-counts"/);
+  assert.match(dataMethodsLab, /className="dml-counts" role="status" aria-live="polite"/);
   assert.match(dataMethodsLab, /className="dml-warning" role="status"/);
 });
 
