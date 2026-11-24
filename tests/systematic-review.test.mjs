@@ -268,3 +268,21 @@ test("an explicit title-screening reset wins over older duplicate full-text deci
   assert.equal(migrated[key].fullTextRetrieved, false);
   assert.equal(migrated[key].fullTextDecision, "pending");
 });
+
+test("reconciles legacy full-text state when title screening is pending or excluded", () => {
+  const paper = { title: "Legacy inconsistent screening", doi: "10.1000/legacy" };
+  for (const decision of ["pending", "exclude"]) {
+    const migrated = migrateReviewRecords([paper], {
+      "doi:10.1000/legacy": {
+        titleAbstractDecision: decision,
+        fullTextRetrieved: true,
+        fullTextDecision: "include",
+        fullTextReason: "Legacy full-text decision",
+        updatedAt: 500
+      }
+    });
+    assert.equal(migrated["doi:10.1000/legacy"].fullTextRetrieved, false);
+    assert.equal(migrated["doi:10.1000/legacy"].fullTextDecision, "pending");
+    assert.equal(migrated["doi:10.1000/legacy"].fullTextReason, "");
+  }
+});
