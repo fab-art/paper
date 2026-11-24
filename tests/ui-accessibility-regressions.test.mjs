@@ -173,3 +173,10 @@ test("reference search can be cleared and filtered empty states explain how to r
   assert.match(projectWorkspace, /No references match your search/);
   assert.match(projectWorkspace, /Clear reference search/);
 });
+
+test("project library icon-only actions announce the affected file or reference", () => {
+  assert.match(projectWorkspace, /aria-label={`Remove reference \$\{paper\.title\}`}/);
+  assert.match(projectWorkspace, /aria-label={`Download \$\{file\.name\}`}/);
+  assert.match(projectWorkspace, /aria-label={`Delete \$\{file\.name\}`}/);
+  assert.match(projectWorkspace, /aria-label="Close add reference form"/);
+});
