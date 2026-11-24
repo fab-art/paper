@@ -28,3 +28,34 @@
 @media(max-width:520px){.srw-form-grid{grid-template-columns:1fr}.srw-wide{grid-column:auto}.srw-screen-tools{align-items:stretch;flex-direction:column}.srw-fulltext{grid-template-columns:1fr}.srw-fulltext .srw-field{grid-column:auto}.srw-protocol-grid{grid-template-columns:1fr}}
 
 .srw-shell button:focus-visible,.srw-shell input:focus-visible,.srw-shell select:focus-visible,.srw-shell textarea:focus-visible{outline:2px solid #625f98;outline-offset:2px}
+
+
+/* Phase 4 — screening navigation and filter recovery */
+.srw-tab-list{display:flex;gap:5px;min-width:0}
+.srw-search{min-width:0}
+.srw-search:focus-within{border-color:#9290bd;box-shadow:0 0 0 3px #8d8ab51b}
+.srw-search input:focus{box-shadow:none}
+.srw-search-clear{
+  display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;
+  border:0;border-radius:7px;background:transparent;color:#777982;cursor:pointer
+}
+.srw-search-clear:hover{background:#f1f0f7;color:#4f4c80}
+.srw-empty-action{
+  display:flex;align-items:center;justify-content:center;min-height:35px;
+  margin:10px auto 0;padding:7px 11px;border:1px solid #dedfe5;border-radius:8px;
+  background:#fff;color:#5d5a91;font-size:10px;font-weight:650;cursor:pointer
+}
+.srw-empty-action:hover{border-color:#b9b7d2;background:#f8f8fc}
+.srw-shell button:focus-visible,.srw-shell input:focus-visible,.srw-shell select:focus-visible,.srw-shell textarea:focus-visible{
+  outline:2px solid #625f98;outline-offset:2px
+}
+@media(max-width:520px){
+  .srw-tabs{min-width:0}
+  .srw-tab-list{min-width:max-content}
+  .srw-header-actions{width:100%}
+  .srw-header-actions button{flex:1}
+  .srw-decision-row{align-items:flex-start;flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){
+  .srw-shell *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
