@@ -4,7 +4,7 @@ import ResearchDiscovery from "./ResearchDiscovery";
 import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import {
-  ArrowLeft, BookOpen, Check, ClipboardList, Download, FilePlus2,
+  ArrowLeft, AlertCircle, BookOpen, Check, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
   UploadCloud, X, FlaskConical, ShieldCheck
 } from "lucide-react";
