@@ -202,7 +202,7 @@ test("submission export announces its busy, success and error states", () => {
   assert.match(submissionReadiness, /className="sr-export" aria-busy={exporting}/);
   assert.match(submissionReadiness, /aria-describedby="sr-export-status sr-export-error"/);
   assert.match(submissionReadiness, /id="sr-export-status"[^>]*role="status"[^>]*aria-live="polite"/);
-  assert.match(submissionReadiness, /id="sr-export-error" role="alert"/);
+  assert.match(submissionReadiness, /id="sr-export-error"[^>]*role="alert"/);
 });
 
 test("all submission download controls declare non-submit button types", () => {
