@@ -7,6 +7,7 @@ import { searchPapers, generatePlot, compileLatex } from "../lib/api";
 import { exportProject } from "../lib/export";
 import LocalPythonPanel from "./LocalPythonPanel";
 import { outlinePrompt, literatureQueryPrompt, plotPrompt, writingPrompt, refinePrompt } from "../agents/prompts";
+import { extractBibtexTitles } from "../lib/phase6-regressions.mjs";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const initialProject = (): Project => ({
@@ -40,34 +41,6 @@ function insertSection(latex: string, title: string, body: string) {
 function normalizeReferenceTitle(value: string) {
   return value.replace(/[{}]/g, "").normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 }
-function extractBibtexTitles(source: string): string[] {
-  const titles: string[] = [];
-  const matcher = /\btitle\s*=\s*([{"'])/gi;
-  let match: RegExpExecArray | null;
-  while ((match = matcher.exec(source))) {
-    const opener = match[1];
-    let value = "";
-    let depth = opener === "{" ? 1 : 0;
-    const quote = opener === '"';
-    let escaped = false;
-    for (let index = matcher.lastIndex; index < source.length; index++) {
-      const char = source[index];
-      if (escaped) { value += char; escaped = false; continue; }
-      if (char === "\\") { value += char; escaped = true; continue; }
-      if (quote) {
-        if (char === '"') break;
-        value += char;
-      } else {
-        if (char === "{") { depth++; if (depth > 1) value += char; }
-        else if (char === "}") { depth--; if (depth === 0) break; value += char; }
-        else value += char;
-      }
-    }
-    titles.push(normalizeReferenceTitle(value));
-  }
-  return titles;
-}
-
 const parseJson = <T,>(text: string): T => {
   const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
   return JSON.parse(clean);
