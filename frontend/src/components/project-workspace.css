@@ -149,3 +149,26 @@ body:has(.project-workspace),body:has(.project-loading){min-width:320px;overflow
 @media(prefers-reduced-motion:reduce){
   .project-workspace *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+
+
+/* Phase 2 — clearer progress, search recovery and compact controls */
+.pw-summary-card .pw-eyebrow{margin-bottom:2px}
+.pw-stat-grid div{min-width:0}
+.pw-stat-grid strong{font-variant-numeric:tabular-nums}
+.pw-mini-progress{height:7px;margin:10px 0 18px;background:#ececf1}
+.pw-mini-progress i{min-width:0;transition:width .2s ease}
+.pw-milestone input[type="checkbox"]{width:16px;height:16px;flex:0 0 16px;accent-color:var(--pw-accent);cursor:pointer}
+.pw-milestone span{min-width:0;overflow-wrap:anywhere;line-height:1.5}
+.pw-search{min-width:0}
+.pw-search:focus-within{border-color:#9290bd;box-shadow:0 0 0 3px #8d8ab51b}
+.pw-search input:focus{box-shadow:none}
+.pw-search-clear{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:#777982;cursor:pointer}
+.pw-search-clear:hover{background:#f1f0f7;color:#4f4c80}
+.pw-empty-action{display:inline-flex;align-items:center;justify-content:center;min-height:36px;margin:10px auto 0;padding:7px 11px;border:1px solid #dedfe5;border-radius:8px;background:#fff;color:#5d5a91;font-size:10px;font-weight:650;cursor:pointer}
+.pw-empty-action:hover{border-color:#b9b7d2;background:#f8f8fc}
+@media(max-width:560px){
+  .pw-summary-card,.pw-panel,.pw-tip,.pw-note-list{padding:16px}
+  .pw-stat-grid{gap:6px}
+  .pw-stat-grid div{padding:10px 7px}
+  .pw-stat-grid strong{font-size:20px}
+}
