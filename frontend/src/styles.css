@@ -292,3 +292,21 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
 .studio-error-banner .secondary-button {
   flex: 0 0 auto;
 }
+
+
+/* Search controls: readable placeholder and focus-preserving clear actions */
+.dash-search input::placeholder{color:#6b6e77;opacity:1}
+.dash-search-clear{
+  display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;
+  border:0;border-radius:8px;background:transparent;color:#6b6e77;cursor:pointer
+}
+.dash-search-clear:hover,.dash-search-clear:focus-visible{background:#f0eff7;color:#514f82}
+.dash-search-clear:focus-visible,.dash-empty-clear:focus-visible{
+  outline:2px solid #625f98;outline-offset:2px
+}
+.dash-empty-clear{
+  display:inline-flex;align-items:center;justify-content:center;min-height:34px;
+  margin-top:9px;padding:6px 11px;border:1px solid #dcdce6;border-radius:8px;
+  background:#fff;color:#555281;font-size:10px;font-weight:650;cursor:pointer
+}
+.dash-empty-clear:hover{border-color:#b9b7d2;background:#f8f8fc}
