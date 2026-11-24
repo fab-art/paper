@@ -77,3 +77,41 @@ test("successful password and immediate sign-up sessions close the modal before 
   const sessionSyncs = authPanel.match(/if \(data\.session\) \{ setSession\(data\.session\); setOpen\(false\); \}/g) || [];
   assert.ok(sessionSyncs.length >= 2);
 });
+
+
+const dashboardStyles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
+
+test("dashboard reports the number of running agents rather than projects containing them", () => {
+  assert.match(dashboard, /const runningAgents = activeProjects\.reduce\(/);
+  assert.match(dashboard, /RUNNING AGENTS/);
+  assert.match(dashboard, /Across active projects/);
+});
+
+test("dashboard workflow progress uses each project's actual stage count", () => {
+  assert.match(dashboard, /const totalStages = project\.agentRecords\.length/);
+  assert.match(dashboard, /done \/ totalStages/);
+  assert.doesNotMatch(dashboard, /done \/ 5/);
+});
+
+test("dashboard project search provides a keyboard-accessible clear action", () => {
+  assert.match(dashboard, /aria-label=["']Clear project search["']/);
+  assert.match(dashboard, /setQuery\(["']["']\)/);
+});
+
+test("dashboard announces result changes and gives the user a way out of filtered empty states", () => {
+  assert.match(dashboard, /aria-live=["']polite["'][^>]*className=["']dash-results/);
+  assert.match(dashboard, /Clear search/);
+});
+
+test("new project name is explicitly required and bounded", () => {
+  assert.match(dashboard, /name=["']projectName["']/);
+  assert.match(dashboard, /required/);
+  assert.match(dashboard, /maxLength={100}/);
+});
+
+test("dashboard dark premium palette is scoped to Research Station and responsive", () => {
+  assert.match(dashboardStyles, /\.dashboard-shell\s*\{[^}]*--dash-bg:\s*#0f1015/s);
+  assert.match(dashboardStyles, /\.dashboard-shell\s*\{[^}]*--dash-surface:/s);
+  assert.match(dashboardStyles, /@media\s*\(max-width:\s*720px\)/);
+  assert.match(dashboardStyles, /\.dashboard-shell\s+button:focus-visible/);
+});
