@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search } from "lucide-react";
 import type { ProjectAttachment } from "../lib/types";
+import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
 import "./data-methods-lab.css";
 
 type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean };
@@ -98,7 +99,7 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
         {loading && <div className="dml-loading"><LoaderCircle className="dml-spin" size={20}/> Reading dataset…</div>}
         {error && <div className="dml-error" role="alert">{error}</div>}
         {dataset && <>
-          {dataset.truncated && <div className="dml-warning">The file contains more than 100,000 rows. The current profile uses the first 100,000 rows.</div>}
+          {dataset.truncated && <div className="dml-warning">The file exceeds the safe preview budget. This profile uses the first {dataset.rows.length.toLocaleString()} rows within a limit of 100,000 rows and {MAX_DATASET_CELLS.toLocaleString()} cells.</div>}
           <section className="dml-panel">
             <div className="dml-panel-head"><div><h3>Variable profile</h3><p>Data type, completeness, unique values and numeric range</p></div>
               <label className="dml-filter"><Search size={14}/><input value={filter} onChange={event => setFilter(event.target.value)} placeholder="Filter variables"/></label>
