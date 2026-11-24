@@ -39,3 +39,15 @@ test("closing either dialog restores focus to its opener", () => {
   assert.match(dashboard, /createTriggerRef\.current\?\.focus\(\)/);
   assert.match(authPanel, /signInTriggerRef\.current\?\.focus\(\)/);
 });
+
+test("project list switcher uses toggle-group semantics", () => {
+  assert.match(dashboard, /role=["']group["'] aria-label=["']Project lists["']/);
+  assert.match(dashboard, /aria-pressed={scope === "active"}/);
+  assert.doesNotMatch(dashboard, /role=["']tablist["']/);
+});
+
+test("sign-in method switcher uses toggle-group semantics", () => {
+  assert.match(authPanel, /role=["']group["'] aria-label=["']Sign-in method["']/);
+  assert.match(authPanel, /aria-pressed={mode === "magic"}/);
+  assert.doesNotMatch(authPanel, /role=["']tablist["']/);
+});
