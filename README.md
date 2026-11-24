@@ -115,3 +115,8 @@ To enable the optional account UI during local development, copy `frontend/.env.
 Use only the Supabase publishable key in browser configuration. Never place a Supabase service-role or secret key in a `VITE_*` variable, frontend source, or Vercel client environment. Configure the exact production and preview callback URLs in Supabase Auth before testing email links.
 
 The collaboration migrations in `supabase/migrations/` have been applied to the dedicated PaperOrchestra Supabase project. The Security and Health Advisors report no findings after the review-hardening migrations. Performance Advisor currently reports unused indexes because the collaboration tables are still empty. The sign-in UI is enabled on the Phase 7 Vercel preview only; project sharing, invitations, sync, comments UI and version restore are subsequent delivery slices. Existing local projects remain local until an explicit Share action is implemented.
+
+
+## Phase 8 — Systematic Review & Evidence Synthesis
+
+The project workspace now includes a local-first systematic review area for protocol details, DOI/title deduplication, title/abstract and full-text screening, PRISMA-style working counts, structured study extraction, domain-level risk-of-bias notes and evidence-matrix CSV export. Decisions remain researcher-led and are stored in the local IndexedDB project. See [Phase 8 architecture and counting rules](docs/phase8-systematic-review.md). The displayed flow is a working count summary, not a certified PRISMA 2020 diagram. Cloud sync, automated screening and automated extraction are not included in this phase.
