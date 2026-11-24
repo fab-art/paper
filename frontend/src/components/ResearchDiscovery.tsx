@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ArrowUpRight, BookOpen, Check, Clock3, FileSearch, LoaderCircle,
   Search, Sparkles
@@ -16,7 +16,7 @@ type Props = {
 };
 
 function normalizeTitle(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 }
 function normalizeDoi(value: string) {
   return value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
@@ -39,6 +39,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   const [notice, setNotice] = useState("");
   const [searched, setSearched] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const searchSequence = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -55,6 +56,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   );
 
   const runSearch = async (value: string) => {
+    const requestId = ++searchSequence.current;
     const clean = value.trim();
     if (clean.length < 3) {
       setError("Enter at least 3 characters to search academic literature.");
@@ -67,14 +69,22 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     setSearched(true);
     try {
       const response = await searchPapers(clean, 12);
+      if (requestId !== searchSequence.current) return;
       setResults(response.papers || []);
-      await recordProjectSearch({ id: crypto.randomUUID(), projectId, query: clean, searchedAt: Date.now() });
-      setHistory(await listProjectSearchHistory(projectId));
+      try {
+        await recordProjectSearch({ id: crypto.randomUUID(), projectId, query: clean, searchedAt: Date.now() });
+        const savedHistory = await listProjectSearchHistory(projectId);
+        if (requestId === searchSequence.current) setHistory(savedHistory);
+      } catch {
+        setNotice("Search completed. Recent-search history could not be saved in this browser.");
+      }
     } catch (cause) {
-      setResults([]);
-      setError((cause as Error).message || "We couldn't complete the literature search. Please try again.");
+      if (requestId === searchSequence.current) {
+        setResults([]);
+        setError((cause as Error).message || "We couldn't complete the literature search. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === searchSequence.current) setLoading(false);
     }
   };
 
@@ -117,7 +127,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
     {history.length > 0 && <div className="rd-history">
       <div className="rd-section-label"><Clock3 size={14}/> RECENT SEARCHES</div>
       <div className="rd-history-list">{history.slice(0, 6).map(item =>
-        <button key={item.id} onClick={() => void runSearch(item.query)}>{item.query}</button>
+        <button key={item.id} disabled={loading} onClick={() => void runSearch(item.query)}>{item.query}</button>
       )}</div>
     </div>}
 
