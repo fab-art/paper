@@ -6,24 +6,6 @@ import "./data-methods-lab.css";
 type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean };
 type ColumnProfile = { name: string; type: string; missing: number; unique: number; min?: string; max?: string; mean?: string; median?: string };
 
-function parseCsv(source: string, delimiter = ","): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [], field = "", quoted = false;
-  for (let i = 0; i < source.length; i++) {
-    const char = source[i];
-    if (quoted) {
-      if (char === '"' && source[i + 1] === '"') { field += '"'; i++; }
-      else if (char === '"') quoted = false;
-      else field += char;
-    } else if (char === '"' && field.length === 0) quoted = true;
-    else if (char === delimiter) { row.push(field); field = ""; }
-    else if (char === "\n") { row.push(field.replace(/\r$/, "")); rows.push(row); row = []; field = ""; }
-    else field += char;
-  }
-  if (field.length || row.length) { row.push(field.replace(/\r$/, "")); rows.push(row); }
-  return rows.filter(item => item.some(value => value.trim() !== ""));
-}
-
 function median(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
@@ -64,20 +46,32 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
 
   useEffect(() => {
     let active = true;
+    let worker: Worker | undefined;
     const file = csvFiles.find(item => item.id === selectedId);
     if (!file) { setDataset(null); return; }
     setLoading(true); setError(""); setDataset(null);
-    file.blob.text().then(source => {
-      const parsed = parseCsv(source.replace(/^\uFEFF/, ""), file.name.toLowerCase().endsWith(".tsv") ? "\t" : ",");
-      if (parsed.length < 2) throw new Error("This file needs a header row and at least one data row.");
-      const headers = parsed[0].map((value, index) => value.trim() || "Column " + (index + 1));
-      const width = headers.length;
-      const body = parsed.slice(1).map(row => Array.from({ length: width }, (_, index) => row[index] ?? ""));
-      const capped = body.length > 100000;
-      if (active) setDataset({ headers, rows: body.slice(0, 100000), totalRows: body.length, truncated: capped });
-    }).catch(cause => { if (active) setError((cause as Error).message || "Could not read this dataset."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    const delimiter = file.name.toLowerCase().endsWith(".tsv") || file.mimeType.toLowerCase().includes("tab-separated") ? "\t" : ",";
+    file.blob.text().then(source => new Promise<Dataset>((resolve, reject) => {
+      if (!active) return;
+      worker = new Worker(new URL("./data-methods-worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (event: MessageEvent<Dataset & { error?: string }>) => {
+        worker?.terminate();
+        if (event.data.error) reject(new Error(event.data.error));
+        else resolve(event.data);
+      };
+      worker.onerror = () => {
+        worker?.terminate();
+        reject(new Error("The dataset parser stopped unexpectedly. Try a smaller file or export it as CSV."));
+      };
+      worker.postMessage({ source: source.replace(/^\uFEFF/, ""), delimiter, maxRows: 100000 });
+    })).then(result => {
+      if (active) setDataset(result);
+    }).catch(cause => {
+      if (active) setError((cause as Error).message || "Could not read this dataset.");
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; worker?.terminate(); };
   }, [csvFiles, selectedId]);
 
   const profiles = useMemo(() => dataset ? dataset.headers.map((name, index) =>
