@@ -16,10 +16,10 @@ type Props = {
 };
 
 function normalizeTitle(value: string) {
-  return value.normalize("NFKC").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]/gu, "");
+  return value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 }
 function normalizeDoi(value: string) {
-  return value.toLowerCase().trim().replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "").replace(/^doi:\\s*/, "");
+  return value.toLowerCase().trim().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
 }
 function isSaved(paper: Paper, saved: Paper[]) {
   const doi = normalizeDoi(paper.doi || "");
@@ -74,7 +74,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
   const recentSearches = useMemo(() => {
     const seen = new Set<string>();
     return history.filter(item => {
-      const key = item.query.trim().replace(/\\s+/g, " ").toLocaleLowerCase();
+      const key = item.query.trim().replace(/\s+/g, " ").toLocaleLowerCase();
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
