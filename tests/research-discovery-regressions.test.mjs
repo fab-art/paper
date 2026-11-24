@@ -76,3 +76,25 @@ test("external publication and PDF links accept only HTTP(S) URLs", () => {
   assert.ok(discovery.includes("const sourceUrl = safeExternalUrl(paper.url)"));
   assert.ok(discovery.includes("const pdfUrl = safeExternalUrl(paper.openAccessPdf)"));
 });
+
+
+test("API errors preserve Retry-After metadata for rate-limited search requests", () => {
+  assert.ok(api.includes("export class ApiRequestError extends Error"));
+  assert.ok(api.includes('response.headers.get("Retry-After")'));
+  assert.ok(api.includes("payload?.retryAfterSeconds"));
+  assert.ok(api.includes("Math.max(headerRetry, bodyRetry, 0)"));
+});
+
+test("discovery waits out the provider cooldown before enabling another search", () => {
+  assert.ok(discovery.includes("cause instanceof ApiRequestError"));
+  assert.ok(discovery.includes("setRetryAfterSeconds(retrySeconds)"));
+  assert.ok(discovery.includes("Try again when the cooldown ends in"));
+  assert.ok(discovery.includes("disabled={loading || retryAfterSeconds > 0 || query.trim().length < 3}"));
+  assert.ok(discovery.includes("Retry in " + " + retryAfterSeconds + "));
+  assert.ok(discovery.includes("window.setTimeout"));
+});
+
+test("clearing a discovery query does not bypass an active provider cooldown", () => {
+  assert.ok(discovery.includes("disabled={loading || retryAfterSeconds > 0}"));
+  assert.ok(discovery.includes("if (retryAfterSeconds > 0)"));
+});
