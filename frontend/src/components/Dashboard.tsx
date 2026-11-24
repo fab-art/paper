@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpen, RotateCcw, Search, Sparkles, Trash2 } from "lucide-react";
 import type { Project } from "../lib/types";
-import { listProjects, saveProject, deleteProjectAndData } from "../lib/db";
+import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeProject = (name: string, question = ""): Project => ({
@@ -65,9 +65,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
     await refresh();
   };
   const restore = async (project: Project) => {
-    const restored = { ...project };
-    delete restored.archivedAt;
-    await saveProject(restored);
+    await restoreProject(project);
     await refresh();
   };
   const permanentlyDelete = async (project: Project) => {
