@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Cloud, LogIn, LogOut, ShieldCheck, X } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
@@ -15,6 +15,9 @@ export default function AuthPanel() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const signInTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -36,6 +39,44 @@ export default function AuthPanel() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      if (wasOpenRef.current) signInTriggerRef.current?.focus();
+      wasOpenRef.current = false;
+      return;
+    }
+    wasOpenRef.current = true;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusableElements = () => Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    );
+    focusableElements()[0]?.focus();
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = focusableElements();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    dialog.addEventListener("keydown", handleDialogKeyDown);
+    return () => dialog.removeEventListener("keydown", handleDialogKeyDown);
+  }, [open]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -95,16 +136,16 @@ export default function AuthPanel() {
   }
 
   return <>
-    <button type="button" className="cloud-auth-button" onClick={() => { setOpen(true); setError(""); setMessage(""); }}>
+    <button ref={signInTriggerRef} type="button" className="cloud-auth-button" onClick={() => { setOpen(true); setError(""); setMessage(""); }}>
       <LogIn size={14}/> Sign in
     </button>
     {open && <div className="cloud-auth-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false); }}>
-      <section className="cloud-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="cloud-auth-title">
+      <section ref={dialogRef} className="cloud-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="cloud-auth-title" aria-describedby="cloud-auth-description">
         <button type="button" className="cloud-auth-close" aria-label="Close sign-in dialog" onClick={() => setOpen(false)}><X size={17}/></button>
         <div className="cloud-auth-mark"><Cloud size={20}/></div>
         <div className="cloud-auth-eyebrow">PAPERORCHESTRA ACCOUNT</div>
         <h2 id="cloud-auth-title">Access your research team</h2>
-        <p>Sign in to prepare for shared projects. Your existing local projects stay private unless you explicitly share them.</p>
+        <p id="cloud-auth-description">Account access is available now. Shared-project invitations and cross-device sync are being rolled out separately. Your existing local projects stay private on this device.</p>
         <div className="cloud-auth-modes" role="tablist" aria-label="Sign-in method">
           <button type="button" role="tab" aria-selected={mode === "magic"} className={mode === "magic" ? "active" : ""} onClick={() => {setMode("magic");setError("");setMessage("");}}>Email link</button>
           <button type="button" role="tab" aria-selected={mode === "password"} className={mode === "password" ? "active" : ""} onClick={() => {setMode("password");setError("");setMessage("");}}>Password</button>
