@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpen, RotateCcw, Search, Sparkles, Trash2 } from "lucide-react";
 import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
+import AuthPanel from "./AuthPanel";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeProject = (name: string, question = ""): Project => ({
@@ -77,7 +78,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   return <div className="dashboard-shell">
     <header className="dash-topbar">
       <div className="dash-brand"><div className="dash-mark"><Sparkles size={18}/></div><span>Paper<span>Orchestra</span></span><small>RESEARCH STATION</small></div>
-      <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><button className="dash-new" onClick={() => setShowCreate(true)}><FilePlus2 size={15}/> New project</button></div>
+      <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button className="dash-new" onClick={() => setShowCreate(true)}><FilePlus2 size={15}/> New project</button></div>
     </header>
     <main className="dash-main">
       <section className="dash-welcome">
