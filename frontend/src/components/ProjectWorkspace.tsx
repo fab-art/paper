@@ -47,6 +47,29 @@ export default function ProjectWorkspace({
     setNotes(nextNotes); setAttachments(nextAttachments);
   };
 
+  const reloadLatestProject = async () => {
+    if (!window.confirm("Load the latest saved version? Unsaved changes in this tab will be discarded.")) return;
+    setLoading(true);
+    try {
+      const [latest, latestNotes, latestAttachments] = await Promise.all([
+        loadProject(projectId), listProjectNotes(projectId), listProjectAttachments(projectId)
+      ]);
+      if (!latest) {
+        setNotice("This project no longer exists in the local research library.");
+        return;
+      }
+      projectRef.current = latest;
+      setProject(latest);
+      setNotes(latestNotes);
+      setAttachments(latestAttachments);
+      setNotice("Loaded latest saved version.");
+    } catch (error) {
+      setNotice("Could not reload latest project: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let live = true;
     setLoading(true);
@@ -240,7 +263,7 @@ export default function ProjectWorkspace({
         <button className={section === "methods" ? "selected" : ""} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
       </nav>
-      {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span></div>}
+      {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="pw-notice-action" onClick={() => void reloadLatestProject()}>Load latest saved version</button>}</div>}
 
       {section === "overview" && <div className="pw-overview">
         <div className="pw-main-column">
