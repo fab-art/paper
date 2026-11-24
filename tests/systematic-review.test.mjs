@@ -286,3 +286,23 @@ test("reconciles legacy full-text state when title screening is pending or exclu
     assert.equal(migrated["doi:10.1000/legacy"].fullTextReason, "");
   }
 });
+
+
+test("keeps same-title records with conflicting DOIs as separate studies", () => {
+  const result = deduplicatePapers([
+    { title: "Same article title", doi: "10.1000/first" },
+    { title: "Same article title", doi: "10.1000/second" }
+  ]);
+  assert.equal(result.uniquePapers.length, 2);
+  assert.equal(result.duplicatesRemoved, 0);
+});
+
+test("does not let a DOI-less title alias bridge two conflicting DOI records", () => {
+  const result = deduplicatePapers([
+    { title: "Same article title", doi: "10.1000/first" },
+    { title: "Same article title" },
+    { title: "Same article title", doi: "10.1000/second" }
+  ]);
+  assert.equal(result.uniquePapers.length, 3);
+  assert.equal(result.duplicatesRemoved, 0);
+});
