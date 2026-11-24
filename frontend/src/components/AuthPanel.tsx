@@ -126,16 +126,18 @@ export default function AuthPanel() {
     setError("");
     try {
       if (mode === "password") {
-        const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
+        if (data.session) setSession(data.session);
       } else if (mode === "signup") {
-        const { error: authError } = await supabase.auth.signUp({
+        const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (authError) throw authError;
-        setMessage("Check your email to confirm your account before signing in.");
+        if (data.session) setSession(data.session);
+        setMessage(data.session ? "Your account is ready. You are signed in." : "Check your email to confirm your account before signing in.");
       } else {
         const { error: authError } = await supabase.auth.signInWithOtp({
           email: email.trim(),
