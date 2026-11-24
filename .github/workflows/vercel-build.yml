@@ -11,42 +11,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install root dependencies
-        run: npm install
-      - name: Install frontend dependencies
-        run: npm --prefix frontend install
-      - name: Apply compatible dependency security fixes
-        continue-on-error: true
-        run: |
-          npm audit fix || true
-          npm --prefix frontend audit fix || true
-      - name: Dependency vulnerability summary
-        continue-on-error: true
-        run: |
-          npm audit --json > /tmp/root-audit.json || true
-          npm --prefix frontend audit --json > /tmp/frontend-audit.json || true
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          for (const [label, file] of [["root", "/tmp/root-audit.json"], ["frontend", "/tmp/frontend-audit.json"]]) {
-            let report;
-            try { report = JSON.parse(fs.readFileSync(file, "utf8")); }
-            catch { console.log(label + ": audit report unavailable"); continue; }
-            const summary = report.metadata?.vulnerabilities || {};
-            console.log(label + " audit summary: " + JSON.stringify(summary));
-            for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
-              const advisories = (item.via || []).map(value => typeof value === "string" ? value : value.title).join("; ");
-              console.log([name, "severity=" + item.severity, "direct=" + item.isDirect, "range=" + item.range, "fix=" + JSON.stringify(item.fixAvailable), "via=" + advisories].join(" | "));
-            }
-          }
-          NODE
-      - name: Upload generated npm lockfiles
-        uses: actions/upload-artifact@v4
-        with:
-          name: paperorchestra-npm-lockfiles
-          path: |
+          cache: npm
+          cache-dependency-path: |
             package-lock.json
             frontend/package-lock.json
-          if-no-files-found: error
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+      - name: Dependency security audit
+        run: |
+          npm audit --audit-level=high
+          npm --prefix frontend audit --audit-level=high
       - name: Regression tests
         run: npm run test:regression
       - name: Typecheck and build
