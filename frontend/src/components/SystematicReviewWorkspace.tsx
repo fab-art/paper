@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, BookOpen, CheckCircle2, ClipboardCheck, FileSpreadsheet, Filter, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import type { Project, Paper, SystematicReviewData, SystematicReviewProtocol, ReviewScreeningRecord, StudyExtraction, RiskOfBiasDomain, ScreeningDecision, FullTextDecision, RiskJudgement } from "../lib/types";
-import { calculatePrismaFlow, migrateReviewRecords, syncReviewRecords, toEvidenceMatrixCsv } from "../lib/systematic-review.mjs";
+import { calculatePrismaFlow, migrateReviewRecords, syncReviewRecords, toEvidenceMatrixCsv, updateTitleAbstractDecision } from "../lib/systematic-review.mjs";
 import "./systematic-review.css";
 
 type Props = { project: Project; onUpdate: (changes: Partial<Project>) => void };
@@ -60,7 +60,12 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   const updateScreening = (key: string, changes: Partial<ReviewScreeningRecord>) => {
     const current = synced.screening[key];
     if (!current) return;
-    updateReview({ screening: { ...synced.screening, [key]: { ...current, ...changes, updatedAt: Date.now() } } });
+    const updatedAt = Date.now();
+    const next: ReviewScreeningRecord = { ...current, ...changes, updatedAt };
+    if ("titleAbstractDecision" in changes) next.titleAbstractDecisionUpdatedAt = updatedAt;
+    if ("fullTextDecision" in changes) next.fullTextDecisionUpdatedAt = updatedAt;
+    if ("fullTextRetrieved" in changes) next.fullTextRetrievedUpdatedAt = updatedAt;
+    updateReview({ screening: { ...synced.screening, [key]: next } });
   };
   const updateExtraction = (key: string, changes: Partial<StudyExtraction>) => {
     updateReview({ extraction: { ...migratedExtraction, [key]: { ...emptyExtraction(), ...migratedExtraction[key], ...changes } } });
@@ -89,7 +94,12 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     JSON.stringify({ project: project.name, exportedAt: new Date().toISOString(), flow }, null, 2),
     "application/json;charset=utf-8"
   );
-  const setDecision = (key: string, decision: ScreeningDecision) => updateScreening(key, { titleAbstractDecision: decision });
+  const setDecision = (key: string, decision: ScreeningDecision) => {
+    const current = synced.screening[key];
+    if (!current) return;
+    const next = updateTitleAbstractDecision(current, decision);
+    updateReview({ screening: { ...synced.screening, [key]: next } });
+  };
   const addRiskDomain = (key: string) => {
     const current = review.riskOfBias[key] || { tool: "JBI", domains: [] };
     updateRisk(key, { domains: [...current.domains, { id: makeId(), name: "", judgement: "unclear", rationale: "" }] });
