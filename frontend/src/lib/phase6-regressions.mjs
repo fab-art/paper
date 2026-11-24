@@ -43,7 +43,7 @@ export function rewriteFigureReferences(tex, assets) {
     (whole, options = "", reference) => {
       const basename = String(reference).replace(/\\/g, "/").split("/").pop()?.toLocaleLowerCase();
       const exportName = basename ? firstByOriginalName.get(basename) : undefined;
-      return exportName ? `\\\\includegraphics${options}{figures/${exportName}}` : whole;
+      return exportName ? `\\includegraphics${options}{figures/${exportName}}` : whole;
     }
   );
 }
