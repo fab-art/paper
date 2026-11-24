@@ -228,7 +228,7 @@ test("Writing Studio agent stages and workspace views expose toggle-group state"
 test("Writing Studio runtime settings and icon-only actions have accessible names", () => {
   assert.match(studio, /aria-label="Runtime settings"/);
   assert.match(studio, /aria-label="Close runtime settings"/);
-  assert.match(studio, /aria-label={`Remove outline section \\$\{s\.title\}`}/);
+  assert.ok(studio.includes('aria-label={`Remove outline section ${s.title}`}'));
   assert.match(studio, /aria-label="Refresh print preview"/);
 });
 
