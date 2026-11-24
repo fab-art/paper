@@ -34,68 +34,61 @@ class StudioDB extends Dexie {
 }
 export const db = new StudioDB();
 
-// Each browser tab keeps its own last-seen revision. IndexedDB transactions
-// serialize writes across tabs; this token prevents a stale tab from winning
-// after it acquires the write transaction.
-const knownProjectRevisions = new Map<string, number>();
-
 export async function saveProject(project: Project) {
-  let savedRevision: number | undefined;
+  // Capture the caller's snapshot revision before awaiting IndexedDB. Reading a
+  // mutable per-tab revision after the transaction is queued can let an older
+  // debounce callback adopt a newer revision and overwrite newer content.
+  const expectedRevision = project.revision ?? 0;
+  let savedProject: Project | undefined;
+
   await db.transaction("rw", db.projects, db.deletedProjects, async () => {
     if (await db.deletedProjects.get(project.id)) {
       throw new Error("This project was permanently deleted in another tab. Reload the Research Station before continuing.");
     }
     const existing = await db.projects.get(project.id);
-    const expectedRevision = knownProjectRevisions.get(project.id) ?? project.revision ?? 0;
     const actualRevision = existing?.revision ?? 0;
     if (existing) {
       assertProjectRevision(expectedRevision, actualRevision);
-    } else if (knownProjectRevisions.has(project.id) || (project.revision ?? 0) > 0) {
+    } else if (expectedRevision > 0) {
       throw new Error("This project no longer exists in the local research library. Reload the Research Station before continuing.");
     }
 
     const next: Project = { ...project, revision: actualRevision + 1 };
-    // A stale tab must not silently unarchive a project after another tab archived it.
     if (existing?.archivedAt && !next.archivedAt) next.archivedAt = existing.archivedAt;
     next.updatedAt = Date.now();
     await db.projects.put(next);
-    savedRevision = next.revision;
+    savedProject = next;
   });
-  if (savedRevision !== undefined) knownProjectRevisions.set(project.id, savedRevision);
+
+  return savedProject;
 }
 
 export async function restoreProject(project: Project) {
-  let restoredRevision: number | undefined;
+  // As with saveProject, the expected revision belongs to this exact snapshot.
+  const expectedRevision = project.revision ?? 0;
+  let restoredProject: Project | undefined;
+
   await db.transaction("rw", db.projects, db.deletedProjects, async () => {
     if (await db.deletedProjects.get(project.id)) return;
     const existing = await db.projects.get(project.id);
     if (!existing) return;
-    const expectedRevision = knownProjectRevisions.get(project.id) ?? project.revision ?? 0;
     const actualRevision = existing.revision ?? 0;
     assertProjectRevision(expectedRevision, actualRevision);
     const restored: Project = { ...existing, ...project, revision: actualRevision + 1, updatedAt: Date.now() };
     delete restored.archivedAt;
     await db.projects.put(restored);
-    restoredRevision = restored.revision;
+    restoredProject = restored;
   });
-  if (restoredRevision !== undefined) knownProjectRevisions.set(project.id, restoredRevision);
+
+  return restoredProject;
 }
 
 export async function loadProject(id: string) {
-  const project = await db.projects.get(id);
-  if (project) knownProjectRevisions.set(id, project.revision ?? 0);
-  else knownProjectRevisions.delete(id);
-  return project;
+  return db.projects.get(id);
 }
 
 export async function listProjects() {
-  const projects = await db.projects.orderBy("updatedAt").reverse().toArray();
-  const liveIds = new Set(projects.map(project => project.id));
-  for (const id of knownProjectRevisions.keys()) {
-    if (!liveIds.has(id)) knownProjectRevisions.delete(id);
-  }
-  for (const project of projects) knownProjectRevisions.set(project.id, project.revision ?? 0);
-  return projects;
+  return db.projects.orderBy("updatedAt").reverse().toArray();
 }
 
 export async function deleteProjectAndData(projectId: string, expectedRevision?: number) {
@@ -113,7 +106,6 @@ export async function deleteProjectAndData(projectId: string, expectedRevision?:
       db.projects.delete(projectId)
     ]);
   });
-  knownProjectRevisions.delete(projectId);
 }
 
 export async function listProjectNotes(projectId: string) {
