@@ -6,7 +6,7 @@ import "./data-methods-lab.css";
 type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean };
 type ColumnProfile = { name: string; type: string; missing: number; unique: number; min?: string; max?: string; mean?: string; median?: string };
 
-function parseCsv(source: string): string[][] {
+function parseCsv(source: string, delimiter = ","): string[][] {
   const rows: string[][] = [];
   let row: string[] = [], field = "", quoted = false;
   for (let i = 0; i < source.length; i++) {
@@ -16,7 +16,7 @@ function parseCsv(source: string): string[][] {
       else if (char === '"') quoted = false;
       else field += char;
     } else if (char === '"' && field.length === 0) quoted = true;
-    else if (char === ",") { row.push(field); field = ""; }
+    else if (char === delimiter) { row.push(field); field = ""; }
     else if (char === "\n") { row.push(field.replace(/\r$/, "")); rows.push(row); row = []; field = ""; }
     else field += char;
   }
@@ -39,7 +39,7 @@ function profileColumn(name: string, values: string[], total: number): ColumnPro
     name, type: numeric ? "Numeric" : dates ? "Date" : "Text",
     missing: Math.max(0, total - present.length), unique,
     ...(numeric ? {
-      min: String(Math.min(...numbers)), max: String(Math.max(...numbers)),
+      min: String(numbers.reduce((value, item) => Math.min(value, item), Number.POSITIVE_INFINITY)), max: String(numbers.reduce((value, item) => Math.max(value, item), Number.NEGATIVE_INFINITY)),
       mean: (numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2),
       median: median(numbers).toFixed(2)
     } : {})
@@ -68,7 +68,7 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
     if (!file) { setDataset(null); return; }
     setLoading(true); setError(""); setDataset(null);
     file.blob.text().then(source => {
-      const parsed = parseCsv(source.replace(/^\uFEFF/, "").replace(/\t/g, ","));
+      const parsed = parseCsv(source.replace(/^\uFEFF/, ""), file.name.toLowerCase().endsWith(".tsv") ? "\t" : ",");
       if (parsed.length < 2) throw new Error("This file needs a header row and at least one data row.");
       const headers = parsed[0].map((value, index) => value.trim() || "Column " + (index + 1));
       const width = headers.length;
