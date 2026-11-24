@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const api = readFileSync(new URL("../api/search-papers.ts", import.meta.url), "utf8");
+const clientApi = readFileSync(new URL("../frontend/src/lib/api.ts", import.meta.url), "utf8");
 const discovery = readFileSync(new URL("../frontend/src/components/ResearchDiscovery.tsx", import.meta.url), "utf8");
 const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
 const types = readFileSync(new URL("../frontend/src/lib/types.ts", import.meta.url), "utf8");
@@ -79,16 +80,16 @@ test("external publication and PDF links accept only HTTP(S) URLs", () => {
 
 
 test("API errors preserve Retry-After metadata for rate-limited search requests", () => {
-  assert.ok(api.includes("export class ApiRequestError extends Error"));
-  assert.ok(api.includes('response.headers.get("Retry-After")'));
-  assert.ok(api.includes("payload?.retryAfterSeconds"));
-  assert.ok(api.includes("Math.max(headerRetry, bodyRetry, 0)"));
+  assert.ok(clientApi.includes("export class ApiRequestError extends Error"));
+  assert.ok(clientApi.includes('response.headers.get("Retry-After")'));
+  assert.ok(clientApi.includes("payload?.retryAfterSeconds"));
+  assert.ok(clientApi.includes("Math.max(headerRetry, bodyRetry, 0)"));
 });
 
 test("discovery waits out the provider cooldown before enabling another search", () => {
   assert.ok(discovery.includes("cause instanceof ApiRequestError"));
   assert.ok(discovery.includes("setRetryAfterSeconds(retrySeconds)"));
-  assert.ok(discovery.includes("Try again when the cooldown ends in"));
+  assert.ok(discovery.includes("You can retry when the cooldown ends in"));
   assert.ok(discovery.includes("disabled={loading || retryAfterSeconds > 0 || query.trim().length < 3}"));
   assert.ok(discovery.includes('retryAfterSeconds > 0 ? "Retry in " + retryAfterSeconds + "s" : "Try search again"'));
   assert.ok(discovery.includes("window.setTimeout"));
