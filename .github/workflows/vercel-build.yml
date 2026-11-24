@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,3 +53,21 @@ jobs:
         run: npm run test:regression
       - name: Typecheck and build
         run: npm --prefix frontend run build
+      - name: Commit audited lockfiles to same-repository PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          cp package-lock.json /tmp/paperorchestra-root-package-lock.json
+          cp frontend/package-lock.json /tmp/paperorchestra-frontend-package-lock.json
+          git fetch origin "$GITHUB_HEAD_REF"
+          git checkout -B "$GITHUB_HEAD_REF" FETCH_HEAD
+          cp /tmp/paperorchestra-root-package-lock.json package-lock.json
+          cp /tmp/paperorchestra-frontend-package-lock.json frontend/package-lock.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json frontend/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Dependency lockfiles are already up to date."
+            exit 0
+          fi
+          git commit -m "chore: commit audited npm lockfiles"
+          git push origin "HEAD:$GITHUB_HEAD_REF"
