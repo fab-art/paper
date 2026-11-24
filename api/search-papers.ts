@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
+  createRateLimitGate,
   readSearchCache,
   retryAfterSeconds,
   searchCacheKey,
@@ -8,6 +9,7 @@ import {
 
 const allowedMethods = ["POST", "OPTIONS"];
 const searchCache = new Map<string, { value: unknown; expiresAt: number }>();
+const rateLimitGate = createRateLimitGate();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -30,6 +32,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   res.setHeader("X-Search-Cache", "MISS");
 
+  const cooldownSeconds = rateLimitGate.retryAfter();
+  if (cooldownSeconds > 0) {
+    res.setHeader("Retry-After", String(cooldownSeconds));
+    res.setHeader("X-Search-Cache", "RATE_LIMIT_BACKOFF");
+    return res.status(429).json({
+      detail: `Semantic Scholar rate limit is active. Please retry in about ${cooldownSeconds} seconds.`,
+      retryAfterSeconds: cooldownSeconds
+    });
+  }
+
   const params = new URLSearchParams({
     query,
     limit: String(limit),
@@ -46,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (upstream.status === 429) {
       const retrySeconds = retryAfterSeconds(upstream.headers.get("retry-after"));
+      rateLimitGate.blockFor(retrySeconds);
       res.setHeader("Retry-After", String(retrySeconds));
       return res.status(429).json({
         detail: `Semantic Scholar rate limit reached. Please retry in about ${retrySeconds} seconds.`,
