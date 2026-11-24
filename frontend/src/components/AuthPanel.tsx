@@ -152,10 +152,10 @@ export default function AuthPanel() {
         <div className="cloud-auth-eyebrow">PAPERORCHESTRA ACCOUNT</div>
         <h2 id="cloud-auth-title">Access your research team</h2>
         <p id="cloud-auth-description">Account access is available now. Shared-project invitations and cross-device sync are being rolled out separately. Your existing local projects stay private on this device.</p>
-        <div className="cloud-auth-modes" role="tablist" aria-label="Sign-in method">
-          <button type="button" role="tab" aria-selected={mode === "magic"} className={mode === "magic" ? "active" : ""} onClick={() => {setMode("magic");setError("");setMessage("");}}>Email link</button>
-          <button type="button" role="tab" aria-selected={mode === "password"} className={mode === "password" ? "active" : ""} onClick={() => {setMode("password");setError("");setMessage("");}}>Password</button>
-          <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => {setMode("signup");setError("");setMessage("");}}>Create account</button>
+        <div className="cloud-auth-modes" role="group" aria-label="Sign-in method">
+          <button type="button" aria-pressed={mode === "magic"} className={mode === "magic" ? "active" : ""} onClick={() => {setMode("magic");setError("");setMessage("");}}>Email link</button>
+          <button type="button" aria-pressed={mode === "password"} className={mode === "password" ? "active" : ""} onClick={() => {setMode("password");setError("");setMessage("");}}>Password</button>
+          <button type="button" aria-pressed={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => {setMode("signup");setError("");setMessage("");}}>Create account</button>
         </div>
         <form onSubmit={event => void submit(event)}>
           <label>Email address<input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@example.com"/></label>
