@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import binascii
 import hmac
@@ -24,6 +25,9 @@ MAX_LATEX_SECONDS = 45
 MAX_COMPILE_FILES = 40
 MAX_COMPILE_TEXT_BYTES = 3_000_000
 MAX_COMPILE_ASSETS_BYTES = 3_000_000
+SEARCH_CACHE_TTL_SECONDS = 600
+_search_cache: dict[tuple[str, int, bool], tuple[float, dict[str, Any]]] = {}
+_search_cache_lock = asyncio.Lock()
 
 app = FastAPI(title="PaperOrchestra Studio Compute Engine", version="0.2.1")
 app.add_middleware(
@@ -85,15 +89,38 @@ async def search_papers(request: SearchRequest):
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     if api_key:
         headers["x-api-key"] = api_key
+    import time
+    cache_key = (request.query.strip().casefold(), request.limit, bool(api_key))
+    now = time.monotonic()
+    async with _search_cache_lock:
+        cached = _search_cache.get(cache_key)
+        if cached and cached[0] > now:
+            return cached[1]
+        if cached:
+            _search_cache.pop(cache_key, None)
+
     try:
         async with httpx.AsyncClient(timeout=18.0, follow_redirects=True) as client:
             response = await client.get(url, params=params, headers=headers)
+            if response.status_code == 429:
+                retry_after = response.headers.get("Retry-After", "30")
+                try:
+                    retry_seconds = max(1, min(int(retry_after), 300))
+                except ValueError:
+                    retry_seconds = 30
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Semantic Scholar is temporarily rate limiting searches. Please wait about {retry_seconds} seconds before trying again.",
+                    headers={"Retry-After": str(retry_seconds)},
+                )
             response.raise_for_status()
             payload = response.json()
+    except HTTPException:
+        raise
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=502, detail=f"Semantic Scholar returned HTTP {exc.response.status_code}") from exc
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Semantic Scholar request failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Semantic Scholar could not be reached. Please try again shortly.") from exc
 
     papers = []
     for item in payload.get("data", []):
@@ -107,7 +134,14 @@ async def search_papers(request: SearchRequest):
             "url": item.get("url"),
             "doi": external.get("DOI"),
         })
-    return {"query": request.query, "papers": papers}
+    result = {"query": request.query, "papers": papers}
+    async with _search_cache_lock:
+        _search_cache[cache_key] = (time.monotonic() + SEARCH_CACHE_TTL_SECONDS, result)
+        if len(_search_cache) > 500:
+            current_time = time.monotonic()
+            for key in [key for key, value in _search_cache.items() if value[0] <= current_time]:
+                _search_cache.pop(key, None)
+    return result
 
 
 @app.post("/api/generate-plot")
