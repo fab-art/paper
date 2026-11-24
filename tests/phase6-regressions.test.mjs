@@ -61,13 +61,13 @@ test("enforces a safe dataset column limit before allocating huge arrays", () =>
 
 test("rewrites extensionless LaTeX figure references", () => {
   const assets = createUniqueFigureAssets([{ name: "plot.png", png: "AAAA", mime: "image/png" }]);
-  assert.equal(rewriteFigureReferences(String.raw`\\includegraphics{plot}`, assets), String.raw`\\includegraphics{figures/plot.png}`);
+  assert.equal(rewriteFigureReferences(String.raw`\includegraphics{plot}`, assets), String.raw`\includegraphics{figures/plot.png}`);
 });
 
 test("ignores citation commands in LaTeX comments but keeps escaped percent signs", () => {
   const result = parseCitationUsage(
-    String.raw`% \\nocite{*}
-Text \\% literal percent and \\cite{alpha}`,
+    String.raw`% \nocite{*}
+Text \% literal percent and \cite{alpha}`
     "@article{alpha, title={A}}\n@article{beta, title={B}}"
   );
   assert.deepEqual(result.citedKeys, ["alpha"]);
