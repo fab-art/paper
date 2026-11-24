@@ -236,3 +236,28 @@ body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidde
   outline: 2px solid #77749f;
   outline-offset: 2px;
 }
+
+
+.dash-action-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 13px;
+  border: 1px solid #efcbc7;
+  border-radius: 10px;
+  background: #fff5f4;
+  color: #913f39;
+  font-size: 12px;
+}
+.dash-action-error button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
