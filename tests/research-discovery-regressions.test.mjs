@@ -68,3 +68,11 @@ test("saved references preserve their origin in the shared Paper type and projec
   assert.ok(projectWorkspace.includes("Manually added"));
   assert.ok(projectWorkspace.includes("Source not recorded"));
 });
+
+
+test("external publication and PDF links accept only HTTP(S) URLs", () => {
+  assert.ok(discovery.includes("function safeExternalUrl"));
+  assert.ok(discovery.includes('url.protocol === "http:" || url.protocol === "https:"'));
+  assert.ok(discovery.includes("const sourceUrl = safeExternalUrl(paper.url)"));
+  assert.ok(discovery.includes("const pdfUrl = safeExternalUrl(paper.openAccessPdf)"));
+});
