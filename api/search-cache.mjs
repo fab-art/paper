@@ -44,3 +44,23 @@ export function retryAfterSeconds(header, now = Date.now()) {
   if (Number.isNaN(timestamp)) return DEFAULT_RETRY_AFTER_SECONDS;
   return Math.min(MAX_RETRY_AFTER_SECONDS, Math.max(1, Math.ceil((timestamp - now) / 1000)));
 }
+
+
+// Per-warm-instance backoff prevents a burst of distinct queries from repeatedly
+// hitting Semantic Scholar while the upstream quota window is still closed.
+export function createRateLimitGate() {
+  let blockedUntil = 0;
+  return {
+    blockFor(seconds, now = Date.now()) {
+      const numeric = Number(seconds);
+      const duration = Math.min(
+        MAX_RETRY_AFTER_SECONDS,
+        Math.max(1, Math.ceil(Number.isFinite(numeric) ? numeric : DEFAULT_RETRY_AFTER_SECONDS))
+      );
+      blockedUntil = Math.max(blockedUntil, now + duration * 1000);
+    },
+    retryAfter(now = Date.now()) {
+      return blockedUntil > now ? Math.max(1, Math.ceil((blockedUntil - now) / 1000)) : 0;
+    }
+  };
+}
