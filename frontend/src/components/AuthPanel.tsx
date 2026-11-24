@@ -61,6 +61,7 @@ export default function AuthPanel() {
       return;
     }
 
+    const isOpening = !wasOpenRef.current;
     wasOpenRef.current = true;
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -70,7 +71,7 @@ export default function AuthPanel() {
         'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
       )
     );
-    focusableElements()[0]?.focus();
+    if (isOpening) focusableElements()[0]?.focus();
 
     // A disabled submit button can cause focus to fall outside the dialog.
     // Keep the guard on document so the next Tab key is still intercepted.
@@ -179,7 +180,7 @@ export default function AuthPanel() {
       <LogIn size={14}/> Sign in
     </button>
     {open && <div className="cloud-auth-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false); }}>
-      <section ref={dialogRef} className="cloud-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="cloud-auth-title" aria-describedby="cloud-auth-description">
+      <section ref={dialogRef} className="cloud-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="cloud-auth-title" aria-describedby="cloud-auth-description" aria-busy={busy}>
         <button type="button" className="cloud-auth-close" aria-label="Close sign-in dialog" onClick={() => setOpen(false)}><X size={17}/></button>
         <div className="cloud-auth-mark"><Cloud size={20}/></div>
         <div className="cloud-auth-eyebrow">PAPERORCHESTRA ACCOUNT</div>
