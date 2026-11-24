@@ -90,7 +90,7 @@ test("discovery waits out the provider cooldown before enabling another search",
   assert.ok(discovery.includes("setRetryAfterSeconds(retrySeconds)"));
   assert.ok(discovery.includes("Try again when the cooldown ends in"));
   assert.ok(discovery.includes("disabled={loading || retryAfterSeconds > 0 || query.trim().length < 3}"));
-  assert.ok(discovery.includes("Retry in " + " + retryAfterSeconds + "));
+  assert.ok(discovery.includes('retryAfterSeconds > 0 ? "Retry in " + retryAfterSeconds + "s" : "Try search again"'));
   assert.ok(discovery.includes("window.setTimeout"));
 });
 
