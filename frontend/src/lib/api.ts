@@ -27,22 +27,22 @@ function bibtexToHtml(bibtex: string) {
   const starts = [...bibtex.matchAll(/@[a-z]+\s*\{\s*([^,]+),/gi)];
   if (!starts.length) return "";
   const field = (source: string, name: string) => {
-    const matcher = new RegExp("(?:^|,)\\\\s*" + name + "\\\\s*=\\\\s*", "i");
+    const matcher = new RegExp("(?:^|,)\\s*" + name + "\\s*=\\s*", "i");
     const match = matcher.exec(source);
     if (!match) return "";
     let index = match.index + match[0].length;
-    while (/\\\\s/.test(source[index] || "")) index++;
+    while (/\s/.test(source[index] || "")) index++;
     const opener = source[index];
     if (opener !== "{" && opener !== '"') return "";
     index++;
     let value = "";
     let depth = opener === "{" ? 1 : 0;
-    let quoted = opener === '"';
+    const quoted = opener === '"';
     let escaped = false;
     for (; index < source.length; index++) {
       const char = source[index];
       if (escaped) { value += char; escaped = false; continue; }
-      if (char === "\\\\") { value += char; escaped = true; continue; }
+      if (char === "\\") { value += char; escaped = true; continue; }
       if (quoted) {
         if (char === '"') break;
         value += char;
