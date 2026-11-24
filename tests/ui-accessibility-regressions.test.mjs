@@ -236,7 +236,9 @@ test("Writing Studio model progress and agent execution expose busy and progress
   assert.match(studio, /role="progressbar" aria-label="Local model loading progress"/);
   assert.match(studio, /aria-valuenow={Math\.round\(progress\*100\)}/);
   assert.match(studio, /className="agent-card" aria-busy={busy}/);
-  assert.match(studio, /className="runtime-log"[^>]*role="status" aria-live="polite"/);
+  assert.match(studio, /className="runtime-log"/);
+  assert.match(studio, /role=\{noticeIsError \? "presentation" : "status"\}/);
+  assert.match(studio, /role="alert" aria-live="assertive"/);
 });
 
 test("Writing Studio manuscript editors and plot feedback have programmatic labels", () => {
