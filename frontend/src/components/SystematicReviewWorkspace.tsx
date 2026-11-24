@@ -63,11 +63,11 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     updateReview({ screening: { ...synced.screening, [key]: { ...current, ...changes, updatedAt: Date.now() } } });
   };
   const updateExtraction = (key: string, changes: Partial<StudyExtraction>) => {
-    updateReview({ extraction: { ...migratedExtraction, [key]: { ...emptyExtraction(), ...migratedExtraction[key], ...changes } } });
+    updateReview({ extraction: { ...review.extraction, [key]: { ...emptyExtraction(), ...review.extraction[key], ...changes } } });
   };
   const updateRisk = (key: string, changes: { tool?: string; domains?: RiskOfBiasDomain[] }) => {
-    const current = migratedRiskOfBias[key] || { tool: "JBI", domains: [] };
-    updateReview({ riskOfBias: { ...migratedRiskOfBias, [key]: { ...current, ...changes } } });
+    const current = review.riskOfBias[key] || { tool: "JBI", domains: [] };
+    updateReview({ riskOfBias: { ...review.riskOfBias, [key]: { ...current, ...changes } } });
   };
   const visiblePapers = synced.uniquePapers.filter(paper => {
     const record = synced.screening[paper.reviewKey];
@@ -95,7 +95,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     updateRisk(key, { domains: [...current.domains, { id: makeId(), name: "", judgement: "unclear", rationale: "" }] });
   };
   const updateRiskDomain = (key: string, domainId: string, changes: Partial<RiskOfBiasDomain>) => {
-    const current = migratedRiskOfBias[key];
+    const current = review.riskOfBias[key];
     if (current) updateRisk(key, { domains: current.domains.map(domain => domain.id === domainId ? { ...domain, ...changes } : domain) });
   };
   const removeRiskDomain = (key: string, domainId: string) => {
