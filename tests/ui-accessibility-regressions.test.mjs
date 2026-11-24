@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const dashboard = readFileSync(new URL("../frontend/src/components/Dashboard.tsx", import.meta.url), "utf8");
 const authPanel = readFileSync(new URL("../frontend/src/components/AuthPanel.tsx", import.meta.url), "utf8");
 const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
+const styles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
   assert.match(dashboard, /<input[^>]*aria-label=["']Search projects["']/s);
@@ -108,4 +109,16 @@ test("clearing project reference search restores keyboard focus to the search fi
 test("systematic review tab uses an imported icon", () => {
   const iconImport = projectWorkspace.slice(0, projectWorkspace.indexOf('from "lucide-react"'));
   assert.ok(iconImport.includes("ClipboardCheck"));
+});
+
+
+test("dashboard clear-search actions return focus to the persistent search input", () => {
+  assert.match(dashboard, /ref={searchInputRef} aria-label="Search projects"/);
+  assert.match(dashboard, /const clearProjectSearch = \(\) => \{\s*setQuery\("+"\);\s*searchInputRef\.current\?\.focus\(\);/);
+  assert.match(dashboard, /aria-label="Clear project search" onClick={clearProjectSearch}/);
+  assert.match(dashboard, /className="dash-empty-clear" onClick={clearProjectSearch}/);
+});
+
+test("dashboard search placeholder uses an explicit readable light-theme color", () => {
+  assert.match(styles, /\.dash-search input::placeholder\s*\{\s*color:#6b6e77;opacity:1\s*\}/);
 });
