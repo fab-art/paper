@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownToLine, BookOpen, CheckCircle2, ClipboardCheck, FileSpreadsheet, Filter, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowDownToLine, BookOpen, CheckCircle2, ClipboardCheck, FileSpreadsheet, Filter, Plus, Search, ShieldCheck, Trash2, X } from "lucide-react";
 import type { Project, Paper, SystematicReviewData, SystematicReviewProtocol, ReviewScreeningRecord, StudyExtraction, RiskOfBiasDomain, ScreeningDecision, FullTextDecision, RiskJudgement } from "../lib/types";
 import { calculatePrismaFlow, migrateReviewRecords, syncReviewRecords, toEvidenceMatrixCsv, updateTitleAbstractDecision } from "../lib/systematic-review.mjs";
 import "./systematic-review.css";
@@ -146,7 +146,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
         <p className="srw-disclaimer">These are working counts, not a certified PRISMA 2020 diagram. Add records to the project library and complete both screening stages before reporting final numbers.</p>
       </section>
       <section className="srw-panel">
-        <div className="srw-panel-heading"><div><span className="srw-kicker">CURRENT REVIEW</span><h3>Protocol snapshot</h3></div><button className="srw-link" onClick={()=>setTab("protocol")}>Edit protocol</button></div>
+        <div className="srw-panel-heading"><div><span className="srw-kicker">CURRENT REVIEW</span><h3>Protocol snapshot</h3></div><button type="button" className="srw-link" onClick={()=>setTab("protocol")}>Edit protocol</button></div>
         <div className="srw-protocol-grid">
           <div><span>Review type</span><strong>{review.protocol.reviewType}</strong></div>
           <div><span>Databases</span><strong>{review.protocol.databases.length?review.protocol.databases.join(", "):"Not recorded"}</strong></div>
@@ -154,7 +154,7 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
           <div><span>Registration</span><strong>{review.protocol.registrationUrl?"Link recorded":"Not recorded"}</strong></div>
         </div>
       </section>
-      <section className="srw-panel srw-next"><div><BookOpen size={18}/><div><strong>{flow.recordsNotScreened} record(s) awaiting title/abstract screening</strong><p>{flow.awaitingFullTextDecision} full-text decision(s) are still pending. Start with the screening queue.</p></div></div><button className="srw-primary" onClick={()=>setTab("screening")}>Open screening queue</button></section>
+      <section className="srw-panel srw-next"><div><BookOpen size={18}/><div><strong>{flow.recordsNotScreened} record(s) awaiting title/abstract screening</strong><p>{flow.awaitingFullTextDecision} full-text decision(s) are still pending. Start with the screening queue.</p></div></div><button type="button" className="srw-primary" onClick={()=>setTab("screening")}>Open screening queue</button></section>
     </div>}
 
     {tab === "protocol" && <section className="srw-panel srw-form-panel">
@@ -189,10 +189,10 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
             <div className="srw-paper-heading"><div><strong>{paper.title}</strong><p>{paperLabel(paper)||"Publication details not recorded"}{paper.doi?" · DOI: "+paper.doi:""}</p></div><span className={"srw-decision srw-"+record.titleAbstractDecision}>{record.titleAbstractDecision}</span></div>
             {paper.abstract&&<p className="srw-abstract">{paper.abstract}</p>}
             <div className="srw-decision-row"><span>Title / abstract decision</span><div>
-              <button className={record.titleAbstractDecision==="include"?"chosen include":""} onClick={()=>setDecision(key,"include")}>Include</button>
-              <button className={record.titleAbstractDecision==="maybe"?"chosen maybe":""} onClick={()=>setDecision(key,"maybe")}>Maybe</button>
-              <button className={record.titleAbstractDecision==="exclude"?"chosen exclude":""} onClick={()=>setDecision(key,"exclude")}>Exclude</button>
-              <button className={record.titleAbstractDecision==="pending"?"chosen":""} onClick={()=>setDecision(key,"pending")}>Reset</button>
+              <button type="button" aria-label={`Mark ${paper.title} include at title/abstract stage`} className={record.titleAbstractDecision==="include"?"chosen include":""} onClick={()=>setDecision(key,"include")}>Include</button>
+              <button type="button" aria-label={`Mark ${paper.title} maybe at title/abstract stage`} className={record.titleAbstractDecision==="maybe"?"chosen maybe":""} onClick={()=>setDecision(key,"maybe")}>Maybe</button>
+              <button type="button" aria-label={`Exclude ${paper.title} at title/abstract stage`} className={record.titleAbstractDecision==="exclude"?"chosen exclude":""} onClick={()=>setDecision(key,"exclude")}>Exclude</button>
+              <button type="button" aria-label={`Reset title/abstract decision for ${paper.title}`} className={record.titleAbstractDecision==="pending"?"chosen":""} onClick={()=>setDecision(key,"pending")}>Reset</button>
             </div></div>
             <label className="srw-field">Screening reason / notes<textarea rows={2} value={record.titleAbstractReason} onChange={e=>updateScreening(key,{titleAbstractReason:e.target.value})} placeholder="Record why this paper is included, excluded or uncertain…"/></label>
             {record.titleAbstractDecision!=="pending"&&record.titleAbstractDecision!=="exclude"&&<div className="srw-fulltext">
