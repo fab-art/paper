@@ -39,9 +39,9 @@ export function rewriteFigureReferences(tex, assets) {
     if (!firstByOriginalName.has(original)) firstByOriginalName.set(original, asset.exportName);
   }
   return tex.replace(
-    /\\\\includegraphics(\s*\[[^\]]*\])?\s*\{([^}]+)\}/g,
+    /\\includegraphics(\s*\[[^\]]*\])?\s*\{([^}]+)\}/g,
     (whole, options = "", reference) => {
-      const basename = String(reference).replace(/\\\\/g, "/").split("/").pop()?.toLocaleLowerCase();
+      const basename = String(reference).replace(/\\/g, "/").split("/").pop()?.toLocaleLowerCase();
       const exportName = basename ? firstByOriginalName.get(basename) : undefined;
       return exportName ? `\\\\includegraphics${options}{figures/${exportName}}` : whole;
     }
@@ -53,7 +53,7 @@ export function parseCitationUsage(tex, bib) {
     .map(match => match[1]);
   const found = new Set();
   let includeAll = false;
-  const citationPattern = /\\\\([a-zA-Z]*cite[a-zA-Z]*|nocite)\*?(?:\s*\[[^\]]*\])*\s*\{([^}]*)\}/g;
+  const citationPattern = /\\([a-zA-Z]*cite[a-zA-Z]*|nocite)\*?(?:\s*\[[^\]]*\])*\s*\{([^}]*)\}/g;
   for (const match of String(tex).matchAll(citationPattern)) {
     const command = match[1].toLowerCase();
     const keys = match[2].split(",").map(value => value.trim()).filter(Boolean);
