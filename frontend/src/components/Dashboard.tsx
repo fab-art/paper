@@ -185,7 +185,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
               <div className="dash-card-foot"><span><Clock3 size={13}/>{relativeDate(project.updatedAt)}</span>{scope === "active" && <button onClick={()=>onOpen(project)}>Open project <ArrowUpRight size={14}/></button>}</div>
               {scope === "archived" && <p className="dash-archived-at">Archived {new Date(project.archivedAt || project.updatedAt).toLocaleDateString()}</p>}
             </article>;
-          })}</div>}</>}
+          })}</div>}
       </section>
       <footer className="dash-footer"><span>PaperOrchestra Research Station</span><span>Private by default · Projects stored locally in this browser</span></footer>
     </main>
