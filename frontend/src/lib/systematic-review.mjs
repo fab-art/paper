@@ -56,6 +56,10 @@ function paperReviewKeyAliases(paper, index = 0) {
 export function deduplicatePapers(papers) {
   const source = Array.isArray(papers) ? papers : [];
   const parent = source.map((_, index) => index);
+  const doiByRoot = new Map(source.map((paper, index) => {
+    const doi = normalizeDoi(paper.doi);
+    return [index, new Set(doi ? [doi] : [])];
+  }));
 
   const find = index => {
     if (parent[index] !== index) parent[index] = find(parent[index]);
@@ -64,10 +68,28 @@ export function deduplicatePapers(papers) {
   const union = (left, right) => {
     const leftRoot = find(left);
     const rightRoot = find(right);
-    if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot;
+    if (leftRoot === rightRoot) return true;
+
+    const mergedDois = new Set([
+      ...(doiByRoot.get(leftRoot) || []),
+      ...(doiByRoot.get(rightRoot) || [])
+    ]);
+    // A DOI is a stronger identifier than title, URL or provider ID.
+    // Never merge two groups once their non-empty DOI values conflict.
+    if (mergedDois.size > 1) return false;
+
+    parent[rightRoot] = leftRoot;
+    doiByRoot.set(leftRoot, mergedDois);
+    doiByRoot.delete(rightRoot);
+    return true;
   };
 
-  const seen = {
+  const collect = (map, identifier, index) => {
+    if (!identifier) return;
+    if (!map.has(identifier)) map.set(identifier, []);
+    map.get(identifier).push(index);
+  };
+  const identifiers = {
     doi: new Map(),
     title: new Map(),
     id: new Map(),
@@ -75,19 +97,45 @@ export function deduplicatePapers(papers) {
   };
 
   source.forEach((paper, index) => {
-    const identifiers = [
-      ["doi", normalizeDoi(paper.doi)],
-      ["title", normalizeTitle(paper.title)],
-      ["id", String(paper.id || "").trim()],
-      ["url", normalizeUrl(paper.url)]
-    ];
-    for (const [kind, identifier] of identifiers) {
-      if (!identifier) continue;
-      const prior = seen[kind].get(identifier);
-      if (prior !== undefined) union(index, prior);
-      else seen[kind].set(identifier, index);
-    }
+    collect(identifiers.doi, normalizeDoi(paper.doi), index);
+    collect(identifiers.title, normalizeTitle(paper.title), index);
+    collect(identifiers.id, String(paper.id || "").trim(), index);
+    collect(identifiers.url, normalizeUrl(paper.url), index);
   });
+
+  const mergeGroup = indices => {
+    for (let position = 1; position < indices.length; position++) {
+      union(indices[0], indices[position]);
+    }
+  };
+
+  // DOI, provider ID and URL matches are considered before title matches.
+  for (const kind of ["doi", "id", "url"]) {
+    for (const indices of identifiers[kind].values()) mergeGroup(indices);
+  }
+
+  // A title may be reused by distinct publications. If it maps to more than
+  // one DOI, merge only within each DOI group; keep DOI-less aliases separate
+  // rather than allowing them to bridge otherwise conflicting DOI records.
+  for (const indices of identifiers.title.values()) {
+    const distinctDois = new Set(indices
+      .map(index => normalizeDoi(source[index].doi))
+      .filter(Boolean));
+    if (distinctDois.size <= 1) {
+      mergeGroup(indices);
+      continue;
+    }
+
+    const compatibleGroups = new Map();
+    for (const index of indices) {
+      const doi = normalizeDoi(source[index].doi) || "__missing_doi__";
+      if (!compatibleGroups.has(doi)) compatibleGroups.set(doi, []);
+      compatibleGroups.get(doi).push(index);
+    }
+    for (const compatibleIndices of compatibleGroups.values()) {
+      mergeGroup(compatibleIndices);
+    }
+  }
 
   const groups = new Map();
   source.forEach((paper, index) => {
