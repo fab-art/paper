@@ -39,7 +39,7 @@ self.onmessage = (event: MessageEvent<ParseMessage>) => {
     if (field.length || row.length) commitRow();
 
     if (headers.length === 0 || totalRows === 0) {
-      (self as DedicatedWorkerGlobalScope).postMessage({ error: "This file needs a header row and at least one data row." } satisfies ParseResult);
+      self.postMessage({ error: "This file needs a header row and at least one data row." } satisfies ParseResult);
       return;
     }
     const width = headers.length;
