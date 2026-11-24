@@ -93,7 +93,36 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const notesRef = useRef<HTMLInputElement>(null);
   const logsRef = useRef<HTMLInputElement>(null);
   const projectRef = useRef(project);
+  const projectSaveQueue = useRef<Promise<void>>(Promise.resolve());
+  const lastSavedFingerprintRef = useRef("");
   projectRef.current = project;
+
+  const persistProject = (snapshot: Project) => {
+    const task = projectSaveQueue.current.then(async () => {
+      const latest = projectRef.current;
+      if (!latest || latest.id !== snapshot.id) return latest;
+      const target = shouldSaveProjectSnapshot(snapshot, latest, lastSavedFingerprintRef.current)
+        ? snapshot
+        : latest;
+      if (!shouldSaveProjectSnapshot(target, latest, lastSavedFingerprintRef.current)) return latest;
+
+      const saved = await saveProject(target);
+      if (saved) {
+        lastSavedFingerprintRef.current = projectFingerprint(saved);
+        const current = projectRef.current;
+        if (current && current.id === saved.id) {
+          const updated = { ...current, revision: saved.revision, updatedAt: saved.updatedAt };
+          projectRef.current = updated;
+          setProject(value => value && value.id === saved.id
+            ? { ...value, revision: saved.revision, updatedAt: saved.updatedAt }
+            : value);
+        }
+      }
+      return saved;
+    });
+    projectSaveQueue.current = task.then(() => undefined, () => undefined);
+    return task;
+  };
   const records = useMemo(() => Object.fromEntries(project.agentRecords.map(r => [r.id, r])), [project.agentRecords]);
 
   useEffect(() => {
@@ -112,6 +141,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
         setHydrated(true);
         return;
       }
+      lastSavedFingerprintRef.current = projectFingerprint(saved);
       setProject(saved);
       setPdf(undefined);
       setHydrated(true);
@@ -132,14 +162,14 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   useEffect(() => {
     if (!hydrated || loadError) return;
     const timer = window.setTimeout(() => {
-      saveProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
+      persistProject(project).catch(error => setNotice("Could not save project: " + (error as Error).message));
     }, 350);
     return () => window.clearTimeout(timer);
   }, [project, hydrated, loadError]);
 
   useEffect(() => () => {
     const latest = projectRef.current;
-    if (latest?.id === projectId) void saveProject(latest).catch(() => undefined);
+    if (latest?.id === projectId) void persistProject(latest).catch(() => undefined);
   }, [projectId]);
 
   const patch = (changes: Partial<Project>) => {
@@ -150,6 +180,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     if (!window.confirm("Reload the latest saved version? Unsaved changes in this tab will be discarded.")) return;
     setHydrated(false);
     try {
+      await projectSaveQueue.current;
       const latest = await loadProject(projectId);
       if (!latest) {
         setLoadError("This project no longer exists in the local research library.");
@@ -157,6 +188,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
         return;
       }
       projectRef.current = latest;
+      lastSavedFingerprintRef.current = projectFingerprint(latest);
       setProject(latest);
       setLoadError("");
       setNotice("Loaded latest saved version.");
@@ -169,12 +201,16 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
 
   const handleBack = async () => {
     if (busy) return;
-    try { await saveProject(project); onBack?.(); }
+    const latest = projectRef.current;
+    if (!latest) return;
+    try { await persistProject(latest); onBack?.(); }
     catch (error) { setNotice("Could not save before leaving: " + (error as Error).message); }
   };
   const handleSelectProject = async (id: string) => {
     if (busy) return;
-    try { await saveProject(project); onSelectProject?.(id); }
+    const latest = projectRef.current;
+    if (!latest) return;
+    try { await persistProject(latest); onSelectProject?.(id); }
     catch (error) { setNotice("Could not save before switching projects: " + (error as Error).message); }
   };
   const setAgent = (id: AgentId, status: "running" | "done" | "error", summary = "") => {
