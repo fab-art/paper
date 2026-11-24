@@ -21,12 +21,12 @@ for (const [name, store] of [
     assert.match(source, new RegExp(
       `db\\.transaction\\("rw",\\s*db\\.projects,\\s*db\\.deletedProjects,\\s*db\\.${store}`
     ));
-    assert.match(source, /assertProjectWritable\\(/);
+    assert.match(source, /assertProjectWritable\(/);
   });
 }
 
 test("search history pruning stays inside the guarded write transaction", () => {
   const source = functionSource("recordProjectSearch");
-  assert.match(source, /db\\.searches\\.bulkDelete/);
-  assert.match(source, /db\\.searches\\.where\\("projectId"\\)/);
+  assert.match(source, /db\.searches\.bulkDelete/);
+  assert.match(source, /db\.searches\.where\("projectId"\)/);
 });
