@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const dashboard = readFileSync(new URL("../frontend/src/components/Dashboard.tsx", import.meta.url), "utf8");
 const authPanel = readFileSync(new URL("../frontend/src/components/AuthPanel.tsx", import.meta.url), "utf8");
 const projectWorkspace = readFileSync(new URL("../frontend/src/components/ProjectWorkspace.tsx", import.meta.url), "utf8");
+const systematicReview = readFileSync(new URL("../frontend/src/components/SystematicReviewWorkspace.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
@@ -121,4 +122,27 @@ test("dashboard clear-search actions return focus to the persistent search input
 
 test("dashboard search placeholder uses an explicit readable light-theme color", () => {
   assert.match(styles, /\.dash-search input::placeholder\s*\{\s*color:#6b6e77;opacity:1\s*\}/);
+});
+
+
+test("systematic review section switcher has toggle-group semantics and explicit button types", () => {
+  assert.match(systematicReview, /role="group" aria-label="Systematic review sections"/);
+  assert.match(systematicReview, /type="button" key={id}/);
+  assert.match(systematicReview, /aria-pressed={tab===id}/);
+});
+
+test("screening search can be cleared with focus restored to its input", () => {
+  assert.match(systematicReview, /screeningSearchRef/);
+  assert.match(systematicReview, /screeningSearchRef\.current\?\.focus\(\)/);
+  assert.match(systematicReview, /aria-label="Clear screening search"/);
+  assert.match(systematicReview, /clearScreeningFilters/);
+});
+
+test("risk-of-bias domain removal names its study and domain", () => {
+  assert.match(systematicReview, /aria-label={`Remove \\$\{domain\.name \|\| "unnamed"} domain for \\$\{paper\.title\}`}/);
+});
+
+test("risk-of-bias domain actions use migrated records so identifier upgrades do not hide edits", () => {
+  assert.match(systematicReview, /const current = migratedRiskOfBias\[key\] \|\| \{ tool: "JBI", domains: \[\] \};/);
+  assert.match(systematicReview, /const current = migratedRiskOfBias\[key\];\s*if \(current\) updateRisk\(key, \{ domains: current\.domains\.filter/);
 });
