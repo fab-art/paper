@@ -29,6 +29,16 @@ function isSaved(paper: Paper, saved: Paper[]) {
     (title && normalizeTitle(item.title) === title)
   );
 }
+function safeExternalUrl(value?: string) {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function formatPublicationDate(value?: string) {
   if (!value) return "";
   const date = new Date(value);
@@ -210,6 +220,8 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
           const key = paper.doi || paper.url || paper.title;
           const citations = formatCitationCount(paper.citationCount);
           const published = formatPublicationDate(paper.publicationDate);
+          const sourceUrl = safeExternalUrl(paper.url);
+          const pdfUrl = safeExternalUrl(paper.openAccessPdf);
           return <article className="rd-paper" key={paper.doi || paper.url || paper.title + index}>
             <div className="rd-paper-icon"><BookOpen size={17}/></div>
             <div className="rd-paper-main">
@@ -224,8 +236,8 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
               {paper.abstract && <p>{paper.abstract}</p>}
               <div className="rd-paper-links">
                 {paper.doi && <span>DOI: {paper.doi}</span>}
-                {paper.url && <a href={paper.url} target="_blank" rel="noreferrer" aria-label={`Open original publication for ${paper.title}`}>View publication <ArrowUpRight size={12}/></a>}
-                {paper.openAccessPdf && <a href={paper.openAccessPdf} target="_blank" rel="noreferrer" aria-label={`Open access PDF for ${paper.title}`}>Open Access PDF <ArrowUpRight size={12}/></a>}
+                {sourceUrl && <a href={sourceUrl} target="_blank" rel="noreferrer" aria-label={`Open original publication for ${paper.title}`}>View publication <ArrowUpRight size={12}/></a>}
+                {pdfUrl && <a href={pdfUrl} target="_blank" rel="noreferrer" aria-label={`Open access PDF for ${paper.title}`}>Open Access PDF <ArrowUpRight size={12}/></a>}
               </div>
             </div>
             <div className="rd-paper-action">
