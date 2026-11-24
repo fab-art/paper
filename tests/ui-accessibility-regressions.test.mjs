@@ -8,6 +8,8 @@ const projectWorkspace = readFileSync(new URL("../frontend/src/components/Projec
 const systematicReview = readFileSync(new URL("../frontend/src/components/SystematicReviewWorkspace.tsx", import.meta.url), "utf8");
 const dataMethodsLab = readFileSync(new URL("../frontend/src/components/DataMethodsLab.tsx", import.meta.url), "utf8");
 const dataMethodsStyles = readFileSync(new URL("../frontend/src/components/data-methods-lab.css", import.meta.url), "utf8");
+const submissionReadiness = readFileSync(new URL("../frontend/src/components/SubmissionReadiness.tsx", import.meta.url), "utf8");
+const submissionStyles = readFileSync(new URL("../frontend/src/components/submission-readiness.css", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../frontend/src/styles.css", import.meta.url), "utf8");
 
 test("project search has an explicit accessible name", () => {
@@ -181,4 +183,35 @@ test("data methods filter recovery and reduced-motion styling are present", () =
   assert.match(dataMethodsStyles, /\.dml-clear-filter/);
   assert.match(dataMethodsStyles, /\.dml-visually-hidden/);
   assert.match(dataMethodsStyles, /prefers-reduced-motion:reduce/);
+});
+
+
+test("submission readiness summaries and findings expose accessible group and list semantics", () => {
+  assert.match(submissionReadiness, /role="group" aria-label="Submission readiness summary" aria-live="polite"/);
+  assert.match(submissionReadiness, /className="sr-findings" role="list"/);
+  assert.match(submissionReadiness, /className="sr-finding" role="listitem"/);
+});
+
+test("researcher confirmations expose a named progress bar and grouped checklist", () => {
+  assert.match(submissionReadiness, /role="progressbar" aria-label="Researcher confirmations completed"/);
+  assert.match(submissionReadiness, /aria-valuenow={manualDone}/);
+  assert.match(submissionReadiness, /role="group" aria-label="Researcher confirmations"/);
+});
+
+test("submission export announces its busy, success and error states", () => {
+  assert.match(submissionReadiness, /className="sr-export" aria-busy={exporting}/);
+  assert.match(submissionReadiness, /aria-describedby="sr-export-status sr-export-error"/);
+  assert.match(submissionReadiness, /id="sr-export-status" role="status" aria-live="polite"/);
+  assert.match(submissionReadiness, /id="sr-export-error" role="alert"/);
+});
+
+test("all submission download controls declare non-submit button types", () => {
+  assert.match(submissionReadiness, /<button type="button" onClick={\(\) => void exportPackage\(\)}/);
+  assert.equal((submissionReadiness.match(/<button(?![^>]*type=)/g) || []).length, 0);
+});
+
+test("submission readiness progress and export controls support reduced motion and visible focus", () => {
+  assert.match(submissionStyles, /\.sr-manual-progress/);
+  assert.match(submissionStyles, /focus-visible/);
+  assert.match(submissionStyles, /prefers-reduced-motion:reduce/);
 });
