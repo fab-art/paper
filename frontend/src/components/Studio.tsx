@@ -38,22 +38,22 @@ function insertSection(latex: string, title: string, body: string) {
 }
 
 function normalizeReferenceTitle(value: string) {
-  return value.replace(/[{}]/g, "").normalize("NFKC").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]/gu, "");
+  return value.replace(/[{}]/g, "").normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 }
 function extractBibtexTitles(source: string): string[] {
   const titles: string[] = [];
-  const matcher = /\\btitle\\s*=\\s*([{"'])/gi;
+  const matcher = /\btitle\s*=\s*([{"'])/gi;
   let match: RegExpExecArray | null;
   while ((match = matcher.exec(source))) {
     const opener = match[1];
     let value = "";
     let depth = opener === "{" ? 1 : 0;
-    let quote = opener === '"' ? true : false;
+    const quote = opener === '"';
     let escaped = false;
     for (let index = matcher.lastIndex; index < source.length; index++) {
       const char = source[index];
       if (escaped) { value += char; escaped = false; continue; }
-      if (char === "\\\\") { value += char; escaped = true; continue; }
+      if (char === "\\") { value += char; escaped = true; continue; }
       if (quote) {
         if (char === '"') break;
         value += char;
