@@ -19,6 +19,7 @@ export type ScreeningRecord = {
 export function normalizeDoi(value: string | undefined): string;
 export function normalizeTitle(value: string): string;
 export function deduplicatePapers<T extends ReviewPaper>(papers: T[]): { uniquePapers: Array<T & { reviewKey: string }>; duplicatesRemoved: number };
+export function migrateReviewRecords<T extends ReviewPaper, R>(papers: T[], existing?: Record<string, R>): Record<string, R>;
 export function syncReviewRecords<T extends ReviewPaper>(papers: T[], existing?: Record<string, ScreeningRecord>): {
   uniquePapers: Array<T & { reviewKey: string }>;
   screening: Record<string, ScreeningRecord>;
