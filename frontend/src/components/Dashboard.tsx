@@ -37,6 +37,10 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const [actionError, setActionError] = useState("");
   const createTriggerRef = useRef<HTMLButtonElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const clearProjectSearch = () => {
+    setQuery("");
+    searchInputRef.current?.focus();
+  };
   const createDialogRef = useRef<HTMLFormElement | null>(null);
   const wasCreateOpenRef = useRef(false);
 
@@ -164,12 +168,12 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
         <div><span><Archive size={15}/> COMPLETED PROJECTS</span><strong>{completed}</strong><small>All recorded stages finished</small></div>
       </section>
       <section className="dash-project-section">
-        <div className="dash-section-head"><div><div className="dash-kicker">PROJECT LIBRARY</div><h2>{scope === "active" ? "Your research projects" : "Archived projects"}</h2></div><label className="dash-search"><Search size={15}/><input aria-label="Search projects" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/></label></div>
+        <div className="dash-section-head"><div><div className="dash-kicker">PROJECT LIBRARY</div><h2>{scope === "active" ? "Your research projects" : "Archived projects"}</h2></div><label className="dash-search"><Search size={15}/><input ref={searchInputRef} aria-label="Search projects" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/>{query && <button type="button" className="dash-search-clear" aria-label="Clear project search" onClick={clearProjectSearch}><X size={14}/></button>}</label></div>
         <div className="dash-scope-tabs" role="group" aria-label="Project lists">
           <button type="button" aria-pressed={scope === "active"} className={scope === "active" ? "selected" : ""} onClick={() => {setScope("active");setQuery("");}}>Active <span>{activeProjects.length}</span></button>
           <button type="button" aria-pressed={scope === "archived"} className={scope === "archived" ? "selected" : ""} onClick={() => {setScope("archived");setQuery("");}}>Archived <span>{archivedProjects.length}</span></button>
         </div>
-        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? "Try another search term." : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
+        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? <><span>Try another search term.</span><button type="button" className="dash-empty-clear" onClick={clearProjectSearch}>Clear search</button></> : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
           <div className="dash-project-grid">{filtered.map(project => {
             const done = project.agentRecords.filter(agent=>agent.status==="done").length;
             const totalStages = project.agentRecords.length || 1;
