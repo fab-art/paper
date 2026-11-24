@@ -157,7 +157,7 @@ export default function ResearchDiscovery({ projectId, papers, onSavePaper, onOp
             </div>
           </div>
           <div className="rd-paper-action">
-            <button className={saved ? "is-saved" : ""} disabled={saved || saving === key} onClick={() => void savePaper(paper)}>
+            <button className={saved ? "is-saved" : ""} disabled={saved || saving !== null} onClick={() => void savePaper(paper)}>
               {saving === key ? <LoaderCircle className="rd-spin" size={14}/> : saved ? <Check size={14}/> : <span>＋</span>}
               {saved ? "In library" : "Save paper"}
             </button>
