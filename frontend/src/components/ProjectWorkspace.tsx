@@ -273,6 +273,8 @@ export default function ProjectWorkspace({
   if (!project) return <div className="project-loading"><p>We couldn't find this project in local storage.</p><button onClick={onBack}>Back to Research Station</button></div>;
 
   const completedMilestones = (project.milestones || []).filter(item => item.completed).length;
+  const milestoneTotal = (project.milestones || []).length;
+  const milestoneProgress = milestoneTotal ? Math.round(completedMilestones / milestoneTotal * 100) : 0;
   const status = project.status || "planning";
 
   return <div className="project-workspace">
@@ -322,17 +324,17 @@ export default function ProjectWorkspace({
             <div className="pw-panel-title"><div><span>02</span><h2>Milestones</h2></div><button className="pw-text-action" onClick={addMilestone}><Plus size={14}/> Add milestone</button></div>
             {(project.milestones || []).length === 0 ? <div className="pw-empty-small">Break the research into milestones you can track as the project develops.</div> :
               <div className="pw-milestones">{(project.milestones || []).map(item => <div className="pw-milestone" key={item.id}>
-                <input type="checkbox" checked={item.completed} onChange={e => patch({ milestones: (project.milestones || []).map(m => m.id === item.id ? { ...m, completed: e.target.checked } : m) })}/>
+                <input type="checkbox" aria-label={`Mark ${item.title} complete`} checked={item.completed} onChange={e => patch({ milestones: (project.milestones || []).map(m => m.id === item.id ? { ...m, completed: e.target.checked } : m) })}/>
                 <span className={item.completed ? "done" : ""}>{item.title}</span>
-                <button title="Remove milestone" onClick={() => patch({ milestones: (project.milestones || []).filter(m => m.id !== item.id) })}><X size={13}/></button>
+                <button type="button" title="Remove milestone" aria-label={`Remove milestone ${item.title}`} onClick={() => patch({ milestones: (project.milestones || []).filter(m => m.id !== item.id) })}><X size={13}/></button>
               </div>)}</div>}
           </section>
         </div>
         <aside className="pw-side-column">
           <section className="pw-summary-card"><div className="pw-eyebrow">PROJECT SNAPSHOT</div><div className="pw-stat-grid">
             <div><strong>{papers.length}</strong><span>Sources</span></div><div><strong>{attachments.length}</strong><span>Files</span></div><div><strong>{notes.length}</strong><span>Notes</span></div>
-          </div><div className="pw-summary-line"><span>Milestones complete</span><b>{completedMilestones}/{(project.milestones || []).length}</b></div>
-          <div className="pw-mini-progress"><i style={{ width: (project.milestones?.length ? completedMilestones / project.milestones.length * 100 : 0) + "%" }}/></div>
+          </div><div className="pw-summary-line"><span>Milestones complete</span><b>{completedMilestones}/{milestoneTotal}</b></div>
+          <div className="pw-mini-progress" role="progressbar" aria-label="Milestone completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={milestoneProgress} aria-valuetext={`${completedMilestones} of ${milestoneTotal} milestones complete`}><i style={{ width: `${milestoneProgress}%` }}/></div>
           <button className="pw-open-studio" onClick={() => void navigateAfterSave(onOpenStudio)}>Continue to Writing Studio <BookOpen size={14}/></button></section>
           <section className="pw-tip"><strong>Research library</strong><p>Keep papers and original documents here. Use the Systematic Review workspace to screen these papers, extract study data and assess evidence quality.</p><button onClick={() => setSection("library")}>Manage sources <Link2 size={13}/></button></section>
         </aside>
@@ -353,9 +355,9 @@ export default function ProjectWorkspace({
           <label>Abstract / description<textarea rows={3} value={source.abstract} onChange={e => setSource({ ...source, abstract: e.target.value })}/></label>
           <div className="pw-form-actions"><button type="button" className="pw-secondary" onClick={() => setShowSourceForm(false)}>Cancel</button><button className="pw-primary" type="submit"><Save size={14}/> Save reference</button></div>
         </form>}
-        <div className="pw-search" role="search" aria-label="Search project references"><Search size={14} aria-hidden="true"/><input id="pw-reference-search" aria-label="Search references" value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/></div>
+        <div className="pw-search" role="search" aria-label="Search project references"><Search size={14} aria-hidden="true"/><input id="pw-reference-search" aria-label="Search references" value={sourceQuery} onChange={e => setSourceQuery(e.target.value)} placeholder="Search titles, authors, DOI…"/>{sourceQuery && <button type="button" className="pw-search-clear" aria-label="Clear reference search" onClick={() => setSourceQuery("")}><X size={14}/></button>}</div>
         <div className="pw-library-section"><h3><BookOpen size={15}/> References <span>{filteredPapers.length}</span></h3>
-          {filteredPapers.length === 0 ? <div className="pw-empty">No references yet. Add a reference manually or import one through a future discovery workflow.</div> :
+          {filteredPapers.length === 0 ? <div className="pw-empty">{sourceQuery.trim() ? <>No references match your search.<button type="button" className="pw-empty-action" onClick={() => setSourceQuery("")}>Clear reference search</button></> : "No references yet. Add a reference manually or import one through a future discovery workflow."}</div> :
             filteredPapers.map((paper) => <article className="pw-reference" key={paper.doi || paper.title}>
               <div className="pw-ref-icon"><FileText size={16}/></div><div className="pw-ref-body"><strong>{paper.title}</strong><p>{paper.authors?.join(", ") || "Author not recorded"}{paper.year ? " · " + paper.year : ""}{paper.venue ? " · " + paper.venue : ""}</p>{paper.doi && <small>DOI: {paper.doi}</small>}</div>
               <div className="pw-ref-actions">{paper.url && <a href={paper.url} target="_blank" rel="noreferrer">Open <Link2 size={12}/></a>}<button title="Remove reference" onClick={() => {
