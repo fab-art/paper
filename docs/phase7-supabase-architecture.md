@@ -63,3 +63,11 @@ These are public client configuration values, not secrets. Do not add service-ro
 - Keep the cloud schema additive; never remove Dexie fields or stores as part of initial rollout.
 - Back up the Supabase project and test RLS with at least two distinct users (owner/editor/viewer) before enabling production sharing. Automated SQL checks confirm all six public tables have RLS, the private Storage bucket and four Storage policies exist, and public RPC wrappers are SECURITY INVOKER; real multi-user JWT tests remain required before production sharing.
 - Test cross-project isolation, removed-member access, anonymous access denial, stale revision conflicts, offline queue recovery and attachment path traversal.
+
+
+## Comment audit and concurrency safeguards
+
+- Comment creation timestamps and resolution timestamps are server-stamped.
+- Resolution is a real state transition: unresolved → resolved, or resolved → reopened. A second non-null timestamp rewrite is rejected.
+- If an Auth user is deleted, the `resolved_by` foreign key may be set to NULL by the database while the historical `resolved_at` timestamp is preserved.
+- Comment replies must stay within the same project and cannot form cycles. Parent changes acquire a project-scoped transaction advisory lock before checking descendants so concurrent reparent operations are serialized.
