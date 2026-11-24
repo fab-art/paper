@@ -6,6 +6,7 @@ class StudioDB extends Dexie {
   notes!: Table<ProjectNote, string>;
   attachments!: Table<ProjectAttachment, string>;
   searches!: Table<ProjectSearchHistory, string>;
+  deletedProjects!: Table<{ id: string; deletedAt: number }, string>;
   constructor() {
     super("paperorchestra-studio");
     this.version(1).stores({ projects: "id, updatedAt, name" });
@@ -20,12 +21,22 @@ class StudioDB extends Dexie {
       attachments: "id, projectId, createdAt, name",
       searches: "id, projectId, searchedAt"
     });
+    this.version(4).stores({
+      projects: "id, updatedAt, name, status",
+      notes: "id, projectId, updatedAt, createdAt",
+      attachments: "id, projectId, createdAt, name",
+      searches: "id, projectId, searchedAt",
+      deletedProjects: "id, deletedAt"
+    });
   }
 }
 export const db = new StudioDB();
 
 export async function saveProject(project: Project) {
-  await db.transaction("rw", db.projects, async () => {
+  await db.transaction("rw", db.projects, db.deletedProjects, async () => {
+    if (await db.deletedProjects.get(project.id)) {
+      throw new Error("This project was permanently deleted in another tab. Reload the Research Station before continuing.");
+    }
     const existing = await db.projects.get(project.id);
     const next = { ...project };
     // A stale tab must not silently unarchive a project after another tab archived it.
@@ -35,7 +46,8 @@ export async function saveProject(project: Project) {
   });
 }
 export async function restoreProject(project: Project) {
-  await db.transaction("rw", db.projects, async () => {
+  await db.transaction("rw", db.projects, db.deletedProjects, async () => {
+    if (await db.deletedProjects.get(project.id)) return;
     const existing = await db.projects.get(project.id);
     if (!existing) return;
     const restored = { ...existing, ...project, updatedAt: Date.now() };
@@ -46,7 +58,8 @@ export async function restoreProject(project: Project) {
 export async function loadProject(id: string) { return db.projects.get(id); }
 export async function listProjects() { return db.projects.orderBy("updatedAt").reverse().toArray(); }
 export async function deleteProjectAndData(projectId: string) {
-  await db.transaction("rw", db.projects, db.notes, db.attachments, db.searches, async () => {
+  await db.transaction("rw", db.projects, db.notes, db.attachments, db.searches, db.deletedProjects, async () => {
+    await db.deletedProjects.put({ id: projectId, deletedAt: Date.now() });
     await Promise.all([
       db.notes.where("projectId").equals(projectId).delete(),
       db.attachments.where("projectId").equals(projectId).delete(),
