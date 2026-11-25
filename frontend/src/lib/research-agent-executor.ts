@@ -23,7 +23,7 @@ export function buildResearchAgentPrompt(
   if (!agent.stationIds.includes(task.stationId)) throw new Error("This specialist is not authorized for the selected research station.");
 
   const inputs = entities
-    .filter(entity => task.inputEntityIds.includes(entity.id) || task.dependencyTaskIds.length === 0)
+    .filter(entity => task.inputEntityIds.includes(entity.id))
     .slice(0, 30)
     .map(entity => ({
       id: entity.id, type: entity.entityType, title: entity.title,
