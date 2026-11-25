@@ -9,7 +9,7 @@ test("Research GPS persists the selected entry path and starts at the matching r
   assert.match(dashboard, /Where would you like to begin/);
   assert.match(dashboard, /startPath: intake\.startPath/);
   assert.match(workspace, /project=\{project\}/);
-  assert.match(line, /getResearchNextAction\(project\)/);
+  assert.match(line, /getResearchNextAction\(project, researchPlan\)/);
 });
 
 test("Writing Studio stages grounded drafts and requires explicit owner acceptance", async () => {
@@ -39,7 +39,7 @@ test("Research GPS persists the editable blueprint plan, story arc and milestone
   assert.match(editor, /Research story arc/);
   assert.match(editor, /Milestones and target dates/);
   assert.match(editor, /moveResearchPlanStation/);
-  assert.match(production, /onProjectUpdate\(\{ researchPlan: nextPlan \}\)/);
+  assert.match(production, /onProjectUpdate\(\{ researchPlan: nextPlan, milestones: nextPlan\.milestones \}\)/);
   assert.match(production, /onStoryArcChange=\{storyArc => onProjectUpdate\(\{ storyArc \}\)\}/);
   assert.match(types, /researchPlan\?: import\("\.\/research-intake"\)\.ResearchStationPlan/);
 });
