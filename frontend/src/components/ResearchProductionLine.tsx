@@ -223,7 +223,7 @@ export default function ResearchProductionLine({
                 return <div className="rpl-output-document" key={entityId}>
                   <strong>{entity?.title ?? "Research output"}</strong>
                   <pre>{typeof draft === "string" ? draft : JSON.stringify(entity?.payload ?? {}, null, 2)}</pre>
-                  <small>Provenance: {entity?.provenance.kind ?? "unknown"} · {entity?.provenance.sourceLabel ?? entityId} · Owner review required</small>
+                  <small>Status: {entity?.status ?? "unavailable"} · Provenance: {entity?.provenance.kind ?? "unknown"} · {entity?.provenance.sourceLabel ?? entityId}</small>
                 </div>;
               })}
             </details>}
