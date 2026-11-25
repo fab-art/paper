@@ -140,7 +140,7 @@ export function checkCitationKeys(latex: string, bibtex: string): { citedKeys: s
   const bibPattern = /@\w+\s*\{\s*([^,\s]+)\s*,/g;
   let match: RegExpExecArray | null;
   while ((match = citationPattern.exec(latex)) !== null) for (const key of match[1].split(",").map(value => value.trim()).filter(Boolean)) cited.add(key);
-  while ((match = bibPattern.exec(bibtex)) !== null) bibKeys.push(match[1].trim());
+  while ((match = bibPattern.exec(bibtex)) !== null) bibKeys.push(match[2].trim());
   const available = new Set(bibKeys);
   const counts = new Map<string, number>();
   for (const key of bibKeys) counts.set(key, (counts.get(key) ?? 0) + 1);
