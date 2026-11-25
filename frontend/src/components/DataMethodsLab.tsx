@@ -1,14 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
 import type { Project, ProjectAttachment } from "../lib/types";
-import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest } from "../lib/research-analysis";
-import { saveResearchEntity } from "../lib/db";
+import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, executeDescriptiveAnalysis, renderAnalysisFigureSvg, approveAnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
+import { listResearchEntities, saveResearchEntity } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
 import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
 import "./data-methods-lab.css";
 
 type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean };
 type ColumnProfile = { name: string; type: string; missing: number; unique: number; min?: string; max?: string; mean?: string; median?: string };
+
+type ComplianceOwnerStatus = "not-reviewed" | "confirmed-by-researcher" | "not-applicable" | "requires-follow-up";
+type SavedAnalysisOutput = ResearchEntity & {
+  payload: {
+    recordType: "analysis-output";
+    summary: string;
+    method: string;
+    table: DescriptiveAnalysisResult["table"];
+    figure: DescriptiveAnalysisResult["figure"];
+    figureSvg: string;
+    caption: string;
+    datasetFingerprint: string;
+    datasetName: string;
+    rowCountAnalyzed: number;
+    manifest: ReturnType<typeof createAnalysisRunManifest>;
+    ownerApproved?: boolean;
+    ownerReviewedAt?: number;
+  };
+};
 
 function median(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
@@ -48,6 +67,17 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
   const [paired, setPaired] = useState(false);
   const [sampleSize, setSampleSize] = useState(0);
   const [analysisScript, setAnalysisScript] = useState("");
+  const [outcomeColumn, setOutcomeColumn] = useState("");
+  const [groupColumn, setGroupColumn] = useState("");
+  const [runningAnalysis, setRunningAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
+  const [analysisOutput, setAnalysisOutput] = useState<SavedAnalysisOutput | null>(null);
+  const [savedAnalysisOutputs, setSavedAnalysisOutputs] = useState<SavedAnalysisOutput[]>([]);
+  const [complianceStatuses, setComplianceStatuses] = useState<Record<string, ComplianceOwnerStatus>>({});
+  const [complianceNotes, setComplianceNotes] = useState("");
+  const [complianceReviewEntity, setComplianceReviewEntity] = useState<ResearchEntity | null>(null);
+  const [savingCompliance, setSavingCompliance] = useState(false);
+  const [complianceNotice, setComplianceNotice] = useState("");
   const [manifestNotice, setManifestNotice] = useState("");
   const [savingManifest, setSavingManifest] = useState(false);
   const variableFilterRef = useRef<HTMLInputElement | null>(null);
@@ -55,6 +85,25 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
     setFilter("");
     variableFilterRef.current?.focus();
   };
+
+  useEffect(() => {
+    let active = true;
+    listResearchEntities(project.id).then(entities => {
+      if (!active) return;
+      const outputs = entities.filter(entity => entity.entityType === "analysis" && entity.payload.recordType === "analysis-output") as SavedAnalysisOutput[];
+      outputs.sort((a, b) => b.updatedAt - a.updatedAt);
+      setSavedAnalysisOutputs(outputs);
+      setAnalysisOutput(outputs[0] ?? null);
+      const review = entities.filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "compliance-review").sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? null;
+      setComplianceReviewEntity(review);
+      const savedChecklist = Array.isArray(review?.payload.checklist) ? review.payload.checklist as Array<{ id: string; ownerStatus: ComplianceOwnerStatus }> : [];
+      setComplianceStatuses(Object.fromEntries(savedChecklist.map(item => [item.id, item.ownerStatus])));
+      setComplianceNotes(typeof review?.payload.notes === "string" ? review.payload.notes : "");
+    }).catch(() => {
+      if (active) setComplianceNotice("Existing local analysis records could not be loaded.");
+    });
+    return () => { active = false; };
+  }, [project.id]);
 
   useEffect(() => {
     if (!csvFiles.length) { setSelectedId(""); setDataset(null); return; }
