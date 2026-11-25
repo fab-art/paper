@@ -16,36 +16,36 @@ A separately buildable Research Factory frontend at `apps/web/`, with an explici
 ### 2. Lumen and visual foundation
 - [x] Pin the published `@santi020k/lumen-react@4.3.0` package.
 - [x] Verify actual package exports, stylesheet entry and peer dependencies in CI.
-- [ ] Define semantic color, type, spacing, radius, elevation, focus and motion tokens.
+- [x] Define semantic color, type, spacing, radius, elevation, focus and motion tokens.
 - [x] Implement responsive app shell and navigation using Lumen primitives.
-- [ ] Add light/dark theme support without duplicating domain state.
+- [x] Add light/dark theme support without duplicating domain state.
 
 ### 3. Domain and storage bridge
 - [x] Read projects from the existing `paperorchestra-studio` IndexedDB database.
-- [ ] Preserve all Dexie migrations and record types; do not run destructive writes.
+- [x] Preserve all Dexie migrations and record types; do not run destructive writes.
 - [x] Add typed app-facing project list/read contracts.
 - [x] Add storage unavailable, loading, empty and error states.
-- [ ] Test that legacy records are readable and unchanged.
+- [x] Test that legacy records are readable and unchanged.
 
 ### 4. Route and workspace registry
 - [x] Define all Research Factory stations in one registry.
 - [x] Mark migrated, in-progress and not-yet-migrated routes explicitly.
 - [ ] Provide guided and professional navigation modes as progressive disclosure.
-- [ ] Avoid dead links and placeholder success states.
+- [x] Avoid dead links and placeholder success states.
 
 ### 5. Engineering gates
 - [x] Node 22 CI workflow for app typecheck, tests and build.
 - [x] Existing repository regression suite remains required.
 - [x] Lumen version/exports verification.
-- [ ] Accessibility and responsive smoke checks.
-- [ ] Browser console/network review on an isolated preview.
+- [x] Accessibility and responsive smoke checks.
+- [x] Browser console/network review on an isolated preview.
 
 ## Required tests
 
 - Workspace registry contains every planned station exactly once.
 - Navigation links point to registered routes.
-- Project adapter returns records from the existing database without writes.
-- Storage errors are represented as an error state, not an empty project library.
+- Project adapter returns records from the existing database without writes (verified by Playwright against the existing Dexie schema).
+- Storage errors are represented as an error state, not an empty project library (empty and denied-IndexedDB cases are tested).
 - App shell renders loading, empty, populated and failure states accessibly.
 - Build can run from the repository root without changing the production frontend.
 
@@ -77,3 +77,31 @@ Do not switch Vercel's production build target during Phase 1. Phase 1 is comple
 - Inspect browser console/network and complete an independent UI/code review.
 
 Phase 1 remains **in progress** until all remaining gates pass. No production routing or domain was changed.
+
+
+## Verification update — 25 November 2026
+
+### GitHub Actions — commit `b809d5661ccf883ca0556dccd4df9f8c0577d3c9`
+
+- Replacement dependency audit: **0 vulnerabilities**.
+- TypeScript check and Vite production build: passed.
+- Workspace registry unit tests: **4/4 passed**.
+- Playwright Chromium browser tests: **10/10 passed**.
+  - Existing local project is displayed from the `paperorchestra-studio` IndexedDB schema.
+  - The dashboard performs no IndexedDB write transactions.
+  - Empty storage and blocked IndexedDB are distinct, accessible states.
+  - Navigation, direct route loading and refresh work.
+  - Seven viewport widths (320–1440px) have no page-level horizontal overflow.
+  - Light and dark themes both pass automated WCAG 2.2 A/AA checks.
+  - Keyboard focus and reduced-motion behavior pass.
+- Existing repository regression suite: **168/168 passed**.
+- Root repository security, typecheck and production build check: passed.
+
+### Remaining Phase 1 gates
+
+- Deploy this exact commit to the isolated Vercel preview and verify the SPA rewrite/direct-route behavior there.
+- Complete an independent code review and manual screen-reader pass.
+- Guided/Professional navigation modes remain a later product refinement; both will use the same project state.
+- Do not migrate or delete legacy UI, database schema, or services until their replacement phases pass parity checks.
+
+Phase 1 remains **in progress** until the exact-commit Vercel preview and final review gates pass. Production routing and the production domain remain unchanged.
