@@ -1,0 +1,241 @@
+import type { Project } from "./types";
+
+export const RESEARCH_BLUEPRINT_SCHEMA_VERSION = 1;
+
+export type ResearchLifecycleState =
+  | "idea"
+  | "planning"
+  | "in-progress"
+  | "paused"
+  | "completed"
+  | "publication-ready"
+  | "archived";
+
+export type ResearchPaperType =
+  | "empirical-study"
+  | "systematic-review"
+  | "scoping-review"
+  | "case-report"
+  | "conference-paper"
+  | "research-protocol"
+  | "dataset-analysis"
+  | "existing-manuscript"
+  | "other"
+  | "unspecified";
+
+export type ResearchProvenanceKind = "owner" | "agent" | "import" | "legacy-migration" | "system";
+
+export interface ResearchProvenance {
+  kind: ResearchProvenanceKind;
+  sourceId?: string;
+  sourceLabel?: string;
+  recordedAt: number;
+}
+
+export interface ResearchBlueprint {
+  id: string;
+  projectId: string;
+  schemaVersion: number;
+  version: number;
+  title: string;
+  description: string;
+  researchQuestion: string;
+  objectives: string[];
+  paperType: ResearchPaperType;
+  lifecycleState: ResearchLifecycleState;
+  legacyProjectRevision: number;
+  provenance: ResearchProvenance;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type ResearchEntityType =
+  | "research-question"
+  | "objective"
+  | "methodology"
+  | "source"
+  | "outline-section"
+  | "systematic-review"
+  | "research-note"
+  | "dataset"
+  | "analysis"
+  | "claim"
+  | "manuscript-section";
+
+export type ResearchEntityStatus = "draft" | "proposed" | "approved" | "verified" | "stale" | "archived";
+
+export interface ResearchEntity<TPayload extends Record<string, unknown> = Record<string, unknown>> {
+  id: string;
+  projectId: string;
+  entityType: ResearchEntityType;
+  version: number;
+  status: ResearchEntityStatus;
+  title: string;
+  payload: TPayload;
+  provenance: ResearchProvenance;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ResearchRelation {
+  id: string;
+  projectId: string;
+  fromEntityId: string;
+  toEntityId: string;
+  relationType: "supports" | "derived-from" | "addresses" | "cites" | "contains" | "related-to";
+  provenance: ResearchProvenance;
+  createdAt: number;
+}
+
+export interface ResearchDecision {
+  id: string;
+  projectId: string;
+  subjectType: string;
+  subjectId: string;
+  decision: "approved" | "rejected" | "deferred" | "amended";
+  rationale: string;
+  proposedBy: "owner" | "agent" | "system";
+  approvedByOwner: boolean;
+  decidedByOwner: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+function stableLegacyId(projectId: string, kind: string, key: string) {
+  return `legacy:${encodeURIComponent(projectId)}:${kind}:${encodeURIComponent(key)}`;
+}
+
+export function projectToResearchBlueprint(project: Project, now = Date.now()): ResearchBlueprint {
+  const status = project.status ?? "planning";
+  const lifecycleState: ResearchLifecycleState =
+    status === "active" ? "in-progress" :
+    status === "on-hold" ? "paused" :
+    status === "completed" ? "completed" : "planning";
+
+  return {
+    id: project.id,
+    projectId: project.id,
+    schemaVersion: RESEARCH_BLUEPRINT_SCHEMA_VERSION,
+    version: 1,
+    title: project.name,
+    description: project.notes ?? "",
+    researchQuestion: project.researchQuestion ?? "",
+    objectives: [...(project.objectives ?? [])],
+    paperType: project.systematicReview
+      ? (project.systematicReview.protocol.reviewType === "scoping" ? "scoping-review" : "systematic-review")
+      : "unspecified",
+    lifecycleState,
+    legacyProjectRevision: project.revision ?? 0,
+    provenance: { kind: "legacy-migration", sourceId: project.id, sourceLabel: "Existing PaperOrchestra project", recordedAt: now },
+    createdAt: project.updatedAt || now,
+    updatedAt: project.updatedAt || now
+  };
+}
+
+export function legacyProjectToResearchEntities(project: Project, now = Date.now()): ResearchEntity[] {
+  const provenance: ResearchProvenance = {
+    kind: "legacy-migration",
+    sourceId: project.id,
+    sourceLabel: "Existing PaperOrchestra project",
+    recordedAt: now
+  };
+  const entities: ResearchEntity[] = [];
+
+  if (project.researchQuestion?.trim()) {
+    entities.push({
+      id: stableLegacyId(project.id, "question", "primary"),
+      projectId: project.id,
+      entityType: "research-question",
+      version: 1,
+      status: "draft",
+      title: "Primary research question",
+      payload: { text: project.researchQuestion },
+      provenance,
+      createdAt: project.updatedAt || now,
+      updatedAt: project.updatedAt || now
+    });
+  }
+
+  for (const [index, objective] of (project.objectives ?? []).entries()) {
+    entities.push({
+      id: stableLegacyId(project.id, "objective", String(index)),
+      projectId: project.id,
+      entityType: "objective",
+      version: 1,
+      status: "draft",
+      title: `Objective ${index + 1}`,
+      payload: { text: objective, order: index },
+      provenance,
+      createdAt: project.updatedAt || now,
+      updatedAt: project.updatedAt || now
+    });
+  }
+
+  if (project.methodology?.trim()) {
+    entities.push({
+      id: stableLegacyId(project.id, "methodology", "primary"),
+      projectId: project.id,
+      entityType: "methodology",
+      version: 1,
+      status: "draft",
+      title: "Research methodology",
+      payload: { text: project.methodology },
+      provenance,
+      createdAt: project.updatedAt || now,
+      updatedAt: project.updatedAt || now
+    });
+  }
+
+  for (const [index, paper] of project.papers.entries()) {
+    const key = paper.doi || paper.url || `${paper.title}:${index}`;
+    entities.push({
+      id: stableLegacyId(project.id, "source", key),
+      projectId: project.id,
+      entityType: "source",
+      version: 1,
+      status: "draft",
+      title: paper.title,
+      payload: { ...paper, legacyIndex: index },
+      provenance,
+      createdAt: project.updatedAt || now,
+      updatedAt: project.updatedAt || now
+    });
+  }
+
+  const addOutline = (sections: Project["outline"], parentId?: string) => {
+    for (const [index, section] of sections.entries()) {
+      const id = stableLegacyId(project.id, "outline", section.id || `${parentId ?? "root"}-${index}`);
+      entities.push({
+        id,
+        projectId: project.id,
+        entityType: "outline-section",
+        version: 1,
+        status: "draft",
+        title: section.title,
+        payload: { description: section.description, parentId: parentId ?? null, order: index },
+        provenance,
+        createdAt: project.updatedAt || now,
+        updatedAt: project.updatedAt || now
+      });
+      if (section.children?.length) addOutline(section.children, id);
+    }
+  };
+  addOutline(project.outline ?? []);
+
+  if (project.systematicReview) {
+    entities.push({
+      id: stableLegacyId(project.id, "systematic-review", "workspace"),
+      projectId: project.id,
+      entityType: "systematic-review",
+      version: 1,
+      status: "draft",
+      title: "Systematic review workspace",
+      payload: { ...project.systematicReview },
+      provenance,
+      createdAt: project.updatedAt || now,
+      updatedAt: project.updatedAt || now
+    });
+  }
+
+  return entities;
+}
