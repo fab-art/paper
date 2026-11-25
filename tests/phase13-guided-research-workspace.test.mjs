@@ -42,6 +42,7 @@ test('Production Line exposes dependency gates, agent assignment, owner approval
   assert.match(production, /Assign specialist/);
   assert.match(production, /ownerApprovalRequired: ownerGate \|\| Boolean\(agentId\)/);
   assert.match(production, /Approve/);
+  assert.match(production, /Approve to start/);
   assert.match(production, /Request changes/);
   assert.match(production, /setResearchAgentsPaused/);
   assert.match(production, /Run specialist/);
@@ -61,6 +62,7 @@ test('research task persistence validates linked inputs and outputs and records 
   assert.match(db, /Every task input must reference an existing research entity/);
   assert.match(db, /db\.researchAuditEvents, db\.researchEntities/);
   assert.match(db, /Every task output must reference an existing research entity/);
+  assert.match(db, /not authorized for this research station/);
   assert.match(db, /Agent outputs can only be saved by the assigned specialist/);
   assert.match(db, /A specialist can submit only its own proposed outputs/);
   assert.match(db, /actor === "agent" && action === "start" && control\?\.agentsPaused/);
