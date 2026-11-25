@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
-import type { ProjectAttachment } from "../lib/types";
+import type { Project, ProjectAttachment } from "../lib/types";
+import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest } from "../lib/research-analysis";
+import { saveResearchEntity } from "../lib/db";
+import type { ResearchEntity } from "../lib/research-blueprint";
 import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
 import "./data-methods-lab.css";
 
@@ -29,7 +32,7 @@ function profileColumn(name: string, values: string[], total: number): ColumnPro
   };
 }
 
-export default function DataMethodsLab({ attachments }: { attachments: ProjectAttachment[] }) {
+export default function DataMethodsLab({ attachments, project }: { attachments: ProjectAttachment[]; project: Project }) {
   const csvFiles = useMemo(() => attachments.filter(file =>
     file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".tsv") ||
     file.mimeType.toLowerCase().includes("csv") || file.mimeType.toLowerCase().includes("tab-separated")
@@ -39,6 +42,14 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
+  const [studyDesign, setStudyDesign] = useState(project.methodology || "");
+  const [outcomeType, setOutcomeType] = useState<"continuous" | "binary" | "categorical" | "count" | "time-to-event" | "ordinal">("continuous");
+  const [groups, setGroups] = useState(2);
+  const [paired, setPaired] = useState(false);
+  const [sampleSize, setSampleSize] = useState(0);
+  const [analysisScript, setAnalysisScript] = useState("");
+  const [manifestNotice, setManifestNotice] = useState("");
+  const [savingManifest, setSavingManifest] = useState(false);
   const variableFilterRef = useRef<HTMLInputElement | null>(null);
   const clearVariableFilter = () => {
     setFilter("");
@@ -85,6 +96,24 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
   ) : [], [dataset]);
   const visibleProfiles = profiles.filter(item => item.name.toLowerCase().includes(filter.toLowerCase()));
   const preview = dataset?.rows.slice(0, 8) ?? [];
+  const statisticalGuidance = useMemo(() => recommendStatisticalOptions({ studyDesign, outcomeType, groups, paired, sampleSize }), [studyDesign, outcomeType, groups, paired, sampleSize]);
+  const complianceChecklist = useMemo(() => getStudyComplianceChecklist(project.paperType, studyDesign), [project.paperType, studyDesign]);
+  const saveAnalysisManifest = async () => {
+    const file = csvFiles.find(item => item.id === selectedId);
+    if (!file) { setManifestNotice("Select a dataset before documenting an analysis run."); return; }
+    if (!analysisScript.trim()) { setManifestNotice("Add the analysis script or documented procedure first."); return; }
+    setSavingManifest(true); setManifestNotice("");
+    try {
+      const bytes = await file.blob.arrayBuffer();
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const fingerprint = "sha256:" + Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, "0")).join("");
+      const manifest = createAnalysisRunManifest({ datasetId: file.id, datasetFingerprint: fingerprint, transformations: [], script: analysisScript, software: { browser: navigator.userAgent, workflow: "PaperOrchestra local Data & Methods" }, parameters: { studyDesign, outcomeType, groups, paired, sampleSize }, outputIds: [] });
+      const entity: ResearchEntity = { id: "analysis:" + crypto.randomUUID(), projectId: project.id, entityType: "analysis", version: 1, status: "draft", title: "Analysis reproducibility record", payload: { recordType: "analysis-run-manifest", manifest }, provenance: { kind: "owner", sourceId: file.id, sourceLabel: "Researcher-documented local analysis plan", recordedAt: Date.now() }, createdAt: Date.now(), updatedAt: Date.now() };
+      await saveResearchEntity(entity);
+      setManifestNotice("Reproducibility record saved locally. It is a documented plan, not evidence that the analysis has been executed or validated.");
+    } catch (cause) { setManifestNotice((cause as Error).message || "Could not save the reproducibility record."); }
+    finally { setSavingManifest(false); }
+  };
 
   return <section className="dml-shell" aria-busy={loading}>
     <header className="dml-heading">
@@ -122,5 +151,30 @@ export default function DataMethodsLab({ attachments }: { attachments: ProjectAt
           </section>
         </>}
       </>}
+
+    <section className="dml-panel" aria-labelledby="dml-guidance-title">
+      <div className="dml-panel-head"><div><h3 id="dml-guidance-title">Guided statistical planning</h3><p>Recommendations depend on your study design and outcome—not column types alone.</p></div><span className="dml-readonly">ADVISORY ONLY</span></div>
+      <div className="dml-form-grid">
+        <label>Study design<input value={studyDesign} onChange={event => setStudyDesign(event.target.value)} placeholder="e.g. cross-sectional, cohort, randomized trial"/></label>
+        <label>Primary outcome type<select value={outcomeType} onChange={event => setOutcomeType(event.target.value as typeof outcomeType)}><option value="continuous">Continuous</option><option value="binary">Binary</option><option value="categorical">Categorical</option><option value="count">Count</option><option value="time-to-event">Time to event</option><option value="ordinal">Ordinal</option></select></label>
+        <label>Number of groups<input type="number" min="1" max="20" value={groups} onChange={event => setGroups(Math.max(1, Number(event.target.value) || 1))}/></label>
+        <label>Sample size<input type="number" min="0" value={sampleSize} onChange={event => setSampleSize(Math.max(0, Number(event.target.value) || 0))}/></label>
+        <label className="dml-checkline"><input type="checkbox" checked={paired} onChange={event => setPaired(event.target.checked)}/> Paired / repeated measurements</label>
+      </div>
+      {statisticalGuidance.options.map(option => <article className="dml-guidance-card" key={option.method}><strong>{option.method}</strong><p>{option.rationale}</p><small>Assumptions: {option.assumptions.join(" · ")}</small><small>Limitations: {option.limitations.join(" · ")}</small></article>)}
+      <ul className="dml-guidance-list">{statisticalGuidance.assumptions.map(item => <li key={item}>{item}</li>)}</ul>
+      <p className="dml-warning">These are candidate methods, not a statistical decision. Confirm the estimand, protocol, assumptions and analysis plan with the researcher or statistician before running inferential analyses.</p>
+    </section>
+    <section className="dml-panel" aria-labelledby="dml-compliance-title">
+      <div className="dml-panel-head"><div><h3 id="dml-compliance-title">Study-specific reporting & ethics checklist</h3><p>Selected from the declared paper type and study design. Nothing is auto-confirmed.</p></div></div>
+      <ul className="dml-guidance-list">{complianceChecklist.map(item => <li key={item.id}><strong>{item.guideline}:</strong> {item.label} <span>Researcher confirmation required</span></li>)}</ul>
+      <p className="dml-warning">A checklist helps identify missing information; it does not certify ethics approval, consent, reporting compliance or scientific validity.</p>
+    </section>
+    {csvFiles.length > 0 && <section className="dml-panel" aria-labelledby="dml-repro-title">
+      <div className="dml-panel-head"><div><h3 id="dml-repro-title">Reproducibility record</h3><p>Fingerprint the original dataset and document the analysis procedure before execution.</p></div></div>
+      <label className="dml-script-label">Analysis script or documented procedure<textarea rows={5} value={analysisScript} onChange={event => setAnalysisScript(event.target.value)} placeholder="Paste the script or describe the exact analysis steps and transformations."/></label>
+      <button type="button" className="dml-primary-action" disabled={savingManifest || !selectedId || !analysisScript.trim()} onClick={() => void saveAnalysisManifest()}>{savingManifest ? "Saving…" : "Save reproducibility record"}</button>
+      {manifestNotice && <p role="status" aria-live="polite">{manifestNotice}</p>}
+    </section>
   </section>;
 }
