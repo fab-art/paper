@@ -87,7 +87,14 @@ export function getResearchEntryPlan(path: ResearchEntryPath, paperType?: Resear
   };
 }
 
-export function getResearchNextAction(project: { researchQuestion?: string; paperType?: ResearchPaperType; papers?: unknown[]; methodology?: string; researchMode?: "guided" | "professional"; startPath?: ResearchEntryPath; }) {
+export function getResearchNextAction(project: { researchQuestion?: string; paperType?: ResearchPaperType; papers?: unknown[]; methodology?: string; researchMode?: "guided" | "professional"; startPath?: ResearchEntryPath; }, plan?: ResearchStationPlan) {
+  if (plan) {
+    for (const station of plan.stations) {
+      const task = station.tasks.find(item => !item.completed);
+      if (task) return { id: task.id, title: task.title, description: task.description, station: station.stationId };
+    }
+    return { id: "plan-review", title: "Review your completed research plan", description: "All planned steps are marked complete. Check the supporting outputs and owner decisions before moving forward.", station: plan.stations.find(item => item.stationId === "quality")?.stationId ?? plan.stations.at(-1)?.stationId ?? "intake" };
+  }
   if (project.startPath === "dataset" || project.paperType === "dataset-analysis") return { id: "dataset-profile", title: "Profile your dataset", description: "Inspect variables, missing values and data quality before selecting an analysis.", station: "data" };
   if (project.startPath === "review" || project.paperType === "systematic-review" || project.paperType === "scoping-review") return { id: "review-protocol", title: "Define your review protocol", description: "Confirm the review question, eligibility criteria and search approach before screening.", station: "protocol" };
   if (project.startPath === "manuscript" || project.paperType === "existing-manuscript") return { id: "manuscript-inventory", title: "Review your existing manuscript", description: "Check the draft, references and evidence gaps before making revisions.", station: "writing" };
