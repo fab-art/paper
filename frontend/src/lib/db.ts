@@ -516,6 +516,18 @@ export async function transitionResearchTaskRecord(
     const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale, actorAgentId, outputEntityIds);
     await db.researchTasks.put(result.task);
     if (result.approval) await db.researchApprovals.add(result.approval);
+    if ((action === "approve" || action === "request-changes") && task.approvalStage === "after-run") {
+      const proposedOutputs = await db.researchEntities.bulkGet(task.outputEntityIds);
+      for (const output of proposedOutputs) {
+        if (!output || output.status !== "proposed") continue;
+        await db.researchEntities.put({
+          ...output,
+          status: action === "approve" ? "approved" : "stale",
+          version: output.version + 1,
+          updatedAt: Date.now()
+        });
+      }
+    }
     await db.researchAuditEvents.add({
       id: createRecordId("event"), projectId, taskId, actor,
       event: action === "approve" ? "owner-approved-task" : action === "request-changes" ? "owner-requested-changes" : `task-${action}`,
