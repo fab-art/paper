@@ -11,6 +11,8 @@ import "./research-plan-editor.css";
 interface ResearchPlanEditorProps {
   plan: ResearchStationPlan;
   onChange: (plan: ResearchStationPlan) => void;
+  storyArc: string[];
+  onStoryArcChange: (storyArc: string[]) => void;
 }
 
 const PAPER_TYPE_LABELS: Record<string, string> = {
@@ -28,13 +30,19 @@ const PAPER_TYPE_LABELS: Record<string, string> = {
 
 export default function ResearchPlanEditor({ plan, onChange, storyArc, onStoryArcChange }: ResearchPlanEditorProps) {
   const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});
-  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});\n  const [storyDrafts, setStoryDrafts] = useState<string[]>(storyArc);\n  const [newStoryBeat, setNewStoryBeat] = useState("");
+  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});
+  const [storyDrafts, setStoryDrafts] = useState<string[]>(storyArc);
+  const [newStoryBeat, setNewStoryBeat] = useState("");
   const [newTaskStation, setNewTaskStation] = useState<ResearchPlanStationId>(plan.stations[0]?.stationId ?? "intake");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
   const [newMilestoneDate, setNewMilestoneDate] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setStoryDrafts(storyArc);
+  }, [storyArc]);
 
   useEffect(() => {
     setTaskDrafts(Object.fromEntries(plan.stations.flatMap(station => station.tasks.map(task => [task.id, { title: task.title, description: task.description }]))));
