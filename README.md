@@ -129,3 +129,8 @@ Phase 9 establishes the cross-phase redesign specification for the React PWA usi
 ## Engineering standards and release gates
 
 Repository-wide development rules are defined in [AGENTS.md](AGENTS.md) and [CONSTRAINTS.md](CONSTRAINTS.md). The current blocking GitHub Actions checks are npm dependency audits, the full regression suite and the TypeScript/production build. Browser automation, runtime accessibility, Lighthouse and Limrun device evidence are required before the integrated Phase 9 release; they are not claimed as automated until their test harnesses are added and verified. Vercel production deployment is a separate release decision after the quality gates pass.
+
+
+### Phase 9 visual prototype
+
+The current Research Station dashboard concept is available in the private [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). It uses preview data only and is not connected to application persistence. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md) for the Lumen package compatibility gate before production integration.
