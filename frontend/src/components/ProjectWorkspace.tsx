@@ -144,7 +144,16 @@ export default function ProjectWorkspace({
     if (latest?.id === projectId) void persistProject(latest).catch(() => undefined);
   }, [projectId]);
 
-  const patch = (changes: Partial<Project>) => setProject(current => current ? { ...current, ...changes } : current);
+  const patch = (changes: Partial<Project>) => setProject(current => {
+    if (!current) return current;
+    const next = { ...current, ...changes };
+    if (changes.researchPlan) {
+      next.milestones = changes.researchPlan.milestones.map(milestone => ({ ...milestone }));
+    } else if (changes.milestones && current.researchPlan) {
+      next.researchPlan = { ...current.researchPlan, milestones: changes.milestones.map(milestone => ({ ...milestone })), updatedAt: Date.now() };
+    }
+    return next;
+  });
   const clearSourceSearch = () => {
     setSourceQuery("");
     sourceSearchRef.current?.focus();
