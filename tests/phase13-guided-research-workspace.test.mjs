@@ -68,6 +68,9 @@ test('research task persistence validates linked inputs and outputs and records 
   assert.match(db, /Agent outputs can only be saved by the assigned specialist/);
   assert.match(db, /A specialist can submit only its own proposed outputs/);
   assert.match(db, /actor === "agent" && action === "start" && control\?\.agentsPaused/);
+  assert.match(db, /task.approvalStage === "after-run"/);
+  assert.match(db, /status: action === "approve" \? "approved" : "stale"/);
+  assert.match(production, /Status: \{entity\?\.status/);
   assert.match(db, /researchAuditEvents/);
   assert.match(db, /listResearchAuditEvents/);
 });
