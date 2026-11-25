@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Search, Settings2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
+import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Moon, Search, Settings2, Sun, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { Button, Card, Sidebar } from "@santi020k/lumen-react";
 import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
@@ -23,6 +23,21 @@ export default function App() {
   const [activePath, setActivePath] = useState(window.location.pathname);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [query, setQuery] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    try {
+      return window.localStorage.getItem("paperorchestra-theme") === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("paperorchestra-theme", theme);
+    } catch {
+      // Theme remains available for this session when storage is restricted.
+    }
+  }, [theme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +68,7 @@ export default function App() {
   }
 
   return (
-    <div className="factory-app" data-lumen-preset="default">
+    <div className="factory-app" data-lumen-preset="default" data-theme={theme}>
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="app-topbar">
         <a className="wordmark" href="/" onClick={(event) => { event.preventDefault(); navigate("/"); }}>
@@ -66,6 +81,14 @@ export default function App() {
             <span className="status-dot" />
             {storageError ? "Local library unavailable" : loading ? "Opening local library" : "Local workspace"}
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+            onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
+          >
+            {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+          </Button>
         </div>
       </header>
 
