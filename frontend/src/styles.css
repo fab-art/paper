@@ -375,3 +375,11 @@ body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
 .dash-modal input,.dash-modal textarea{min-width:0}
 .dash-modal-actions{flex-wrap:wrap}
 @media(max-width:420px){.dash-modal-backdrop{padding:12px}.dash-modal{width:100%;max-width:100%;padding:20px 18px}}
+
+/* iOS Safari auto-zooms focused form controls below 16px. Keep mobile dialogs in the viewport. */
+@media(max-width:580px){
+  .dash-modal-backdrop{padding:12px}
+  .dash-modal{width:min(100%,460px);max-width:100%;padding:20px 18px}
+  .dash-modal input,.dash-modal textarea,.cloud-auth-dialog input,.cloud-auth-dialog textarea,.dash-search input{font-size:16px}
+  .dash-modal h2{overflow-wrap:anywhere}
+}
