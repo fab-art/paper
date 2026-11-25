@@ -111,8 +111,11 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       setAnalysisOutput(outputs[0] ?? null);
       const review = entities.filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "compliance-review").sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? null;
       setComplianceReviewEntity(review);
+      const savedDesign = typeof review?.payload.studyDesign === "string" ? review.payload.studyDesign : "";
+      if (savedDesign) setStudyDesign(savedDesign);
       const savedChecklist = Array.isArray(review?.payload.checklist) ? review.payload.checklist as Array<{ id: string; ownerStatus: ComplianceOwnerStatus }> : [];
-      setComplianceStatuses(Object.fromEntries(savedChecklist.map(item => [item.id, item.ownerStatus])));
+      const samePaperType = review?.payload.paperType === (project.paperType ?? "unspecified");
+      setComplianceStatuses(samePaperType ? Object.fromEntries(savedChecklist.map(item => [item.id, item.ownerStatus])) : {});
       setComplianceNotes(typeof review?.payload.notes === "string" ? review.payload.notes : "");
     }).catch(() => {
       if (active) setComplianceNotice("Existing local analysis records could not be loaded.");
@@ -215,7 +218,8 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       const manifest = createAnalysisRunManifest({
         datasetId: file.id,
         datasetFingerprint: fingerprint,
-        transformations: analysisScript.trim() ? [analysisScript.trim()] : [],
+        transformations: [],
+        researcherNotes: analysisScript,
         script: result.engineVersion + " — " + result.method + "; deterministic descriptive analysis only.",
         software: { application: "PaperOrchestra Studio", analysisEngine: result.engineVersion, runtime: "Browser Web Worker", userAgent: navigator.userAgent },
         parameters: { outcomeColumn, groupColumn, outcomeType, rowCountAnalyzed: result.rowCountAnalyzed },
