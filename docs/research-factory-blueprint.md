@@ -433,25 +433,88 @@ A dedicated inbox for protocol decisions, screening decisions, extraction correc
 - Provide export, delete and local-only controls consistent with data ownership.
 - Maintain audit events for agent actions and owner decisions.
 
-## 18. Delivery roadmap
+## 18. Two-stage delivery roadmap
 
-### Foundation and product architecture
-- **Phase 11:** finalize domain model, state machine, permissions, agent contracts, event/provenance model, migration design and acceptance criteria.
-- **Phase 12:** Research Station dashboard, assembly-line navigation, station shell, Guided/Professional toggle and owner approval centre shell.
+The implementation is deliberately consolidated into **two stages, with exactly five phases in each stage**. Each phase is a coherent delivery milestone; individual PRs may still be smaller and more frequent. The stages are sequential: Stage 1 establishes the dependable production system, and Stage 2 makes that system effortless, intelligent, and publication-ready.
 
-### Production workflows
-- **Phase 13:** Research GPS onboarding and paper-type blueprints.
-- **Phase 14:** station orchestration, task dependencies, quality gates, run history and pause/cancel controls.
-- **Phase 15:** evidence graph, claim-to-source verification and grounded Writing Co-pilot.
-- **Phase 16:** Data & Methods production workflow, reproducibility records and figure/table generation.
-- **Phase 17:** scientific auditor, compliance checks and Reviewer #2 fix cards.
-- **Phase 18:** journal intelligence, format compiler, rebuttal and revision workflow.
+### Stage 1 — Foundation: build the core Research Factory
 
-### Integration and release
-- **Phase 19:** legacy module migration, offline/local-first regression, optional collaboration integration and security review.
-- **Phase 20:** end-to-end production-line testing, independent review, accessibility/device validation, preview verification and controlled production release.
+**Outcome:** A working, secure, local-first research production engine with shared project state, controlled agents, station workflows, provenance, and owner authority. The UI can remain functional and relatively simple; advanced product polish is not a prerequisite for proving the core.
 
-Phases should be sliced into reviewable PRs. Do not attempt a risky all-at-once rewrite.
+1. **Phase 1 — Research Blueprint & Domain Foundation**
+   - Inventory existing project records, IndexedDB stores, module state, and migrations.
+   - Define normalized entities, stable IDs, relationships, versioning, provenance, and lifecycle states.
+   - Implement the canonical project model and additive, backward-compatible migration path.
+   - Preserve current projects and ensure local-first operation remains the default.
+   - **Exit gate:** existing and new projects can be represented in the shared model without data loss; migrations are repeatable and covered by regression tests.
+
+2. **Phase 2 — Production Line & Workflow Engine**
+   - Implement the station registry, task model, dependencies, lifecycle state machine, queues, and run history.
+   - Support multiple entry points and non-linear routes through the stations.
+   - Implement component-level status, quality gates, stale-state propagation, retries, idempotency, cancellation, and pause controls.
+   - **Exit gate:** a project can move through stations, pause and resume safely, and identify downstream components requiring reinspection after upstream changes.
+
+3. **Phase 3 — Agent Runtime, Contracts & Owner Authority**
+   - Implement the Research Orchestrator and structured specialist-agent contracts.
+   - Enforce per-agent permissions, tool scopes, budgets, timeouts, and execution records.
+   - Implement approval requests, owner decisions, audit history, global pause, cancellation, and permission revocation.
+   - Keep scientific decisions, ethics declarations, authorship, final conclusions, and submission authorization owner-controlled.
+   - **Exit gate:** agents can perform only permitted work; approval-required tasks block until owner action; no agent can approve its own output or act as the owner.
+
+4. **Phase 4 — Core Research Stations & Evidence Traceability**
+   - Connect the existing Discovery, Systematic Review, Data & Methods, Writing Studio, and Quality & Export capabilities to the shared project model.
+   - Implement station input/output contracts and traceable links between sources, passages, evidence, claims, datasets, analyses, figures, tables, and manuscript sections.
+   - Preserve researcher-led screening, extraction corrections, risk-of-bias judgements, and interpretation.
+   - Implement baseline reproducibility records for dataset versions, transformations, scripts, environments, parameters, and outputs.
+   - **Exit gate:** core research work is represented in one project model and outputs can be traced to their underlying evidence or data.
+
+5. **Phase 5 — Foundation Integration, Security & Reliability**
+   - Complete additive migration and legacy compatibility.
+   - Verify local-only workflows, offline behavior where applicable, explicit Supabase sharing, and RLS boundaries.
+   - Review prompt-injection boundaries, file limits, compute isolation, secrets, quotas, and agent execution safety.
+   - Run regression, type/build, dependency, browser, accessibility, responsive, and device checks appropriate to the implemented foundation.
+   - **Exit gate:** the integrated foundation passes the repository's blocking checks and agreed release checks; no production rollout until independent review and release approval.
+
+### Stage 2 — Product improvements: make the factory effortless and publication-ready
+
+**Outcome:** A beginner-friendly guided experience layered on the proven foundation, with specialized assistance, professional controls, and a complete publication workflow.
+
+6. **Phase 6 — Research GPS, Guided UX & Paper-Type Blueprints**
+   - Build plain-language onboarding for idea-first, literature-first, dataset-first, review-first, and manuscript-first projects.
+   - Add empirical, systematic/scoping review, case report, conference paper, protocol, and custom blueprints.
+   - Generate an editable station plan, story arc, milestones, and one clear next action.
+   - Add Guided and Professional modes over the same project records, plus the Research Station production control room.
+   - **Exit gate:** a first-time author can start and navigate a suitable workflow without needing to understand academic jargon or the underlying technical configuration.
+
+7. **Phase 7 — Evidence-Grounded Writing Co-pilot**
+   - Add block-by-block manuscript drafting, micro-prompts, section guidance, word targets, and sentence starters.
+   - Ground writing suggestions in accessible source passages, approved protocol, owner notes, and verified analysis outputs.
+   - Add claim-to-source verification, citation checks, plain-language-to-academic clarity refinement, and author-voice preservation.
+   - Provide reviewable diffs, accept/reject controls, and navigation from a claim to its source.
+   - **Exit gate:** generated factual claims have traceable support or are visibly flagged as unsupported/awaiting verification; no fabricated citations.
+
+8. **Phase 8 — Data, Statistics, Figures & Compliance Assistant**
+   - Add no-code dataset profiling and guided statistical recommendations with design-aware assumption checks.
+   - Generate reproducible analyses, publication-ready tables/figures, and captions from actual outputs.
+   - Add reporting-guideline and ethics/compliance checklists appropriate to the selected study design.
+   - Clearly distinguish automated checks, recommendations, missing declarations, and owner-confirmed statements.
+   - **Exit gate:** analyses are reproducible and reviewable; statistical choices and scientific interpretation remain under researcher control; compliance tools never imply certification they cannot establish.
+
+9. **Phase 9 — Scientific Auditor, Reviewer Simulator & Journal Advisor**
+   - Add independent claim/evidence, citation, consistency, calculation, reporting, and reproducibility inspections.
+   - Simulate critical reviewer perspectives and turn findings into prioritized, location-aware fix cards.
+   - Add journal-fit and risk advice using sourced, dated information about scope, article type, indexing, publisher, APCs, and review timelines when available.
+   - Mark unavailable or unverified metrics honestly; do not invent acceptance probabilities or make unsupported predatory-journal accusations.
+   - **Exit gate:** every finding is actionable and traceable; AI review is clearly labeled as simulation, not real peer review or an acceptance prediction.
+
+10. **Phase 10 — Publication Compiler, Rebuttal & Product Release**
+    - Compile journal-specific Word/LaTeX manuscripts, figures, tables, supplementary files, and cover letters from the canonical manuscript.
+    - Add reviewer-comment import, response grouping, point-by-point rebuttal drafts, and revision tracking.
+    - Complete end-to-end workflows, migration checks, independent security/code review, accessibility and device validation, performance baselines, and production smoke tests.
+    - Require owner preview and explicit authorization before any submission action.
+    - **Exit gate:** a complete, reproducible, owner-approved research package can be prepared for submission; production release is approved only against the exact tested commit.
+
+**Delivery rule:** each phase is broken into small, reviewable PRs with focused tests. A phase is complete only when its exit gate is demonstrated. Stage 2 builds on Stage 1; it must not bypass or weaken the foundation's data integrity, security, local-first, provenance, or owner-authority guarantees.
 
 ## 19. Acceptance criteria
 
