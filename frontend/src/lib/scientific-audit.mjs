@@ -35,7 +35,7 @@ function getPassageEvidence(claim, entities, relations) {
     .filter(relation => relation.toEntityId === claim.id && relation.relationType === "supports")
     .map(relation => byId.get(relation.fromEntityId))
     .filter(entity => entity?.entityType === "research-note" && entity.payload?.recordType === "evidence-passage")
-    .filter(entity => text(entity.payload?.quote) && text(entity.payload?.sourceEntityId) && byId.has(entity.payload.sourceEntityId));
+    .filter(entity => text(entity.payload?.quote) && text(entity.payload?.sourceEntityId) && byId.get(entity.payload.sourceEntityId)?.entityType === "source");
 }
 
 export function runScientificAudit({ project, entities = [], relations = [], now = Date.now() }) {
@@ -191,16 +191,17 @@ export function assessJournalFit({ manuscript = {}, journal = {} } = {}) {
   const typeMatch = Boolean(manuscript.paperType && articleTypes.includes(manuscript.paperType));
   const enoughData = Boolean(scope && keywords.length && articleTypes.length);
   const score = enoughData ? Math.round((overlap.length / Math.max(1, keywords.length) * 0.7 + (typeMatch ? 0.3 : 0)) * 100) : null;
-  const verified = Boolean(text(journal.sourceUrl) && Number.isFinite(journal.verifiedAt) && journal.verifiedAt > 0);
+  const sourceUrl = text(journal.sourceUrl);
+  const researcherMarkedSource = /^https:\/\//i.test(sourceUrl) && Number.isFinite(journal.verifiedAt) && journal.verifiedAt > 0;
   return {
-    status: !enoughData ? "insufficient-data" : verified ? "preliminary-fit" : "needs-source-verification",
+    status: !enoughData ? "insufficient-data" : researcherMarkedSource ? "scope-overlap-calculated" : "needs-source-verification",
     journalTitle: text(journal.title),
     scopeOverlap: overlap,
     scopeFitScore: score,
     articleTypeMatch: enoughData ? typeMatch : null,
-    sourceUrl: text(journal.sourceUrl) || null,
-    verifiedAt: verified ? journal.verifiedAt : null,
-    metadataStatus: verified ? "source-and-date-provided" : "unverified",
+    sourceUrl: sourceUrl || null,
+    verifiedAt: researcherMarkedSource ? journal.verifiedAt : null,
+    metadataStatus: researcherMarkedSource ? "researcher-marked-source-and-date" : "unverified",
     apc: journal.apc ?? null,
     reviewTimeline: journal.reviewTimeline ?? null,
     indexing: Array.isArray(journal.indexing) ? journal.indexing : [],
