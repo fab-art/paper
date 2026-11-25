@@ -18,6 +18,8 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [journalTitle, setJournalTitle] = useState("");
+  const [journalPublisher, setJournalPublisher] = useState("");
+  const [journalIndexing, setJournalIndexing] = useState("");
   const [journalScope, setJournalScope] = useState("");
   const [journalTypes, setJournalTypes] = useState("empirical-study");
   const [journalUrl, setJournalUrl] = useState("");
@@ -40,6 +42,8 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
       const profile = savedJournal?.payload.profile as Record<string, unknown> | undefined;
       if (profile) {
         setJournalTitle(String(profile.title || ""));
+        setJournalPublisher(String(profile.publisher || ""));
+        setJournalIndexing(String(profile.indexing || ""));
         setJournalScope(String(profile.aimsAndScope || ""));
         setJournalTypes(String(profile.acceptedArticleTypes || "empirical-study"));
         setJournalUrl(String(profile.sourceUrl || ""));
@@ -90,18 +94,18 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
   const journalResult = useMemo(() => assessJournalFit({
     manuscript: { title: project.name, paperType: project.paperType, keywords: [project.name, project.researchQuestion || "", ...(project.objectives || [])] },
     journal: {
-      title: journalTitle, aimsAndScope: journalScope,
+      title: journalTitle, publisher: journalPublisher, aimsAndScope: journalScope, indexing: journalIndexing.split(",").map(value => value.trim()).filter(Boolean),
       acceptedArticleTypes: journalTypes.split(",").map(value => value.trim()).filter(Boolean),
       sourceUrl: journalUrl,
       verifiedAt: journalVerifiedDate ? new Date(journalVerifiedDate).getTime() : undefined,
       apc: journalApc || null, reviewTimeline: journalTimeline || null
     }
-  }), [project, journalTitle, journalScope, journalTypes, journalUrl, journalVerifiedDate, journalApc, journalTimeline]);
+  }), [project, journalTitle, journalPublisher, journalIndexing, journalScope, journalTypes, journalUrl, journalVerifiedDate, journalApc, journalTimeline]);
 
   const saveJournalProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const savedAt = Date.now();
-    const profile = { title: journalTitle.trim(), aimsAndScope: journalScope.trim(), acceptedArticleTypes: journalTypes.trim(), sourceUrl: journalUrl.trim(), verifiedDate: journalVerifiedDate, apc: journalApc.trim(), reviewTimeline: journalTimeline.trim() };
+    const profile = { title: journalTitle.trim(), publisher: journalPublisher.trim(), indexing: journalIndexing.trim(), aimsAndScope: journalScope.trim(), acceptedArticleTypes: journalTypes.trim(), sourceUrl: journalUrl.trim(), verifiedDate: journalVerifiedDate, apc: journalApc.trim(), reviewTimeline: journalTimeline.trim() };
     try {
       await saveResearchEntity({ id: "journal-profile:" + project.id, projectId: project.id, entityType: "research-note", version: 1, status: "draft", title: "Journal fit profile", payload: { recordType: "journal-profile", profile }, provenance: { kind: "owner", sourceId: project.id, sourceLabel: "Researcher-supplied journal profile", recordedAt: savedAt }, createdAt: savedAt, updatedAt: savedAt });
       setNotice("Journal profile saved locally. Source metadata remains researcher-supplied and should be checked with the journal.");
@@ -159,6 +163,8 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
       <section className="sa-panel"><div className="sa-panel-title"><div><h3>Journal profile</h3><p>Enter journal details from an official, current source. This tool does not invent missing data.</p></div></div>
         <form className="sa-form" onSubmit={saveJournalProfile}>
           <label>Journal name<input value={journalTitle} onChange={event => setJournalTitle(event.target.value)} placeholder="Journal title"/></label>
+          <label>Publisher<input value={journalPublisher} onChange={event => setJournalPublisher(event.target.value)} placeholder="Publisher name, if confirmed"/></label>
+          <label>Indexing services<input value={journalIndexing} onChange={event => setJournalIndexing(event.target.value)} placeholder="e.g. MEDLINE, Scopus (comma-separated)"/></label>
           <label>Aims and scope<textarea rows={5} value={journalScope} onChange={event => setJournalScope(event.target.value)} placeholder="Paste the journal's stated scope…"/></label>
           <label>Accepted article types<input value={journalTypes} onChange={event => setJournalTypes(event.target.value)} placeholder="empirical-study, systematic-review"/></label>
           <label>Official source URL<input type="url" value={journalUrl} onChange={event => setJournalUrl(event.target.value)} placeholder="https://journal.example/about"/></label>
@@ -171,7 +177,7 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
         <Badge variant={journalResult.status === "scope-overlap-calculated" ? "secondary" : "outline"}>{journalResult.status.replaceAll("-", " ")}</Badge>
         <div className="sa-fit-score"><strong>{journalResult.scopeFitScore === null ? "—" : journalResult.scopeFitScore + "%"}</strong><span>Scope overlap heuristic</span></div>
         <p>{journalResult.scopeOverlap.length ? "Shared terms: " + journalResult.scopeOverlap.join(", ") : "Add a journal scope and manuscript keywords to compare subject overlap."}</p>
-        <dl><div><dt>Article type match</dt><dd>{journalResult.articleTypeMatch === null ? "Not assessed" : journalResult.articleTypeMatch ? "Listed" : "Not listed"}</dd></div><div><dt>APC</dt><dd>{journalResult.apc ?? "Not provided"}</dd></div><div><dt>Review timeline</dt><dd>{journalResult.reviewTimeline ?? "Not provided"}</dd></div><div><dt>Metadata</dt><dd>{journalResult.metadataStatus.replaceAll("-", " ")}</dd></div></dl>
+        <dl><div><dt>Publisher</dt><dd>{journalResult.publisher ?? "Not provided"}</dd></div><div><dt>Indexing</dt><dd>{journalResult.indexing.length ? journalResult.indexing.join(", ") : "Not provided"}</dd></div><div><dt>Article type match</dt><dd>{journalResult.articleTypeMatch === null ? "Not assessed" : journalResult.articleTypeMatch ? "Listed" : "Not listed"}</dd></div><div><dt>APC</dt><dd>{journalResult.apc ?? "Not provided"}</dd></div><div><dt>Review timeline</dt><dd>{journalResult.reviewTimeline ?? "Not provided"}</dd></div><div><dt>Metadata</dt><dd>{journalResult.metadataStatus.replaceAll("-", " ")}</dd></div></dl>
         <p className="sa-footnote">{journalResult.warning}</p>
       </section>
     </div>}
