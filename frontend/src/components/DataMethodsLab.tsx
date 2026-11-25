@@ -160,6 +160,152 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
   const preview = dataset?.rows.slice(0, 8) ?? [];
   const statisticalGuidance = useMemo(() => recommendStatisticalOptions({ studyDesign, outcomeType, groups, paired, sampleSize }), [studyDesign, outcomeType, groups, paired, sampleSize]);
   const complianceChecklist = useMemo(() => getStudyComplianceChecklist(project.paperType, studyDesign), [project.paperType, studyDesign]);
+  const runDescriptiveAnalysis = async () => {
+    const file = csvFiles.find(item => item.id === selectedId);
+    if (!file || !dataset) { setAnalysisError("Select a fully loaded dataset before running analysis."); return; }
+    if (dataset.truncated) { setAnalysisError("This dataset is truncated for preview. Use a complete dataset before analysis."); return; }
+    if (!outcomeColumn) { setAnalysisError("Select an outcome variable."); return; }
+    const startedAt = Date.now();
+    setRunningAnalysis(true); setAnalysisError(""); setManifestNotice("");
+    try {
+      const result = await new Promise<DescriptiveAnalysisResult>((resolve, reject) => {
+        const worker = new Worker(new URL("./research-analysis-worker.ts", import.meta.url), { type: "module" });
+        worker.onmessage = (event: MessageEvent<{ result?: DescriptiveAnalysisResult; error?: string }>) => {
+          worker.terminate();
+          if (event.data.error) reject(new Error(event.data.error));
+          else if (event.data.result) resolve(event.data.result);
+          else reject(new Error("The analysis worker returned an empty result."));
+        };
+        worker.onerror = () => {
+          worker.terminate();
+          reject(new Error("The local analysis worker stopped unexpectedly."));
+        };
+        worker.postMessage({
+          datasetName: file.name,
+          headers: dataset.headers,
+          rows: dataset.rows,
+          outcomeColumn,
+          groupColumn: groupColumn || undefined,
+          outcomeType,
+          truncated: dataset.truncated
+        });
+      });
+      const bytes = await file.blob.arrayBuffer();
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const fingerprint = "sha256:" + Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, "0")).join("");
+      const completedAt = Date.now();
+      const entityId = "analysis:" + crypto.randomUUID();
+      const rowSummary = result.table.rows.slice(0, 18).map(row => Object.entries(row).map(([key, value]) => key + "=" + value).join(", ")).join("; ");
+      const summary = (result.method + " for " + result.outcomeColumn + " in " + file.name + " (N=" + result.rowCountAnalyzed + "). " + rowSummary).slice(0, 3200);
+      const manifest = createAnalysisRunManifest({
+        datasetId: file.id,
+        datasetFingerprint: fingerprint,
+        transformations: analysisScript.trim() ? [analysisScript.trim()] : [],
+        script: result.engineVersion + " — " + result.method + "; deterministic descriptive analysis only.",
+        software: { application: "PaperOrchestra Studio", analysisEngine: result.engineVersion, runtime: "Browser Web Worker", userAgent: navigator.userAgent },
+        parameters: { outcomeColumn, groupColumn, outcomeType, rowCountAnalyzed: result.rowCountAnalyzed },
+        outputIds: [entityId],
+        execution: { status: "completed", startedAt, completedAt, durationMs: completedAt - startedAt, runtime: "Browser Web Worker", analyzedRows: result.rowCountAnalyzed, logs: [...result.logs, "Dataset SHA-256 fingerprint: " + fingerprint, "Output entity: " + entityId] }
+      });
+      const entity: SavedAnalysisOutput = {
+        id: entityId,
+        projectId: project.id,
+        entityType: "analysis",
+        version: 1,
+        status: "draft",
+        title: result.method + ": " + result.outcomeColumn,
+        payload: {
+          recordType: "analysis-output",
+          summary,
+          method: result.method,
+          table: result.table,
+          figure: result.figure,
+          figureSvg: renderAnalysisFigureSvg(result.figure),
+          caption: result.caption,
+          datasetFingerprint: fingerprint,
+          datasetName: file.name,
+          rowCountAnalyzed: result.rowCountAnalyzed,
+          manifest,
+          ownerApproved: false
+        },
+        provenance: { kind: "owner", sourceId: file.id, sourceLabel: file.name + " · SHA-256 " + fingerprint, recordedAt: completedAt },
+        createdAt: startedAt,
+        updatedAt: completedAt
+      };
+      await saveResearchEntity(entity);
+      setSavedAnalysisOutputs(current => [entity, ...current.filter(item => item.id !== entity.id)]);
+      setAnalysisOutput(entity);
+      setManifestNotice("Descriptive analysis executed and saved locally. The output is awaiting your review and is not yet available to writing agents.");
+    } catch (cause) {
+      setAnalysisError((cause as Error).message || "The descriptive analysis could not be completed.");
+    } finally {
+      setRunningAnalysis(false);
+    }
+  };
+
+  const approveAnalysisOutput = async (output: SavedAnalysisOutput) => {
+    const approvedAt = Date.now();
+    const next: SavedAnalysisOutput = {
+      ...output,
+      status: "approved",
+      version: output.version + 1,
+      updatedAt: approvedAt,
+      payload: {
+        ...output.payload,
+        ownerApproved: true,
+        ownerReviewedAt: approvedAt,
+        manifest: approveAnalysisRunManifest(output.payload.manifest, approvedAt)
+      }
+    };
+    try {
+      await saveResearchEntity(next);
+      setSavedAnalysisOutputs(current => current.map(item => item.id === next.id ? next : item));
+      setAnalysisOutput(next);
+      setManifestNotice("You approved this descriptive output. Its summary can now be used as grounded writing context.");
+    } catch (cause) {
+      setManifestNotice("Could not save owner approval: " + (cause as Error).message);
+    }
+  };
+
+  const saveComplianceReview = async () => {
+    setSavingCompliance(true); setComplianceNotice("");
+    const now = Date.now();
+    const id = complianceReviewEntity?.id ?? "compliance:" + crypto.randomUUID();
+    const checklist = complianceChecklist.map(item => ({
+      ...item,
+      ownerStatus: complianceStatuses[item.id] ?? "not-reviewed"
+    }));
+    const entity: ResearchEntity = {
+      id,
+      projectId: project.id,
+      entityType: "research-note",
+      version: (complianceReviewEntity?.version ?? 0) + 1,
+      status: "draft",
+      title: "Study reporting and ethics owner review",
+      payload: {
+        recordType: "compliance-review",
+        paperType: project.paperType ?? "unspecified",
+        studyDesign,
+        checklist,
+        notes: complianceNotes,
+        ownerReviewedAt: now,
+        notice: "Researcher declarations only; this record is not independent verification or certification."
+      },
+      provenance: { kind: "owner", sourceId: project.id, sourceLabel: "Researcher-authored compliance review", recordedAt: now },
+      createdAt: complianceReviewEntity?.createdAt ?? now,
+      updatedAt: now
+    };
+    try {
+      await saveResearchEntity(entity);
+      setComplianceReviewEntity(entity);
+      setComplianceNotice("Owner review saved locally. Confirmations and follow-up items remain researcher declarations.");
+    } catch (cause) {
+      setComplianceNotice("Could not save the owner review: " + (cause as Error).message);
+    } finally {
+      setSavingCompliance(false);
+    }
+  };
+
   const saveAnalysisManifest = async () => {
     const file = csvFiles.find(item => item.id === selectedId);
     if (!file) { setManifestNotice("Select a dataset before documenting an analysis run."); return; }
