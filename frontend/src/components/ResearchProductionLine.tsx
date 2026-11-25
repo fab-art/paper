@@ -232,6 +232,6 @@ export default function ResearchProductionLine({
       <div className="rpl-station-heading"><div><span className="rpl-eyebrow">SPECIALIST NETWORK</span><h3>Agent responsibilities</h3></div><Badge variant="outline">{RESEARCH_AGENTS.length} roles</Badge></div>
       <div className="rpl-agent-grid">{RESEARCH_AGENTS.map(agent => <div key={agent.id}><strong>{agent.label}</strong><p>{agent.purpose}</p><small>Can propose: {agent.canPropose.join(", ")}</small><small>Cannot approve or make owner decisions</small></div>)}</div>
     </Card>}
-    <p className="rpl-owner-note"><ShieldCheck size={15}/> You own the research. Specialist agents can prepare drafts and recommendations, but they cannot approve scientific decisions, change ethics declarations, determine authorship or submit your work. Pausing agents stops future dispatch; an in-progress local model generation must be canceled separately.</p>
+    <p className="rpl-owner-note"><ShieldCheck size={15}/> You own the research. Specialist agents can prepare drafts and recommendations, but they cannot approve scientific decisions, change ethics declarations, determine authorship or submit your work. Pausing agents stops future dispatch; it does not interrupt a local model generation that is already running.</p>
   </div>;
 }
