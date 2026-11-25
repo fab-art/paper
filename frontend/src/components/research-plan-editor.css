@@ -38,3 +38,6 @@
 .rpe-root button:focus-visible,.rpe-root input:focus-visible,.rpe-root textarea:focus-visible,.rpe-root select:focus-visible{outline:3px solid color-mix(in srgb,hsl(var(--brand,193 79% 26%)) 35%,transparent);outline-offset:2px}
 .rpe-root .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:760px){.rpe-heading{display:grid}.rpe-save-note{width:100%;margin-left:0}.rpe-add-card form{grid-template-columns:1fr}.rpe-add-card form>div{grid-column:auto}.rpe-milestone{grid-template-columns:24px minmax(0,1fr)}.rpe-date{grid-column:2}.rpe-add-milestone{grid-template-columns:1fr}.rpe-station-head{align-items:center}}
+
+.rpe-complete,.rpe-milestone-done{display:flex;align-items:center;justify-content:center;min-width:28px;min-height:28px}
+.rpe-reorder button{min-width:28px;min-height:28px}
