@@ -11,6 +11,7 @@ type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncat
 type ColumnProfile = { name: string; type: string; missing: number; unique: number; min?: string; max?: string; mean?: string; median?: string };
 
 type ComplianceOwnerStatus = "not-reviewed" | "confirmed-by-researcher" | "not-applicable" | "requires-follow-up";
+type AnalysisRunManifest = Omit<ReturnType<typeof createAnalysisRunManifest>, "ownerApproved" | "status"> & { ownerApproved: boolean; status: "awaiting-owner-review" | "approved"; approvedAt?: number };
 type SavedAnalysisOutput = ResearchEntity & {
   payload: {
     recordType: "analysis-output";
@@ -23,7 +24,7 @@ type SavedAnalysisOutput = ResearchEntity & {
     datasetFingerprint: string;
     datasetName: string;
     rowCountAnalyzed: number;
-    manifest: ReturnType<typeof createAnalysisRunManifest>;
+    manifest: AnalysisRunManifest;
     ownerApproved?: boolean;
     ownerReviewedAt?: number;
   };
