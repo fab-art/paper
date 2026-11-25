@@ -29,6 +29,21 @@ type SavedAnalysisOutput = ResearchEntity & {
   };
 };
 
+function downloadTextFile(filename: string, content: string, mimeType: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function analysisTableCsv(table: DescriptiveAnalysisResult["table"]) {
+  const keys = table.rows.length ? Object.keys(table.rows[0]) : [];
+  const quote = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+  return [keys.map(quote).join(","), ...table.rows.map(row => keys.map(key => quote(row[key])).join(","))].join("\n");
+}
+
 function median(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
