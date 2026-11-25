@@ -1,6 +1,6 @@
 import type { Project, OutlineSection } from "./types";
 import type { ResearchPaperType } from "./research-blueprint";
-import { writingPrompt } from "../agents/prompts";
+import { writingPrompt } from "../agents/prompts.ts";
 
 export type WritingAuthorVoice = "preserve" | "formal" | "concise" | "accessible";
 export interface WritingSectionGuide {
