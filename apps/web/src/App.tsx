@@ -12,8 +12,10 @@ const iconByWorkspace: Record<string, typeof Activity> = {
   collaboration: Sparkles, settings: Settings2
 };
 
-function formatDate(timestamp: number) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(timestamp);
+function formatDate(timestamp: number | null | undefined) {
+  const date = new Date(typeof timestamp === "number" ? timestamp : Number.NaN);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
 export default function App() {
@@ -59,7 +61,8 @@ export default function App() {
 
   const groups = useMemo(() => getWorkspaceGroups(), []);
   const activeWorkspace = getWorkspaceByPath(activePath) ?? WORKSPACES[0];
-  const filteredProjects = projects.filter((project) => project.name.toLowerCase().includes(query.trim().toLowerCase()));
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredProjects = projects.filter((project) => (project.name ?? "").toLowerCase().includes(normalizedQuery));
 
   function navigate(path: string) {
     window.history.pushState({}, "", path);
@@ -132,15 +135,15 @@ export default function App() {
             <div>
               <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
-              <h1>{selectedProject ? selectedProject.name : activeWorkspace.label}</h1>
+              <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
               <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
           {selectedProject ? (
             <Card className="project-detail-card">
-              <div className="detail-topline"><span className="eyebrow">LOCAL PROJECT RECORD</span><span className="record-id">ID · {selectedProject.id.slice(0, 8)}</span></div>
-              <h2>{selectedProject.name}</h2>
+              <div className="detail-topline"><span className="eyebrow">LOCAL PROJECT RECORD</span><span className="record-id">ID · {String(selectedProject.id ?? "unknown").slice(0, 8)}</span></div>
+              <h2>{selectedProject.name || "Untitled project"}</h2>
               <p>{selectedProject.researchQuestion || "No research question has been recorded yet."}</p>
               <div className="detail-meta"><span>Updated {formatDate(selectedProject.updatedAt)}</span><span>{selectedProject.status ?? "planning"}</span></div>
               <Button variant="secondary" onClick={() => setSelectedProject(null)}>Back to project library</Button>
@@ -151,7 +154,7 @@ export default function App() {
                 <div className="welcome-copy">
                   <span className="welcome-label"><Sparkles size={14} /> A BETTER WAY TO DO RESEARCH</span>
                   <h2>From research question<br />to a defensible paper.</h2>
-                  <p>Plan, discover, analyze, write and verify in one connected workspace. You stay in control at every step.</p>
+                  <p>Your existing tools stay available while each research station is migrated into this connected workspace.</p>
                   <div className="welcome-footnote"><span className="status-dot" /> Your projects stay on this device by default.</div>
                 </div>
                 <div className="welcome-art" aria-hidden="true">
@@ -166,17 +169,17 @@ export default function App() {
 
               <section className="library-section" aria-labelledby="library-heading">
                 <div className="section-heading">
-                  <div><p className="eyebrow">YOUR RESEARCH LIBRARY</p><h2 id="library-heading">Projects <span className="count-pill">{projects.length}</span></h2></div>
+                  <div><p className="eyebrow">YOUR RESEARCH LIBRARY</p><h2 id="library-heading">Projects <span className="count-pill">{loading ? "…" : storageError ? "—" : projects.length}</span></h2></div>
                   <label className="project-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a project" aria-label="Find a project" /></label>
                 </div>
 
                 {loading ? <div className="state-panel" role="status">Opening your local research library…</div> :
                   storageError ? <div className="state-panel state-error" role="alert"><strong>Local library unavailable</strong><span>{storageError}</span><span>Your records have not been changed.</span></div> :
-                  filteredProjects.length === 0 ? <div className="state-panel"><div className="empty-icon"><FolderKanban size={22} /></div><strong>{projects.length ? "No matching projects" : "Your research library is ready"}</strong><span>{projects.length ? "Try another project name." : "Projects you create or import will appear here. Your existing local data is preserved."}</span></div> :
+                  filteredProjects.length === 0 ? <div className="state-panel"><div className="empty-icon"><FolderKanban size={22} /></div><strong>{projects.length ? "No matching projects" : "Your research library is ready"}</strong><span>{projects.length ? "Try another project name." : "This Phase 1 preview is read-only. Project creation and import arrive in the next migration phase; your existing local data is preserved."}</span></div> :
                   <div className="project-grid">{filteredProjects.map((project) => (
                     <Card className="project-card" key={project.id}>
                       <div className="project-card-top"><span className="project-type"><FileText size={14} /> Research project</span><span className="project-status">{project.status ?? "planning"}</span></div>
-                      <h3>{project.name}</h3>
+                      <h3>{project.name || "Untitled project"}</h3>
                       <p>{project.researchQuestion || "Research question not added yet."}</p>
                       <div className="project-card-footer"><span>Updated {formatDate(project.updatedAt)}</span><Button variant="ghost" size="sm" onClick={() => setSelectedProject(project)}>Open record <ArrowRight size={14} /></Button></div>
                     </Card>
