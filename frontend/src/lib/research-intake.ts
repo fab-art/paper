@@ -51,3 +51,65 @@ export function buildResearchIntake(input: ResearchIntake) {
     ownerConfirmationRequired: true as const
   };
 }
+
+
+export type ResearchEntryPath = "idea" | "literature" | "dataset" | "review" | "manuscript";
+
+export const RESEARCH_ENTRY_PATHS: {
+  id: ResearchEntryPath;
+  label: string;
+  description: string;
+  firstAction: string;
+  recommendedPaperTypes: ResearchPaperType[];
+  route: string[];
+}[] = [
+  { id: "idea", label: "I have an idea", description: "Start with a problem, observation or question and shape it into a research brief.", firstAction: "Clarify the research question and intended contribution.", recommendedPaperTypes: ["empirical-study", "research-protocol", "other"], route: ["intake", "protocol", "literature", "evidence", "methods", "data", "writing"] },
+  { id: "literature", label: "I have a literature question", description: "Start by finding and organizing relevant research before deciding the final paper format.", firstAction: "Build a transparent search strategy and discover sources.", recommendedPaperTypes: ["systematic-review", "scoping-review", "other"], route: ["literature", "evidence", "protocol", "methods", "writing"] },
+  { id: "dataset", label: "I already have data", description: "Start by understanding the dataset, its variables, quality and limitations.", firstAction: "Profile the dataset and create a data dictionary before choosing an analysis.", recommendedPaperTypes: ["dataset-analysis", "empirical-study"], route: ["data", "protocol", "methods", "evidence", "writing"] },
+  { id: "review", label: "I want to review existing studies", description: "Start with a review question, protocol and screening criteria.", firstAction: "Define the review question, eligibility criteria and search protocol.", recommendedPaperTypes: ["systematic-review", "scoping-review"], route: ["protocol", "literature", "evidence", "writing"] },
+  { id: "manuscript", label: "I already have a draft", description: "Bring an existing manuscript into the workflow for evidence, methods and quality checks.", firstAction: "Inventory the manuscript, references, evidence and missing components.", recommendedPaperTypes: ["existing-manuscript", "conference-paper", "case-report"], route: ["writing", "evidence", "methods", "quality", "publication"] }
+];
+
+export function getResearchEntryPlan(path: ResearchEntryPath, paperType?: ResearchPaperType) {
+  const entry = RESEARCH_ENTRY_PATHS.find(item => item.id === path) ?? RESEARCH_ENTRY_PATHS[0];
+  const selectedType = paperType && paperType !== "unspecified" ? paperType : entry.recommendedPaperTypes[0];
+  return {
+    ...entry,
+    selectedPaperType: selectedType,
+    route: [...entry.route],
+    firstAction: entry.id === "dataset" ? "Profile the dataset and confirm its variables before choosing an analysis."
+      : entry.id === "review" ? "Define the review question, eligibility criteria and search protocol."
+      : entry.id === "manuscript" ? "Inventory the manuscript, references and evidence gaps."
+      : entry.id === "literature" ? "Build a transparent search strategy and discover relevant sources."
+      : "Clarify the research question and intended contribution."
+  };
+}
+
+export function getResearchNextAction(project: {
+  researchQuestion?: string;
+  paperType?: ResearchPaperType;
+  papers?: unknown[];
+  methodology?: string;
+  researchMode?: "guided" | "professional";
+  startPath?: ResearchEntryPath;
+}) {
+  if (!project.researchQuestion?.trim()) {
+    return { id: "research-question", title: "Clarify your research question", description: "Write a first version of what you want to understand. You can refine it later.", station: "intake" };
+  }
+  if (project.startPath === "dataset" || project.paperType === "dataset-analysis") {
+    return { id: "dataset-profile", title: "Profile your dataset", description: "Inspect variables, missing values and data quality before selecting an analysis.", station: "data" };
+  }
+  if (project.startPath === "review" || project.paperType === "systematic-review" || project.paperType === "scoping-review") {
+    return { id: "review-protocol", title: "Define your review protocol", description: "Confirm the question, eligibility criteria and search approach before screening.", station: "protocol" };
+  }
+  if (project.startPath === "manuscript" || project.paperType === "existing-manuscript") {
+    return { id: "manuscript-inventory", title: "Review your existing manuscript", description: "Check the draft, references and evidence gaps before making revisions.", station: "writing" };
+  }
+  if (!project.papers?.length) {
+    return { id: "source-discovery", title: "Find and organize relevant research", description: "Start a documented literature search and save the sources you plan to use.", station: "literature" };
+  }
+  if (!project.methodology?.trim()) {
+    return { id: "methods-plan", title: "Outline your research methods", description: "Record the study design, setting, population, outcomes and analysis plan.", station: "methods" };
+  }
+  return { id: "evidence-check", title: "Connect evidence to your key claims", description: "Link important statements to source passages or verified analysis outputs.", station: "evidence" };
+}
