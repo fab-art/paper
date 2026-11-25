@@ -4,6 +4,7 @@ import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpe
 import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
 import AuthPanel from "./AuthPanel";
+import "./dashboard-intake.css";
 import { buildResearchIntake, PAPER_TYPE_BLUEPRINTS } from "../lib/research-intake";
 import type { ResearchPaperType } from "../lib/research-blueprint";
 
