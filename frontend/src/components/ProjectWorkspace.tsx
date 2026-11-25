@@ -393,6 +393,7 @@ export default function ProjectWorkspace({
         paperType={(project.paperType && project.paperType !== "unspecified" ? project.paperType : project.systematicReview?.protocol.reviewType === "scoping" ? "scoping-review" : project.systematicReview ? "systematic-review" : "unspecified") as ResearchPaperType}
         researchMode={project.researchMode ?? "guided"}
         onModeChange={mode => patch({ researchMode: mode })}
+        onOpenStudio={() => void navigateAfterSave(onOpenStudio)}
       />}
 
       {section === "notes" && <div className="pw-notes-layout">
