@@ -85,6 +85,7 @@ test("Research Station reads an existing IndexedDB project without writes", asyn
 
   await expect(page).toHaveTitle(/PaperOrchestra — Research Factory/);
   await expect(page.getByRole("heading", { name: "Research Station", level: 1 })).toBeVisible();
+  await expect(page.getByText("Local workspace")).toBeVisible();
   await expect(page.getByText("Existing local research project")).toBeVisible();
 
   const writes = await page.evaluate(() =>
