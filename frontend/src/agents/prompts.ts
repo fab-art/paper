@@ -39,7 +39,7 @@ Choose one categorical/time x column and one numeric outcome y column from this 
 DATA SAMPLE: ${project.logs.slice(0, 5000)}
 PROJECT CONTEXT: ${researchBrief(project, 1500)}`;
 }
-export function writingPrompt(project: Project, section: OutlineSection) {
+export function writingPrompt(project: Project, section: OutlineSection, evidenceContext = "No verified source passages or approved analysis outputs are available.") {
   return `You are an academic LaTeX writing assistant. Draft ONLY the LaTeX body for this section (no document preamble).
 Use cautious claims, clear academic tone, and cite only keys present in the supplied bibliography. Insert [SOURCE NEEDED] where evidence is missing. Never fabricate results or references.
 SECTION: ${section.title}
@@ -47,7 +47,7 @@ DESCRIPTION: ${section.description}
 PROJECT BRIEF:
 ${researchBrief(project, 4500)}
 BIBLIOGRAPHY: ${project.bibtex.slice(0, 3500)}
-EXISTING DRAFT: ${project.latex.slice(0, 3000)}`;
+EXISTING DRAFT: ${project.latex.slice(0, 3000)}\nTRACEABLE PROJECT EVIDENCE:\n${evidenceContext}\nFor each factual statement, append [EVIDENCE: entity-id] only when the supplied passage/result directly supports it. Otherwise insert [SOURCE NEEDED]. Never treat a title or abstract as a read passage.`;
 }
 export function refinePrompt(project: Project) {
   return `Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
