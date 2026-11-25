@@ -84,3 +84,12 @@ test("Writing Studio drafts only the selected section and stages clarity refinem
   assert.match(studio, /projectRef\.current\.id !== project\.id/);
   assert.match(studio, /setResearchEntities\(\[\]\)/);
 });
+
+test("Writing Studio exposes explicit plain-language-to-academic refinement and keeps revisions staged", async () => {
+  const studio = await readFile(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
+  const prompts = await readFile(new URL("../frontend/src/agents/prompts.ts", import.meta.url), "utf8");
+  assert.match(studio, /Plain language to academic prose/);
+  assert.match(studio, /refinePrompt\(project, refinementFocus, authorVoice\)/);
+  assert.match(prompts, /Convert plain-language, informal or note-like passages into clear academic prose/);
+  assert.match(studio, /disabled=\{busy\} onClick=\{acceptWritingProposal\}/);
+});
