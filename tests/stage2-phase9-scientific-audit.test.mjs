@@ -99,3 +99,17 @@ test("reviewer simulation is explicitly labeled as a simulation and yields trace
   assert.ok(result.perspectives.some(item => item.id === "methods"));
   assert.ok(result.perspectives.every(item => item.status === "prompt-only"));
 });
+
+
+test("evidence links only count when the linked source record is a source entity", () => {
+  const invalidPassage = { ...passage, payload: { ...passage.payload, sourceEntityId: "claim-1" } };
+  const report = runScientificAudit({ project, entities: [claim, invalidPassage], relations: [{ id: "r1", projectId: "project-1", fromEntityId: "passage-1", toEntityId: "claim-1", relationType: "supports" }], now: 100 });
+  assert.equal(report.findings.find(item => item.category === "claim-evidence").severity, "high");
+});
+
+test("journal metadata is labeled as researcher-marked rather than independently verified", () => {
+  const result = assessJournalFit({ manuscript: { paperType: "empirical-study", keywords: ["diabetes", "outcomes"] }, journal: { title: "Journal", aimsAndScope: "Diabetes outcomes and clinical research", acceptedArticleTypes: ["empirical-study"], sourceUrl: "https://journal.example/about", verifiedAt: 100 } });
+  assert.equal(result.status, "scope-overlap-calculated");
+  assert.equal(result.metadataStatus, "researcher-marked-source-and-date");
+  assert.equal(result.acceptanceProbability, null);
+});
