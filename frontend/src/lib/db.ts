@@ -181,15 +181,17 @@ export async function listResearchDecisions(projectId: string) {
 export async function deleteProjectAndData(projectId: string, expectedRevision?: number) {
   await db.transaction(
     "rw",
-    db.projects,
-    db.notes,
-    db.attachments,
-    db.searches,
-    db.deletedProjects,
-    db.researchBlueprints,
-    db.researchEntities,
-    db.researchRelations,
-    db.researchDecisions,
+    [
+      db.projects,
+      db.notes,
+      db.attachments,
+      db.searches,
+      db.deletedProjects,
+      db.researchBlueprints,
+      db.researchEntities,
+      db.researchRelations,
+      db.researchDecisions
+    ],
     async () => {
       const existing = await db.projects.get(projectId);
       if (expectedRevision !== undefined) {
