@@ -5,7 +5,8 @@ import {
   updateResearchPlanTask,
   addResearchPlanTask,
   addResearchPlanMilestone,
-  updateResearchPlanMilestone
+  updateResearchPlanMilestone,
+  getResearchNextAction
 } from "../frontend/src/lib/research-intake.ts";
 
 test("empirical blueprint creates an editable route with research design and analysis work", () => {
@@ -76,4 +77,13 @@ test("production route can follow the researcher's editable station order, inclu
   const { getResearchRoute } = await import("../frontend/src/lib/research-production-line.ts");
   const route = getResearchRoute("dataset-analysis", ["data", "protocol", "evidence", "writing"]);
   assert.deepEqual(route.map(station => station.id), ["data", "protocol", "evidence", "writing"]);
+});
+
+test("guided next action advances to the first incomplete task in the saved blueprint plan", () => {
+  const plan = createResearchStationPlan("empirical-study", "idea", 1000);
+  const first = plan.stations[0].tasks[0];
+  const second = plan.stations[0].tasks[1];
+  assert.equal(getResearchNextAction({ startPath: "idea", paperType: "empirical-study" }, plan).id, first.id);
+  const progressed = updateResearchPlanTask(plan, first.id, { completed: true }, 2000);
+  assert.equal(getResearchNextAction({ startPath: "idea", paperType: "empirical-study" }, progressed).id, second.id);
 });
