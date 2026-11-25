@@ -162,6 +162,6 @@ test("keyboard focus reaches skip navigation, brand and theme control", async ({
 test("reduced-motion preference suppresses nonessential transitions", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  const duration = await page.locator(".project-card").first().evaluate((element) => getComputedStyle(element).transitionDuration);
+  const duration = await page.locator(".nav-item").first().evaluate((element) => getComputedStyle(element).transitionDuration);
   expect(Number.parseFloat(duration)).toBeLessThan(0.001);
 });
