@@ -430,8 +430,12 @@ export async function createResearchTaskRecord(input: {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
     });
-    if (task.assignedAgentId && !RESEARCH_AGENTS.some(agent => agent.id === task.assignedAgentId)) {
-      throw new Error("The selected specialist agent is not registered.");
+    if (task.assignedAgentId) {
+      const assignedAgent = RESEARCH_AGENTS.find(agent => agent.id === task.assignedAgentId);
+      if (!assignedAgent) throw new Error("The selected specialist agent is not registered.");
+      if (!assignedAgent.stationIds.includes(task.stationId)) {
+        throw new Error("The selected specialist is not authorized for this research station.");
+      }
     }
     const existingTasks = await db.researchTasks.where("projectId").equals(input.projectId).toArray();
     if (task.dependencyTaskIds.some(id => !existingTasks.some(existing => existing.id === id))) {
