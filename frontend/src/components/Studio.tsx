@@ -168,8 +168,13 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     listProjects().then(items => {
       if (live) setProjects(items.filter(item => !item.archivedAt));
     }).catch(() => {});
-    loadProject(projectId).then(saved => {
+    const evidencePromise = listResearchEntities(projectId).catch(error => {
+      if (live) setNotice("Project loaded, but the evidence library could not be refreshed: " + (error as Error).message);
+      return [];
+    });
+    Promise.all([loadProject(projectId), evidencePromise]).then(([saved, entities]) => {
       if (!live) return;
+      setResearchEntities(entities);
       if (!saved) {
         setLoadError("This project could not be found in the local research library.");
         setHydrated(true);
@@ -179,7 +184,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       setProject(saved);
       setPdf(undefined);
       setHydrated(true);
-      setNotice("Project loaded. Changes are saved locally.");
+      setNotice("Project and available evidence loaded. Changes are saved locally.");
     }).catch(error => {
       if (!live) return;
       setLoadError((error as Error).message || "Could not load this project.");
