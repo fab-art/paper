@@ -70,7 +70,7 @@ export default function ResearchProductionLine({
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
   const agentReadyCount = localModelReady ? getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length : 0;
   const nextStation = summaries.find(item => item.status !== "complete") ?? summaries[0];
-  const nextAction = useMemo(() => getResearchNextAction(project), [project]);
+  const nextAction = useMemo(() => getResearchNextAction(project, researchPlan), [project, researchPlan]);
 
   useEffect(() => {
     if (!project.researchPlan) onProjectUpdate({ researchPlan, milestones: researchPlan.milestones });
