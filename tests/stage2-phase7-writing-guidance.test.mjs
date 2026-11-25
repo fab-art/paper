@@ -6,7 +6,7 @@ import {
   inspectDraftEvidence,
   checkCitationKeys
 } from "../frontend/src/lib/writing-guidance.ts";
-import { refinePrompt } from "../frontend/src/agents/prompts.ts";
+import { refinePrompt, writingPrompt } from "../frontend/src/agents/prompts.ts";
 
 const project = {
   id: "p1", name: "Study", notes: "Research context", latex: "\\documentclass{article}\\n\\begin{document}\\n\\end{document}",
@@ -32,6 +32,9 @@ test("writing block prompt carries word target, focused micro-prompt, author voi
   assert.match(prompt, /preserve the author's existing voice/i);
   assert.match(prompt, /\[SOURCE NEEDED\]/);
   assert.match(prompt, /PASSAGE \[ev-1\]/);
+  const base = writingPrompt(project, section, "assessment=contradicts");
+  assert.match(base, /contradicts must remain visible as conflicting evidence/);
+  assert.match(base, /unassessed remains awaiting verification/);
 });
 
 test("draft evidence audit maps markers to exact available evidence and flags unknown or unsupported claims", () => {
