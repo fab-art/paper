@@ -116,10 +116,46 @@ export async function saveProject(project: Project) {
     // New projects and any legacy project missing a canonical record receive a
     // one-time mapping. Existing Research Blueprint work is never overwritten
     // by a later save from the legacy Project editor.
-    if (!(await db.researchBlueprints.get(project.id))) {
-      await db.researchBlueprints.put(projectToResearchBlueprint(next, Date.now(), "owner"));
-      const migratedEntities = legacyProjectToResearchEntities(next, Date.now(), "owner");
+    const existingBlueprint = await db.researchBlueprints.get(project.id);
+    const now = Date.now();
+    const candidateBlueprint = projectToResearchBlueprint(next, now, "owner");
+    if (!existingBlueprint) {
+      await db.researchBlueprints.put(candidateBlueprint);
+      const migratedEntities = legacyProjectToResearchEntities(next, now, "owner");
       if (migratedEntities.length) await db.researchEntities.bulkPut(migratedEntities);
+    } else {
+      // The current Project editor remains a supported owner-facing surface.
+      // Mirror only fields it explicitly owns; never replace canonical entities,
+      // provenance, owner decisions or richer blueprint-only records.
+      const changed =
+        existingBlueprint.title !== candidateBlueprint.title ||
+        existingBlueprint.description !== candidateBlueprint.description ||
+        existingBlueprint.researchQuestion !== candidateBlueprint.researchQuestion ||
+        JSON.stringify(existingBlueprint.objectives) !== JSON.stringify(candidateBlueprint.objectives) ||
+        existingBlueprint.paperType !== candidateBlueprint.paperType ||
+        existingBlueprint.intendedAudience !== candidateBlueprint.intendedAudience ||
+        JSON.stringify(existingBlueprint.availableMaterials) !== JSON.stringify(candidateBlueprint.availableMaterials) ||
+        JSON.stringify(existingBlueprint.storyArc) !== JSON.stringify(candidateBlueprint.storyArc) ||
+        existingBlueprint.researchMode !== candidateBlueprint.researchMode ||
+        existingBlueprint.lifecycleState !== candidateBlueprint.lifecycleState;
+      if (changed) {
+        await db.researchBlueprints.put({
+          ...existingBlueprint,
+          title: candidateBlueprint.title,
+          description: candidateBlueprint.description,
+          researchQuestion: candidateBlueprint.researchQuestion,
+          objectives: candidateBlueprint.objectives,
+          paperType: candidateBlueprint.paperType,
+          intendedAudience: candidateBlueprint.intendedAudience,
+          availableMaterials: candidateBlueprint.availableMaterials,
+          storyArc: candidateBlueprint.storyArc,
+          researchMode: candidateBlueprint.researchMode,
+          lifecycleState: candidateBlueprint.lifecycleState,
+          legacyProjectRevision: next.revision ?? 0,
+          version: existingBlueprint.version + 1,
+          updatedAt: now
+        });
+      }
     }
     savedProject = next;
   });
