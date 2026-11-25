@@ -131,12 +131,17 @@ export async function loadResearchBlueprint(projectId: string) {
   const blueprint = projectToResearchBlueprint(project);
   const entities = legacyProjectToResearchEntities(project);
   await db.transaction("rw", db.projects, db.deletedProjects, db.researchBlueprints, db.researchEntities, async () => {
-    const current = await db.researchBlueprints.get(projectId);
-    if (!current) {
+    const [current, latestProject, deleted] = await Promise.all([
+      db.researchBlueprints.get(projectId),
+      db.projects.get(projectId),
+      db.deletedProjects.get(projectId)
+    ]);
+    if (!current && latestProject && !deleted) {
       await db.researchBlueprints.put(blueprint);
       if (entities.length) await db.researchEntities.bulkPut(entities);
     }
   });
+  if (await db.deletedProjects.get(projectId)) return undefined;
   return db.researchBlueprints.get(projectId);
 }
 
