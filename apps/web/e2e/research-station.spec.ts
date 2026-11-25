@@ -165,3 +165,22 @@ test("reduced-motion preference suppresses nonessential transitions", async ({ p
   const duration = await page.locator(".nav-item").first().evaluate((element) => getComputedStyle(element).transitionDuration);
   expect(Number.parseFloat(duration)).toBeLessThan(0.001);
 });
+
+test("empty local library is distinct from a storage failure", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Your research library is ready")).toBeVisible();
+  await expect(page.getByText(/Projects you create or import will appear here/)).toBeVisible();
+  await expect(page.getByText("Local workspace")).toBeVisible();
+});
+
+test("IndexedDB failures are announced without presenting an empty library", async ({ page }) => {
+  await page.addInitScript(() => {
+    IDBFactory.prototype.open = function () {
+      throw new DOMException("IndexedDB disabled by browser policy", "SecurityError");
+    };
+  });
+  await page.goto("/");
+  await expect(page.getByText("Local library unavailable")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("IndexedDB disabled by browser policy");
+  await expect(page.getByText("Your research library is ready")).toHaveCount(0);
+});
