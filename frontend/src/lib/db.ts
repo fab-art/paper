@@ -468,7 +468,7 @@ export async function setResearchAgentsPaused(projectId: string, paused: boolean
 
 export async function transitionResearchTaskRecord(
   projectId: string, taskId: string,
-  action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "mark-stale",
+  action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "fail" | "mark-stale",
   actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number, actorAgentId?: string, outputEntityIds: string[] = []
 ) {
   let saved: ResearchTask | undefined;
