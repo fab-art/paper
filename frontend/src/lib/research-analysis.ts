@@ -75,7 +75,7 @@ export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): Des
     existing.push(row);
     grouped.set(group, existing);
   }
-  const groupNames = [...grouped.keys()].sort((a, b) => a.localeCompare(b));
+  const groupNames = [...grouped.keys()].sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   const logs = [
     "Engine: PaperOrchestra descriptive-analysis@1.0.0",
     "Runtime: deterministic browser JavaScript",
@@ -103,9 +103,9 @@ export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): Des
       const sd = Math.sqrt(variance);
       tableRows.push({
         group, n: observed.length, missing,
-        mean: Number(mean.toFixed(4)), sd: Number(sd.toFixed(4)),
+        mean: Number(mean.toFixed(4)), sd: observed.length > 1 ? Number(sd.toFixed(4)) : "",
         median: Number(medianOf(observed).toFixed(4)),
-        min: Math.min(...observed), max: Math.max(...observed)
+        min: observed.reduce((minimum, value) => Math.min(minimum, value), Number.POSITIVE_INFINITY), max: observed.reduce((maximum, value) => Math.max(maximum, value), Number.NEGATIVE_INFINITY)
       });
       figureCategories.push(group);
       figureValues.push(Number(mean.toFixed(4)));
@@ -132,7 +132,7 @@ export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): Des
     const missing = rows.length - values.length;
     const counts = new Map<string, number>();
     for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-    for (const category of [...counts.keys()].sort((a, b) => a.localeCompare(b))) {
+    for (const category of [...counts.keys()].sort((a, b) => a < b ? -1 : a > b ? 1 : 0)) {
       const count = counts.get(category)!;
       const percent = values.length ? Number((count / values.length * 100).toFixed(2)) : 0;
       tableRows.push({ group, category, count, percent, denominator: values.length, missing });
@@ -161,7 +161,7 @@ function escapeSvg(value: string) {
 export function renderAnalysisFigureSvg(figure: DescriptiveAnalysisFigure): string {
   const width = 1200, height = 720, left = 110, right = 45, top = 92, bottom = 150;
   const plotWidth = width - left - right, plotHeight = height - top - bottom;
-  const maximum = Math.max(1, ...figure.values);
+  const maximum = Math.max(1, figure.values.reduce((value, item) => Math.max(value, item), 0));
   const step = maximum / 4;
   const band = plotWidth / Math.max(1, figure.values.length);
   const barWidth = Math.min(72, band * .58);
