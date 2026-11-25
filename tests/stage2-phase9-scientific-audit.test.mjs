@@ -114,3 +114,25 @@ test("journal metadata is labeled as researcher-marked rather than independently
   assert.equal(result.metadataStatus, "researcher-marked-source-and-date");
   assert.equal(result.acceptanceProbability, null);
 });
+
+
+test("reporting and consistency checks identify title drift and missing paper sections", () => {
+  const draft = { ...project, name: "Project title", paperType: "empirical-study", latex: "\\title{Different title}\\section{Introduction}\\section{Methods}" };
+  const report = runScientificAudit({ project: draft, entities: [], relations: [], now: 100 });
+  assert.ok(report.findings.some(item => item.category === "manuscript-consistency"));
+  assert.ok(report.findings.some(item => item.category === "reporting-completeness" && item.title.includes("Results")));
+});
+
+test("reproducibility checks detect missing manifests and mismatched dataset fingerprints", () => {
+  const missingManifest = { id: "analysis-missing", projectId: "project-1", entityType: "analysis", version: 1, status: "draft", title: "Missing manifest", payload: { recordType: "analysis-output" }, provenance: { kind: "owner", recordedAt: 1 }, createdAt: 1, updatedAt: 1 };
+  const mismatch = { ...missingManifest, id: "analysis-mismatch", status: "approved", payload: { recordType: "analysis-output", datasetFingerprint: "hash-a", rowCountAnalyzed: 10, table: { rows: [] }, manifest: { datasetId: "dataset-1", datasetFingerprint: "hash-b", script: "mean()", software: { browser: "test" }, parameters: {}, ownerApproved: true, status: "approved", execution: { status: "completed", runtime: "local", analyzedRows: 10 } } } };
+  const report = runScientificAudit({ project, entities: [missingManifest, mismatch], relations: [], now: 100 });
+  assert.ok(report.findings.some(item => item.category === "reproducibility" && item.targetId === "analysis-missing"));
+  assert.ok(report.findings.some(item => item.category === "calculation-consistency" && item.targetId === "analysis-mismatch"));
+});
+
+test("duplicate BibTeX keys are reported without deleting bibliography records", () => {
+  const draft = { ...project, bibtex: "@article{duplicate, title={One}}\n@article{duplicate, title={Two}}" };
+  const report = runScientificAudit({ project: draft, entities: [], relations: [], now: 100 });
+  assert.ok(report.findings.some(item => item.category === "citation-integrity" && /Duplicate keys/.test(item.evidence)));
+});
