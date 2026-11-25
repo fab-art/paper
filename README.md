@@ -125,3 +125,7 @@ The project workspace now includes a local-first systematic review area for prot
 ## Phase 9 — Lumen UI System-Wide Redesign
 
 Phase 9 establishes the cross-phase redesign specification for the React PWA using the Lumen UI React design system. It covers the application shell and every Phase 1–8 surface while preserving local-first IndexedDB, optional Supabase/RLS, browser WebLLM, bounded local data processing, export safeguards and researcher-led review decisions. See [Phase 9 redesign architecture and acceptance criteria](docs/phase9-lumen-redesign.md). The implementation must pin the Lumen adapter and lockfile together, then pass regression, accessibility, responsive, production-build and exact-commit Vercel Preview checks before release.
+
+## Engineering standards and release gates
+
+Repository-wide development rules are defined in [AGENTS.md](AGENTS.md) and [CONSTRAINTS.md](CONSTRAINTS.md). The current blocking GitHub Actions checks are npm dependency audits, the full regression suite and the TypeScript/production build. Browser automation, runtime accessibility, Lighthouse and Limrun device evidence are required before the integrated Phase 9 release; they are not claimed as automated until their test harnesses are added and verified. Vercel production deployment is a separate release decision after the quality gates pass.
