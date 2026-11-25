@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
 import type { Project, ProjectAttachment } from "../lib/types";
-import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, renderAnalysisFigureSvg, approveAnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
+import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, renderAnalysisFigureSvg, approveAnalysisRunManifest, type AnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
 import { listResearchEntities, saveResearchEntity } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
 import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
@@ -11,7 +11,6 @@ type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncat
 type ColumnProfile = { name: string; type: string; missing: number; unique: number; min?: string; max?: string; mean?: string; median?: string };
 
 type ComplianceOwnerStatus = "not-reviewed" | "confirmed-by-researcher" | "not-applicable" | "requires-follow-up";
-type AnalysisRunManifest = Omit<ReturnType<typeof createAnalysisRunManifest>, "ownerApproved" | "status"> & { ownerApproved: boolean; status: "awaiting-owner-review" | "approved"; approvedAt?: number };
 type SavedAnalysisOutput = ResearchEntity & {
   payload: {
     recordType: "analysis-output";
