@@ -137,7 +137,7 @@ export function checkCitationKeys(latex: string, bibtex: string): { citedKeys: s
   const cited = new Set<string>();
   const bibKeys: string[] = [];
   const citationPattern = /\\(?:cite|citep|citet|autocite|parencite|textcite)\*?(?:\[[^\]]*\]){0,2}\{([^}]+)\}/g;
-  const bibPattern = /@\w+\s*\{\s*([^,\s]+)\s*,/g;
+  const bibPattern = /@(article|book|inproceedings|conference|incollection|inbook|phdthesis|mastersthesis|techreport|misc|online|manual|unpublished|report|software|dataset|proceedings)\s*\{\s*([^,\s]+)\s*,/gi;
   let match: RegExpExecArray | null;
   while ((match = citationPattern.exec(latex)) !== null) for (const key of match[1].split(",").map(value => value.trim()).filter(Boolean)) cited.add(key);
   while ((match = bibPattern.exec(bibtex)) !== null) bibKeys.push(match[2].trim());
