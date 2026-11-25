@@ -47,7 +47,7 @@ DESCRIPTION: ${section.description}
 PROJECT BRIEF:
 ${researchBrief(project, 4500)}
 BIBLIOGRAPHY: ${project.bibtex.slice(0, 3500)}
-EXISTING DRAFT: ${project.latex.slice(0, 3000)}\nTRACEABLE PROJECT EVIDENCE:\n${evidenceContext}\nFor each factual statement, append [EVIDENCE: entity-id] only when the supplied passage/result directly supports it. Otherwise insert [SOURCE NEEDED]. Never treat a title or abstract as a read passage.`;
+EXISTING DRAFT: ${project.latex.slice(0, 3000)}\nTRACEABLE PROJECT EVIDENCE:\n${evidenceContext}\nRespect every researcher assessment label: supports may support only the specific claim it directly addresses; partially-supports may support only the narrower supported part with qualification; contradicts must remain visible as conflicting evidence and must never be presented as support; irrelevant must not be used as evidence; unassessed remains awaiting verification. For each factual statement, append [EVIDENCE: entity-id] only when the supplied passage/result directly supports it. Otherwise insert [SOURCE NEEDED]. Never treat a title or abstract as a read passage.`;
 }
 export function refinePrompt(
   project: Project,
