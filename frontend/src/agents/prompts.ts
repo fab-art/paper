@@ -49,11 +49,27 @@ ${researchBrief(project, 4500)}
 BIBLIOGRAPHY: ${project.bibtex.slice(0, 3500)}
 EXISTING DRAFT: ${project.latex.slice(0, 3000)}\nTRACEABLE PROJECT EVIDENCE:\n${evidenceContext}\nFor each factual statement, append [EVIDENCE: entity-id] only when the supplied passage/result directly supports it. Otherwise insert [SOURCE NEEDED]. Never treat a title or abstract as a read passage.`;
 }
-export function refinePrompt(project: Project) {
-  return `Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
-Preserve meaning and all factual uncertainty. Check alignment with the research question, balanced braces/environments, citation keys against the bibliography, duplicated text, and academic tone. Do not invent citations or findings.
+export function refinePrompt(
+  project: Project,
+  focus: "clarity" | "academic" = "clarity",
+  authorVoice: "preserve" | "formal" | "concise" | "accessible" = "preserve"
+) {
+  const focusInstruction = focus === "academic"
+    ? "Convert plain-language, informal or note-like passages into clear academic prose. Preserve the author's intended meaning, uncertainty and terminology; do not make claims more certain."
+    : "Improve clarity, logical flow, sentence structure and concision while preserving the author's intended meaning.";
+  const voiceInstruction = authorVoice === "preserve"
+    ? "Preserve the author's existing voice and phrasing patterns wherever possible."
+    : authorVoice === "formal"
+      ? "Use formal academic language and precise terminology."
+      : authorVoice === "concise"
+        ? "Prefer concise academic prose without removing essential scientific detail."
+        : "Use accessible scholarly language and explain specialized terms where useful.";
+  return \`Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
+\${focusInstruction}
+\${voiceInstruction}
+Preserve all factual uncertainty. Check alignment with the research question, balanced braces/environments, citation keys against the bibliography, duplicated text and unsupported factual claims. Do not invent citations, methods, approvals or findings.
 PROJECT BRIEF:
-${researchBrief(project, 2500)}
-LATEX: ${project.latex.slice(0, 9000)}
-BIB: ${project.bibtex.slice(0, 3500)}`;
+\${researchBrief(project, 2500)}
+LATEX: \${project.latex.slice(0, 9000)}
+BIB: \${project.bibtex.slice(0, 3500)}\`;
 }
