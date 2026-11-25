@@ -24,6 +24,8 @@ test("reviewer simulation and journal fit are explicitly bounded", () => {
   assert.match(component, /acceptance prediction/i);
   assert.match(component, /Not provided/);
   assert.match(component, /Save journal profile/);
+  assert.match(component, /Publisher/);
+  assert.match(component, /Indexing services/);
 });
 
 test("audit interface includes accessible status and responsive layouts", () => {
