@@ -105,3 +105,30 @@ Phase 1 remains **in progress** until all remaining gates pass. No production ro
 - Do not migrate or delete legacy UI, database schema, or services until their replacement phases pass parity checks.
 
 Phase 1 remains **in progress** until the exact-commit Vercel preview and final review gates pass. Production routing and the production domain remain unchanged.
+
+
+## Final preview verification — 25 November 2026
+
+### Exact commit `ad56d334f1c9795fc509ed9ff0006ee0915e9b4e`
+
+- GitHub root quality gates: **passed**.
+- Replacement app quality gates: **passed**.
+- Replacement dependency audit: **0 vulnerabilities**.
+- TypeScript, unit tests (**4/4**) and Vite production build: passed.
+- Playwright Chromium suite: **10/10 passed**, including read-only IndexedDB, populated/empty/error states, route refresh, keyboard focus, reduced motion, responsive widths and light/dark WCAG 2.2 A/AA.
+- Existing repository regressions: **168/168 passed**.
+- Isolated Vercel preview: **READY** — https://paperorchestra-research-factory-preview-hlix0gcun.vercel.app
+- Vercel HTTP smoke checks: `/projects` and `/literature` both returned **200** with the application entrypoint, confirming SPA rewrites.
+- Temporary Vercel protection-bypass share link used for the HTTP checks was revoked immediately afterward; normal preview protection remains enabled.
+- Existing production project and production domain remain unchanged.
+
+### Review outcome and remaining gates
+
+A focused implementation review found and corrected misleading empty/loading states, an inert help control, a placeholder search hint, and defensive handling for incomplete legacy project metadata. No database schema or production service was changed.
+
+Still required before Phase 1 can be declared fully closed:
+- Independent human code review.
+- Manual screen-reader verification (automated Axe and keyboard tests have passed).
+- Owner visual review of the protected preview.
+
+The replacement remains a read-only foundation. Project creation/import and workspace parity are intentionally deferred to subsequent phases; no production cutover is authorized by this preview.
