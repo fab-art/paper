@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, Card } from "@santi020k/lumen-react";
-import { ArrowDown, ArrowUp, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   addResearchPlanMilestone, addResearchPlanTask, moveResearchPlanStation,
   removeResearchPlanTask, updateResearchPlanMilestone, updateResearchPlanTask,
@@ -117,7 +117,7 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
           {station.tasks.map(task => {
             const draft = taskDrafts[task.id] ?? { title: task.title, description: task.description };
             return <div className="rpe-task" key={task.id}>
-              <label className="rpe-complete"><input type="checkbox" checked={task.completed} onChange={event => onChange(updateResearchPlanTask(plan, task.id, { completed: event.target.checked }))}/><span className="sr-only">Mark {task.title} complete</span><CheckCircle2 size={17}/></label>
+              <label className="rpe-complete"><input type="checkbox" checked={task.completed} onChange={event => onChange(updateResearchPlanTask(plan, task.id, { completed: event.target.checked }))}/><span className="sr-only">Mark {task.title} complete</span></label>
               <div className="rpe-task-fields">
                 <input aria-label={`Task title: ${task.title}`} value={draft.title} onChange={event => setTaskDrafts(current => ({ ...current, [task.id]: { ...draft, title: event.target.value } }))} onBlur={() => commitTask(task.id)} onKeyDown={event => { if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur(); }} />
                 <textarea aria-label={`Task details: ${task.title}`} rows={2} value={draft.description} onChange={event => setTaskDrafts(current => ({ ...current, [task.id]: { ...draft, description: event.target.value } }))} onBlur={() => commitTask(task.id)} />
@@ -144,7 +144,7 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
       <div className="rpe-milestone-heading"><div><span className="rpl-eyebrow">PROJECT CHECKPOINTS</span><h4>Milestones and target dates</h4></div><Badge>{completedMilestones}/{plan.milestones.length} complete</Badge></div>
       {plan.milestones.map(milestone => <div className="rpe-milestone" key={milestone.id}>
         <label className="rpe-milestone-done"><input type="checkbox" checked={milestone.completed} onChange={event => updateMilestone(milestone.id, { completed: event.target.checked })}/><span className="sr-only">Mark milestone complete</span></label>
-        <input aria-label="Milestone title" value={milestoneDrafts[milestone.id]?.title ?? milestone.title} onChange={event => setMilestoneDrafts(current => ({ ...current, [milestone.id]: { ...(current[milestone.id] ?? { title: milestone.title, dueDate: milestone.dueDate ?? "" }), title: event.target.value } }))} onBlur={() => updateMilestone(milestone.id, { title: milestoneDrafts[milestone.id]?.title ?? milestone.title })} />
+        <input aria-label={`Milestone title: ${milestone.title}`} value={milestoneDrafts[milestone.id]?.title ?? milestone.title} onChange={event => setMilestoneDrafts(current => ({ ...current, [milestone.id]: { ...(current[milestone.id] ?? { title: milestone.title, dueDate: milestone.dueDate ?? "" }), title: event.target.value } }))} onBlur={() => updateMilestone(milestone.id, { title: milestoneDrafts[milestone.id]?.title ?? milestone.title })} />
         <label className="rpe-date"><span>Target date</span><input type="date" value={milestoneDrafts[milestone.id]?.dueDate ?? milestone.dueDate ?? ""} onChange={event => setMilestoneDrafts(current => ({ ...current, [milestone.id]: { ...(current[milestone.id] ?? { title: milestone.title, dueDate: milestone.dueDate ?? "" }), dueDate: event.target.value } }))} onBlur={() => updateMilestone(milestone.id, { dueDate: milestoneDrafts[milestone.id]?.dueDate || undefined })}/></label>
       </div>)}
       <form className="rpe-add-milestone" onSubmit={addMilestone}>
