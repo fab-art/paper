@@ -145,8 +145,8 @@ export default function ProjectLibrary({
         </div>
 
         <div className="project-scope-tabs" role="group" aria-label="Project library filter">
-          <Button size="sm" variant={scope === "active" ? "primary" : "ghost"} onClick={() => setScope("active")}>Active ({activeProjects.length})</Button>
-          <Button size="sm" variant={scope === "archived" ? "primary" : "ghost"} onClick={() => setScope("archived")}>Archived ({archivedProjects.length})</Button>
+          <Button size="sm" variant={scope === "active" ? "secondary" : "ghost"} onClick={() => setScope("active")}>Active ({activeProjects.length})</Button>
+          <Button size="sm" variant={scope === "archived" ? "secondary" : "ghost"} onClick={() => setScope("archived")}>Archived ({archivedProjects.length})</Button>
         </div>
 
         {actionError && <div className="state-panel state-error" role="alert">{actionError}</div>}
