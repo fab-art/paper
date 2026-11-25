@@ -41,6 +41,7 @@ test("draft evidence audit maps markers to exact available evidence and flags un
   assert.equal(audit.linked.length, 1);
   assert.equal(audit.unresolved.length, 2);
   assert.equal(audit.linked[0].evidenceId, "ev-1");
+  assert.equal(audit.linked[0].claim, "The intervention improved the outcome.");
   assert.match(audit.unresolved[0].reason, /not in the available evidence set/i);
   assert.match(audit.unresolved[1].reason, /source needed/i);
 });
