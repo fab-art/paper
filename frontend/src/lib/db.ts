@@ -117,8 +117,8 @@ export async function saveProject(project: Project) {
     // one-time mapping. Existing Research Blueprint work is never overwritten
     // by a later save from the legacy Project editor.
     if (!(await db.researchBlueprints.get(project.id))) {
-      await db.researchBlueprints.put(projectToResearchBlueprint(next));
-      const migratedEntities = legacyProjectToResearchEntities(next);
+      await db.researchBlueprints.put(projectToResearchBlueprint(next, Date.now(), "owner"));
+      const migratedEntities = legacyProjectToResearchEntities(next, Date.now(), "owner");
       if (migratedEntities.length) await db.researchEntities.bulkPut(migratedEntities);
     }
     savedProject = next;
