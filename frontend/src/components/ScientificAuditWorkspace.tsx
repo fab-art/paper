@@ -31,9 +31,7 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
     setLoading(true);
     setError("");
     try {
-      const [nextEntities, nextRelations] = await Promise.all([
-        listResearchEntities(project.id), listResearchRelations(project.id)
-      ]);
+      const nextEntities = await listResearchEntities(project.id);
       const latest = nextEntities
         .filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "scientific-audit-report")
         .sort((a, b) => b.updatedAt - a.updatedAt)[0];
