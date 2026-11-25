@@ -77,7 +77,7 @@ test("uploads, downloads and deletes a local project attachment", async ({ page 
 
 test("archives, restores and permanently deletes projects as separate actions", async ({ page }) => {
   await createProject(page, "Project lifecycle test");
-  await page.getByRole("button", { name: "Projects" }).click();
+  await page.locator(".project-workspace-header").getByRole("button", { name: "Projects" }).click();
 
   page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Archive" }).click();
