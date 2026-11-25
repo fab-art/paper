@@ -381,12 +381,23 @@ export async function saveResearchRelation(relation: ResearchRelation) {
 
 export async function recordOwnerResearchDecision(decision: ResearchDecision, ownerConfirmed = false) {
   if (!ownerConfirmed || !decision.decidedByOwner) throw new Error("Research decisions require explicit confirmation by the project owner.");
-  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchDecisions], async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchEntities, db.researchDecisions], async () => {
     await assertProjectWritable(decision.projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
     });
-    await db.researchDecisions.put({ ...decision, approvedByOwner: true, decidedByOwner: true, updatedAt: Date.now() });
+    if (decision.subjectType === "project" || decision.subjectType === "blueprint") {
+      if (decision.subjectId !== decision.projectId) throw new Error("Project-level decisions must reference their own project.");
+    } else {
+      const subject = await db.researchEntities.get(decision.subjectId);
+      if (!subject || subject.projectId !== decision.projectId) throw new Error("Owner decisions must reference an existing entity in this project.");
+    }
+    await db.researchDecisions.put({
+      ...decision,
+      approvedByOwner: decision.decision === "approved",
+      decidedByOwner: true,
+      updatedAt: Date.now()
+    });
   });
 }
 
