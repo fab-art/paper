@@ -65,9 +65,11 @@ test('agent output requiring review cannot be completed without owner approval',
   assert.equal(approved.approval?.decision, 'approved');
 });
 
-test('agent cannot start unassigned work or approve a scientific decision', () => {
+test('agent cannot start unassigned work, impersonate another specialist or approve a scientific decision', () => {
   const queued = task();
-  assert.throws(() => transitionResearchTask(queued, 'start', 'agent', [queued], now), /no assigned/);
+  assert.throws(() => transitionResearchTask(queued, 'start', 'agent', [queued], now), /assigned specialist/);
+  const assigned = task({ assignedAgentId: 'research-planner' });
+  assert.throws(() => transitionResearchTask(assigned, 'start', 'agent', [assigned], now, false, '', 'literature-search'), /assigned to this task/);
   assert.throws(() => transitionResearchTask(queued, 'approve', 'agent', [queued], now, true), /owner confirmation/);
 });
 
