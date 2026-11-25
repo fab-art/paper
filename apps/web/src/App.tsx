@@ -63,7 +63,7 @@ export default function App() {
         <div className="topbar-context"><span className="context-dot" /> Independent Research Factory</div>
         <div className="topbar-actions">
           <span className="local-status"><span className="status-dot" /> Local workspace</span>
-          <Button variant="quiet" size="sm" aria-label="Help and guidance"><CircleHelp size={17} /></Button>
+          <Button variant="ghost" size="sm" aria-label="Help and guidance"><CircleHelp size={17} /></Button>
         </div>
       </header>
 
@@ -156,7 +156,7 @@ export default function App() {
                       <div className="project-card-top"><span className="project-type"><FileText size={14} /> Research project</span><span className="project-status">{project.status ?? "planning"}</span></div>
                       <h3>{project.name}</h3>
                       <p>{project.researchQuestion || "Research question not added yet."}</p>
-                      <div className="project-card-footer"><span>Updated {formatDate(project.updatedAt)}</span><Button variant="quiet" size="sm" onClick={() => setSelectedProject(project)}>Open record <ArrowRight size={14} /></Button></div>
+                      <div className="project-card-footer"><span>Updated {formatDate(project.updatedAt)}</span><Button variant="ghost" size="sm" onClick={() => setSelectedProject(project)}>Open record <ArrowRight size={14} /></Button></div>
                     </Card>
                   ))}</div>
                 }
