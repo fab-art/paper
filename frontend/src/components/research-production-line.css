@@ -60,3 +60,10 @@
 .rpl-audit-list strong{font-size:11px;text-transform:capitalize}
 .rpl-audit-list p{grid-column:2;margin:0;color:hsl(var(--ink-muted,189 8% 36%));font-size:10px;line-height:1.5}
 @media(max-width:600px){.rpl-audit-list>div{grid-template-columns:1fr;gap:3px}.rpl-audit-list p{grid-column:1}}
+
+.rpl-task-output{margin-top:7px;border:1px solid hsl(var(--line,39 11% 76%));border-radius:9px;overflow:hidden}
+.rpl-task-output summary{padding:8px 10px;font-size:11px;font-weight:700;color:hsl(var(--brand,193 79% 26%));cursor:pointer;list-style-position:inside}
+.rpl-output-document{padding:10px;border-top:1px solid hsl(var(--line,39 11% 76%));display:grid;gap:7px}
+.rpl-output-document strong{font-size:12px}
+.rpl-output-document pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;margin:0;padding:11px;border-radius:8px;background:hsl(var(--surface-muted,42 17% 91%));color:hsl(var(--ink,190 22% 12%));font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace}
+.rpl-output-document small{font-size:10px;color:hsl(var(--ink-muted,189 8% 36%))}
