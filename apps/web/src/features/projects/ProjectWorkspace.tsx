@@ -9,7 +9,7 @@ import type {
 } from "../../../../../frontend/src/lib/types";
 import { projectFingerprint, shouldSaveProjectSnapshot } from "../../../../../frontend/src/lib/project-save-guard.mjs";
 import {
-  addPaper, deleteAttachment, deleteNote, getProject, listAttachments, listNotes,
+  deleteAttachment, deleteNote, getProject, listAttachments, listNotes,
   saveAttachment, saveNote, saveProjectSnapshot
 } from "./projectRepository";
 import { isDuplicatePaper } from "./projectModel.mjs";
