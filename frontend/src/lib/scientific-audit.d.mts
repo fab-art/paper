@@ -19,8 +19,8 @@ export interface ScientificAuditReport {
 export function runScientificAudit(input: { project: Project; entities?: ResearchEntity[]; relations?: ResearchRelation[]; now?: number }): ScientificAuditReport;
 export function assessJournalFit(input: {
   manuscript?: { title?: string; paperType?: string; keywords?: string[] };
-  journal?: { title?: string; aimsAndScope?: string; acceptedArticleTypes?: string[]; sourceUrl?: string; verifiedAt?: number; apc?: string | number | null; reviewTimeline?: string | null; indexing?: string[] };
-}): { status: string; journalTitle: string; scopeOverlap: string[]; scopeFitScore: number | null; articleTypeMatch: boolean | null; sourceUrl: string | null; verifiedAt: number | null; metadataStatus: string; apc: string | number | null; reviewTimeline: string | null; indexing: string[]; acceptanceProbability: null; warning: string };
+  journal?: { title?: string; aimsAndScope?: string; acceptedArticleTypes?: string[]; sourceUrl?: string; verifiedAt?: number; publisher?: string; apc?: string | number | null; reviewTimeline?: string | null; indexing?: string[] };
+}): { status: string; journalTitle: string; publisher: string | null; scopeOverlap: string[]; scopeFitScore: number | null; articleTypeMatch: boolean | null; sourceUrl: string | null; verifiedAt: number | null; metadataStatus: string; apc: string | number | null; reviewTimeline: string | null; indexing: string[]; acceptanceProbability: null; warning: string };
 export function simulateReviewerPerspectives(input: { project?: Project; auditReport?: { findings?: ScientificAuditFinding[] } }): {
   kind: "simulation"; isPeerReview: false; projectId: string; label: string;
   perspectives: Array<{ id: string; title: string; prompt: string; status: "prompt-only"; relatedFindingIds: string[] }>;
