@@ -129,7 +129,7 @@ export function createResearchTask(input: {
     assignedAgentId: input.assignedAgentId,
     dependencyTaskIds: [...new Set(input.dependencyTaskIds ?? [])],
     inputEntityIds: [...new Set(input.inputEntityIds ?? [])], outputEntityIds: [],
-    ownerApprovalBeforeRun: before, ownerApprovalRequired: Boolean(input.ownerApprovalRequired || before),
+    ownerApprovalBeforeRun: before, ownerApprovalRequired: Boolean(input.ownerApprovalRequired || before || input.assignedAgentId),
     approvalStage: before ? "before-run" : null, ownerApproved: false,
     version: 1, runCount: 0, createdAt: now, updatedAt: now
   };
@@ -143,7 +143,7 @@ export function getReadyResearchTasks(tasks: ResearchTask[], agentsPaused = fals
 
 export function transitionResearchTask(
   task: ResearchTask,
-  action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "mark-stale",
+  action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "fail" | "mark-stale",
   actor: ResearchActor,
   tasks: ResearchTask[],
   now = Date.now(),
@@ -189,6 +189,12 @@ export function transitionResearchTask(
       rationale: rationale.trim(), decidedByOwner: true, createdAt: now
     };
     next.approvalStage = null;
+  } else if (action === "fail") {
+    if (actor !== "agent" && actor !== "system") throw new Error("Only the assigned specialist or system can record an execution failure.");
+    if (next.status !== "running") throw new Error("Only a running task can fail.");
+    if (actor === "agent" && (!next.assignedAgentId || actorAgentId !== next.assignedAgentId)) throw new Error("Only the specialist assigned to this task can record its failure.");
+    next.status = "failed";
+    next.error = rationale.trim() || "Specialist execution failed.";
   } else if (action === "retry") {
     if (actor !== "owner") throw new Error("Only the owner can retry a failed or stale task.");
     if (!["failed", "blocked", "stale", "canceled"].includes(next.status)) throw new Error("Only failed, blocked, stale or canceled tasks can be retried.");
