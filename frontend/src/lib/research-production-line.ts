@@ -160,6 +160,7 @@ export function transitionResearchTask(
   if (action === "start") {
     if (actor !== "owner" && actor !== "agent") throw new Error("Only the owner or assigned agent can start this task.");
     if (next.status !== "queued" || !dependenciesReady) throw new Error("This task is not ready. Complete its dependencies first.");
+    if (next.ownerApprovalBeforeRun && !next.ownerApproved) throw new Error("Owner approval is required before this task can start.");
     if (actor === "agent" && (!next.assignedAgentId || actorAgentId !== next.assignedAgentId)) throw new Error("Only the specialist assigned to this task can start it.");
     next.status = "running";
     next.runCount += 1;
@@ -172,16 +173,19 @@ export function transitionResearchTask(
     next.approvalStage = next.ownerApprovalRequired ? "after-run" : null;
   } else if (action === "approve" || action === "request-changes") {
     if (actor !== "owner" || !ownerConfirmed) throw new Error("This decision requires explicit owner confirmation.");
-    if (next.status !== "awaiting-owner") throw new Error("This task is not waiting for an owner decision.");
-    if (action === "approve" && next.approvalStage === "before-run") {
+    const awaitingPreRunReapproval = next.status === "queued" && next.ownerApprovalBeforeRun && !next.ownerApproved && next.approvalStage === "before-run";
+    if (next.status !== "awaiting-owner" && !awaitingPreRunReapproval) throw new Error("This task is not waiting for an owner decision.");
+    if (action === "approve" && (next.approvalStage === "before-run" || awaitingPreRunReapproval)) {
       next.status = "queued";
       next.ownerApproved = true;
+      next.approvalStage = null;
     } else if (action === "approve") {
       next.status = "completed";
       next.ownerApproved = true;
     } else {
       next.status = "queued";
       next.ownerApproved = false;
+      next.approvalStage = next.ownerApprovalBeforeRun ? "before-run" : null;
     }
     approval = {
       id: `approval:${next.id}:${now}`, projectId: next.projectId, taskId: next.id,
