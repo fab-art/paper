@@ -138,3 +138,10 @@ test("dark theme preference persists and passes WCAG 2.2 A/AA checks", async ({ 
   await page.getByRole("button", { name: "Switch to light theme" }).click();
   await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "light");
 });
+
+test("Projects route survives a direct load and browser refresh", async ({ page }) => {
+  await page.goto("/projects");
+  await expect(page.getByRole("heading", { name: "Projects", level: 1 })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Projects", level: 1 })).toBeVisible();
+});
