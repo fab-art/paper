@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Moon, Search, Settings2, Sun, ShieldCheck, Sparkles, Workflow } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Activity, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban,
+  GraduationCap, Layers3, Microscope, Moon, Settings2, ShieldCheck, Sparkles, Sun, Workflow
+} from "lucide-react";
 import { Button, Card, Sidebar } from "@santi020k/lumen-react";
-import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
+import { listProjects } from "./features/projects/projectRepository";
+import ProjectLibrary from "./features/projects/ProjectLibrary";
+import ProjectWorkspace from "./features/projects/ProjectWorkspace";
 import { getWorkspaceByPath, getWorkspaceGroups, WORKSPACES } from "./domain/workspaces.mjs";
 
 const iconByWorkspace: Record<string, typeof Activity> = {
@@ -12,19 +17,24 @@ const iconByWorkspace: Record<string, typeof Activity> = {
   collaboration: Sparkles, settings: Settings2
 };
 
-function formatDate(timestamp: number | null | undefined) {
-  const date = new Date(typeof timestamp === "number" ? timestamp : Number.NaN);
-  if (Number.isNaN(date.getTime())) return "Date unavailable";
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
+type RouteState = { path: string; projectId: string | null };
+
+function resolveRoute(pathname: string): RouteState {
+  const normalized = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  const segments = normalized.split("/");
+  if (segments.length === 3 && segments[1] === "projects" && segments[2]) {
+    let projectId = segments[2];
+    try { projectId = decodeURIComponent(projectId); } catch { /* Keep the literal route segment. */ }
+    return { path: "/projects", projectId };
+  }
+  return { path: normalized || "/", projectId: null };
 }
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageError, setStorageError] = useState<string | null>(null);
-  const [activePath, setActivePath] = useState(window.location.pathname);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [query, setQuery] = useState("");
+  const [route, setRoute] = useState<RouteState>(() => resolveRoute(window.location.pathname));
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     try {
       return window.localStorage.getItem("paperorchestra-theme") === "dark" ? "dark" : "light";
@@ -32,6 +42,20 @@ export default function App() {
       return "light";
     }
   });
+
+  const refreshProjects = useCallback(async () => {
+    setLoading(true);
+    setStorageError(null);
+    try {
+      setProjects(await listProjects());
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : "The local research library could not be opened.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void refreshProjects(); }, [refreshProjects]);
 
   useEffect(() => {
     try {
@@ -42,32 +66,21 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    let cancelled = false;
-    listLocalProjects().then((records) => {
-      if (!cancelled) setProjects(records);
-    }).catch((error: unknown) => {
-      if (!cancelled) setStorageError(error instanceof Error ? error.message : "The local research library could not be opened.");
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    const onPopState = () => { setActivePath(window.location.pathname); setSelectedProject(null); };
+    const onPopState = () => setRoute(resolveRoute(window.location.pathname));
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   const groups = useMemo(() => getWorkspaceGroups(), []);
-  const activeWorkspace = getWorkspaceByPath(activePath) ?? WORKSPACES[0];
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredProjects = projects.filter((project) => (project.name ?? "").toLowerCase().includes(normalizedQuery));
+  const activeWorkspace = getWorkspaceByPath(route.path) ?? WORKSPACES[0];
 
   function navigate(path: string) {
     window.history.pushState({}, "", path);
-    setActivePath(path);
-    setSelectedProject(null);
+    setRoute(resolveRoute(path));
+  }
+
+  function openProject(project: Project) {
+    navigate("/projects/" + encodeURIComponent(project.id));
   }
 
   return (
@@ -80,14 +93,14 @@ export default function App() {
         </a>
         <div className="topbar-context"><span className="context-dot" /> Independent Research Factory</div>
         <div className="topbar-actions">
-          <span className={`local-status ${storageError ? "is-error" : loading ? "is-loading" : ""}`}>
+          <span className={"local-status " + (storageError ? "is-error" : loading ? "is-loading" : "")}>
             <span className="status-dot" />
             {storageError ? "Local library unavailable" : loading ? "Opening local library" : "Local workspace"}
           </span>
           <Button
             variant="ghost"
             size="sm"
-            aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+            aria-label={"Switch to " + (theme === "light" ? "dark" : "light") + " theme"}
             onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
           >
             {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
@@ -109,7 +122,7 @@ export default function App() {
                 const active = activeWorkspace.id === workspace.id;
                 return (
                   <button
-                    className={`nav-item ${active ? "is-active" : ""}`}
+                    className={"nav-item " + (active ? "is-active" : "")}
                     key={workspace.id}
                     type="button"
                     onClick={() => navigate(workspace.path)}
@@ -133,60 +146,23 @@ export default function App() {
         <main id="main-content" className="main-content">
           <div className="page-heading">
             <div>
-              <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
+              <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{route.projectId ? "Projects" : activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
-              <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
-              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : "A connected environment for every stage of the research journey."}</p>
+              <h1>{route.projectId ? "Project workspace" : activeWorkspace.label}</h1>
+              <p className="page-subtitle">{route.projectId ? "A connected workspace for your research brief, sources, notes and files." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
-          {selectedProject ? (
-            <Card className="project-detail-card">
-              <div className="detail-topline"><span className="eyebrow">LOCAL PROJECT RECORD</span><span className="record-id">ID · {String(selectedProject.id ?? "unknown").slice(0, 8)}</span></div>
-              <h2>{selectedProject.name || "Untitled project"}</h2>
-              <p>{selectedProject.researchQuestion || "No research question has been recorded yet."}</p>
-              <div className="detail-meta"><span>Updated {formatDate(selectedProject.updatedAt)}</span><span>{selectedProject.status ?? "planning"}</span></div>
-              <Button variant="secondary" onClick={() => setSelectedProject(null)}>Back to project library</Button>
-            </Card>
+          {route.projectId ? (
+            <ProjectWorkspace projectId={route.projectId} onBack={() => navigate("/projects")} />
           ) : activeWorkspace.id === "station" || activeWorkspace.id === "projects" ? (
-            <>
-              <section className="welcome-panel">
-                <div className="welcome-copy">
-                  <span className="welcome-label"><Sparkles size={14} /> A BETTER WAY TO DO RESEARCH</span>
-                  <h2>From research question<br />to a defensible paper.</h2>
-                  <p>Your existing tools stay available while each research station is migrated into this connected workspace.</p>
-                  <div className="welcome-footnote"><span className="status-dot" /> Your projects stay on this device by default.</div>
-                </div>
-                <div className="welcome-art" aria-hidden="true">
-                  <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-                  <div className="orbit-core"><Workflow size={36} strokeWidth={1.2} /></div>
-                  <span className="orbit-node node-one"><BookOpen size={17} /></span>
-                  <span className="orbit-node node-two"><FlaskConical size={17} /></span>
-                  <span className="orbit-node node-three"><FileText size={17} /></span>
-                  <span className="orbit-node node-four"><ShieldCheck size={17} /></span>
-                </div>
-              </section>
-
-              <section className="library-section" aria-labelledby="library-heading">
-                <div className="section-heading">
-                  <div><p className="eyebrow">YOUR RESEARCH LIBRARY</p><h2 id="library-heading">Projects <span className="count-pill">{loading ? "…" : storageError ? "—" : projects.length}</span></h2></div>
-                  <label className="project-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a project" aria-label="Find a project" /></label>
-                </div>
-
-                {loading ? <div className="state-panel" role="status">Opening your local research library…</div> :
-                  storageError ? <div className="state-panel state-error" role="alert"><strong>Local library unavailable</strong><span>{storageError}</span><span>Your records have not been changed.</span></div> :
-                  filteredProjects.length === 0 ? <div className="state-panel"><div className="empty-icon"><FolderKanban size={22} /></div><strong>{projects.length ? "No matching projects" : "Your research library is ready"}</strong><span>{projects.length ? "Try another project name." : "This Phase 1 preview is read-only. Project creation and import arrive in the next migration phase; your existing local data is preserved."}</span></div> :
-                  <div className="project-grid">{filteredProjects.map((project) => (
-                    <Card className="project-card" key={project.id}>
-                      <div className="project-card-top"><span className="project-type"><FileText size={14} /> Research project</span><span className="project-status">{project.status ?? "planning"}</span></div>
-                      <h3>{project.name || "Untitled project"}</h3>
-                      <p>{project.researchQuestion || "Research question not added yet."}</p>
-                      <div className="project-card-footer"><span>Updated {formatDate(project.updatedAt)}</span><Button variant="ghost" size="sm" onClick={() => setSelectedProject(project)}>Open record <ArrowRight size={14} /></Button></div>
-                    </Card>
-                  ))}</div>
-                }
-              </section>
-            </>
+            <ProjectLibrary
+              projects={projects}
+              loading={loading}
+              storageError={storageError}
+              onOpen={openProject}
+              onRefresh={refreshProjects}
+            />
           ) : (
             <Card className="migration-panel">
               <div className="migration-icon"><Layers3 size={22} /></div>
