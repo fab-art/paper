@@ -325,7 +325,12 @@ export default function ProjectWorkspace({
               <textarea rows={3} value={project.researchQuestion ?? project.notes.replace(/^Research question:\s*/i, "")} onChange={e => patch({ researchQuestion: e.target.value })} placeholder="What is the central question your research will answer?"/>
             </label>
             <label className="pw-field">Research objectives
-              <textarea rows={4} value={(project.objectives || []).join("\n")} onChange={e => patch({ objectives: e.target.value.split("\n").map(v => v.trim()).filter(Boolean) })} placeholder={"Enter one objective per line\n1. Describe…\n2. Assess…\n3. Explore…"}/>
+              <textarea rows={4} value={(project.objectives || []).join("
+")} onChange={e => patch({ objectives: e.target.value.split("
+").map(v => v.trim()).filter(Boolean) })} placeholder={"Enter one objective per line
+1. Describe…
+2. Assess…
+3. Explore…"}/>
             </label>
             <label className="pw-field">Methodology and approach
               <textarea rows={4} value={project.methodology || ""} onChange={e => patch({ methodology: e.target.value })} placeholder="Study design, setting, population, data sources and analysis plan…"/>
@@ -397,7 +402,8 @@ export default function ProjectWorkspace({
         project={project}
         paperType={(project.paperType && project.paperType !== "unspecified" ? project.paperType : project.systematicReview?.protocol.reviewType === "scoping" ? "scoping-review" : project.systematicReview ? "systematic-review" : "unspecified") as ResearchPaperType}
         researchMode={project.researchMode ?? "guided"}
-        onModeChange={mode => patch({ researchMode: mode })}\n        onProjectUpdate={patch}
+        onModeChange={mode => patch({ researchMode: mode })}
+        onProjectUpdate={patch}
         onOpenStudio={() => void navigateAfterSave(onOpenStudio)}
       />}
 
