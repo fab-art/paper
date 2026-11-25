@@ -104,6 +104,8 @@ test("Data & Methods executes local descriptive analysis and persists reviewable
   assert.match(lab, /Download table CSV/);
   assert.match(lab, /Download figure SVG/);
   assert.match(lab, /Download LaTeX table/);
+  assert.match(lab, /table\.rows\.slice\(0, 250\)/);
+  assert.match(lab, /exports contain all rows/);
   assert.match(worker, /executeDescriptiveAnalysis/);
 });
 
