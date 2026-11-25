@@ -50,5 +50,8 @@ test('database upgrade backfills existing projects idempotently', () => {
 test('Research Blueprint reads and writes are project-scoped and transactional', () => {
   assert.match(db, /loadResearchBlueprint/);
   assert.match(db, /saveResearchBlueprint/);
+  assert.match(db, /expectedVersion = blueprint\.version/);
+  assert.match(db, /actualVersion/);
+  assert.match(db, /changed elsewhere/);
   assert.match(db, /db\.transaction\("rw"/);
 });
