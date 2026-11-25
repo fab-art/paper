@@ -314,3 +314,15 @@ export function removeResearchPlanTask(plan: ResearchStationPlan, taskId: string
   if (stations.every((station, index) => station.tasks.length === plan.stations[index].tasks.length)) throw new Error("Research plan task was not found.");
   return { ...plan, stations, updatedAt: now };
 }
+
+
+export function moveResearchPlanStation(plan: ResearchStationPlan, fromIndex: number, toIndex: number, now = Date.now()): ResearchStationPlan {
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex < 0 || toIndex < 0 || fromIndex >= plan.stations.length || toIndex >= plan.stations.length) {
+    throw new Error("Choose a valid station position.");
+  }
+  if (fromIndex === toIndex) return plan;
+  const stations = [...plan.stations];
+  const [station] = stations.splice(fromIndex, 1);
+  stations.splice(toIndex, 0, station);
+  return { ...plan, stations, updatedAt: now };
+}
