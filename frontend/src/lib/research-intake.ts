@@ -7,6 +7,7 @@ export interface ResearchIntake {
   intendedAudience: string;
   availableMaterials: string[];
   paperType: ResearchPaperType;
+  startPath?: ResearchEntryPath;
 }
 
 export const PAPER_TYPE_BLUEPRINTS: {
@@ -45,6 +46,7 @@ export function buildResearchIntake(input: ResearchIntake) {
     intendedAudience: audience,
     availableMaterials: materials,
     paperType: input.paperType,
+    startPath: input.startPath ?? "idea",
     storyArc,
     researchMode: "guided" as const,
     lifecycleState: "planning" as const,
