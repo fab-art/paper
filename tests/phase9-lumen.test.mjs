@@ -54,6 +54,8 @@ test('dashboard and project workspace use contrast-safe muted text tokens', asyn
   assert.match(dashboardStyles, /\.dashboard-shell \.dash-local\.ui-badge\{color:#477653\}/);
   assert.match(dashboardStyles, /\.dashboard-shell \.cloud-auth-status\{color:#62666f\}/);
   assert.match(dashboardStyles, /#dash-create-description\{color:#6c6f78\}/);
+  assert.match(dashboardStyles, /\.cloud-auth-dialog \.cloud-auth-eyebrow\{color:#68658e\}/);
+  assert.match(dashboardStyles, /\.cloud-auth-dialog form input\{font-size:16px\}/);
   assert.match(workspaceStyles, /\.project-workspace \.pw-breadcrumb[^}]*color:#62666f/);
   assert.match(workspaceStyles, /\.project-workspace \.pw-eyebrow[^}]*color:#68658e/);
 });

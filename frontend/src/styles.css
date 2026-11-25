@@ -394,3 +394,10 @@ body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
 /* Remaining muted cloud and dialog copy must also meet AA on white surfaces. */
 .dashboard-shell .cloud-auth-status{color:#62666f}
 .dashboard-shell #dash-create-description{color:#6c6f78}
+
+/* Supabase sign-in dialog contrast and mobile input zoom safeguards. */
+.cloud-auth-dialog .cloud-auth-eyebrow{color:#68658e}
+.cloud-auth-dialog #cloud-auth-description{color:#6c6f78}
+.cloud-auth-dialog .cloud-auth-modes button:not(.active){color:#62666f}
+.cloud-auth-dialog>small{color:#62666f}
+@media(max-width:580px){.cloud-auth-dialog form input{font-size:16px}}
