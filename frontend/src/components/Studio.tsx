@@ -370,7 +370,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       setNotice("Add or generate an outline section before drafting.");
       return;
     }
-    setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
+    setWritingProposal(null);\n    setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
     try {
       const guide = getWritingSectionGuide(section.title, project.paperType ?? "unspecified");
       const target = Number(writingWordTarget) || guide.defaultWordTarget;
@@ -403,7 +403,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     setNotice("Writing proposal rejected. The existing manuscript was left unchanged.");
   };
   const runRefine = async () => {
-    setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
+    setWritingProposal(null);\n    setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
       const raw = await ask(refinePrompt(project, refinementFocus, authorVoice));
       if (projectRef.current.id !== project.id) return;
@@ -623,7 +623,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input aria-label="Plot regeneration instructions" value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button type="button" className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
-            {writingProposal && (activeAgent==="writing" || activeAgent==="refine") && <section className="agent-summary writing-proposal-review" aria-label="Writing proposal review"><strong>{writingProposalLabel}</strong><p>The current manuscript remains unchanged. Inspect the proposed text, linked evidence, unresolved claims and citation keys before accepting.</p><div className="proposal-diff"><div><b>Current manuscript</b><pre>{project.latex.slice(0, 2600)}</pre></div><div><b>Proposed manuscript</b><pre>{writingProposal.slice(0, 2600)}</pre></div></div><p>{(writingProposal.match(/\[SOURCE NEEDED\]/g) || []).length} source-needed marker(s) · {(writingProposal.match(/\[EVIDENCE:/g) || []).length} evidence marker(s)</p>{renderWritingAudit(proposalEvidenceAudit, proposalCitationAudit, "Proposed manuscript evidence and citation audit")}<div className="proposal-actions"><button type="button" className="primary-button" onClick={acceptWritingProposal}>Accept proposal</button><button type="button" className="secondary-button" onClick={rejectWritingProposal}>Reject proposal</button></div></section>}
+            {writingProposal && (activeAgent==="writing" || activeAgent==="refine") && <section className="agent-summary writing-proposal-review" aria-label="Writing proposal review"><strong>{writingProposalLabel}</strong><p>The current manuscript remains unchanged. Inspect the proposed text, linked evidence, unresolved claims and citation keys before accepting.</p><div className="proposal-diff"><div><b>Current manuscript</b><pre>{project.latex.slice(0, 2600)}</pre></div><div><b>Proposed manuscript</b><pre>{writingProposal.slice(0, 2600)}</pre></div></div><p>{(writingProposal.match(/\[SOURCE NEEDED\]/g) || []).length} source-needed marker(s) · {(writingProposal.match(/\[EVIDENCE:/g) || []).length} evidence marker(s)</p>{renderWritingAudit(proposalEvidenceAudit, proposalCitationAudit, "Proposed manuscript evidence and citation audit")}<div className="proposal-actions"><button type="button" className="primary-button" disabled={busy} onClick={acceptWritingProposal}>Accept proposal</button><button type="button" className="secondary-button" disabled={busy} onClick={rejectWritingProposal}>Reject proposal</button></div></section>}
             <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "presentation" : "status"} aria-live={noticeIsError ? "off" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
           </>}
           {tab==="latex"&&<div className="editor-wrap"><div className="editor-toolbar"><span><FileText size={14}/> manuscript.tex</span><span className="muted">LaTeX · UTF-8</span></div><textarea className="latex-editor" aria-label="LaTeX manuscript source" spellCheck={false} value={project.latex} onChange={e=>patch({latex:e.target.value})}/></div>}
