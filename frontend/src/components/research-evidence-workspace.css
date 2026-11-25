@@ -17,7 +17,7 @@
 .re-panel-title p{margin:5px 0 0;color:var(--re-muted);font-size:10px;line-height:1.5}
 .re-form{display:grid;gap:11px}
 .re-form label{display:grid;gap:6px;color:var(--re-ink);font-size:10px;font-weight:650}
-.re-form :is(input,textarea,select){width:100%;min-width:0;border:1px solid var(--re-line);border-radius:8px;padding:10px 11px;background:#fff;color:var(--re-ink);font:12px inherit;outline:0}
+.re-form :is(input,textarea,select){width:100%;min-width:0;border:1px solid var(--re-line);border-radius:8px;padding:10px 11px;background:#fff;color:var(--re-ink);font-size:12px;font-family:inherit;outline:0}
 .re-form :is(input,textarea,select):focus{border-color:var(--re-brand);box-shadow:0 0 0 3px hsl(193 79% 26% / .12)}
 .re-form textarea{resize:vertical;line-height:1.55}
 .re-form>button{justify-self:start}
