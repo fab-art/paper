@@ -180,7 +180,7 @@ test("IndexedDB failures are announced without presenting an empty library", asy
     };
   });
   await page.goto("/");
-  await expect(page.getByText("Local library unavailable")).toBeVisible();
+  await expect(page.getByRole("alert").getByText("Local library unavailable")).toBeVisible();
   await expect(page.getByRole("alert")).toContainText("IndexedDB disabled by browser policy");
   await expect(page.getByText("Your research library is ready")).toHaveCount(0);
 });
