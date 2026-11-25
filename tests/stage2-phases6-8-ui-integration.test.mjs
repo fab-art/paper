@@ -103,6 +103,7 @@ test("Data & Methods executes local descriptive analysis and persists reviewable
   assert.match(lab, /Approve result for grounded writing/);
   assert.match(lab, /Download table CSV/);
   assert.match(lab, /Download figure SVG/);
+  assert.match(lab, /Download LaTeX table/);
   assert.match(worker, /executeDescriptiveAnalysis/);
 });
 
