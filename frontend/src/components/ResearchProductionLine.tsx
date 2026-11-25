@@ -6,11 +6,11 @@ import {
 } from "lucide-react";
 import type { ResearchPaperType } from "../lib/research-blueprint";
 import {
-  getResearchRoute, RESEARCH_AGENTS, summarizeResearchStations,
-  type ResearchStationId, type ResearchTask
+  getResearchRoute, getReadyResearchTasks, RESEARCH_AGENTS, summarizeResearchStations,
+  type ResearchStationId, type ResearchTask, type ResearchAuditEvent
 } from "../lib/research-production-line";
 import {
-  createResearchTaskRecord, getResearchControl, listResearchTasks,
+  createResearchTaskRecord, getResearchControl, listResearchAuditEvents, listResearchTasks,
   setResearchAgentsPaused, transitionResearchTaskRecord
 } from "../lib/db";
 import "./research-production-line.css";
@@ -34,6 +34,8 @@ export default function ResearchProductionLine({
   onModeChange: (mode: "guided" | "professional") => void;
 }) {
   const [tasks, setTasks] = useState<ResearchTask[]>([]);
+  const [events, setEvents] = useState<ResearchAuditEvent[]>([]);
+  const [dependencies, setDependencies] = useState<string[]>([]);
   const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,15 +51,17 @@ export default function ResearchProductionLine({
   const summaries = useMemo(() => summarizeResearchStations(tasks, paperType), [tasks, paperType]);
   const completedTasks = tasks.filter(task => task.status === "completed").length;
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
+  const agentReadyCount = getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length;
   const nextStation = summaries.find(item => item.status !== "complete") ?? summaries[0];
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const [nextTasks, control] = await Promise.all([
-        listResearchTasks(projectId), getResearchControl(projectId)
+      const [nextTasks, control, nextEvents] = await Promise.all([
+        listResearchTasks(projectId), getResearchControl(projectId), listResearchAuditEvents(projectId)
       ]);
       setTasks(nextTasks);
+      setEvents(nextEvents.slice(0, 12));
       setPaused(control.agentsPaused);
       setError("");
     } catch (cause) {
@@ -99,9 +103,10 @@ export default function ResearchProductionLine({
     try {
       await createResearchTaskRecord({
         projectId, stationId, title, description, assignedAgentId: agentId || undefined,
+        dependencyTaskIds: dependencies,
         ownerApprovalRequired: ownerGate, ownerApprovalBeforeRun: beforeRun
       });
-      setTitle(""); setDescription(""); setAgentId(""); setOwnerGate(false); setBeforeRun(false); setShowComposer(false);
+      setTitle(""); setDescription(""); setAgentId(""); setDependencies([]); setOwnerGate(false); setBeforeRun(false); setShowComposer(false);
       await refresh();
     } catch (cause) {
       setError((cause as Error).message || "The task could not be added.");
@@ -136,7 +141,7 @@ export default function ResearchProductionLine({
         <span className="rpl-progress-value">{overall}%</span>
       </div>
       <Progress value={overall} max={100} aria-label="Research task completion"/>
-      <div className="rpl-progress-foot"><span>{route.length} stations in this suggested route</span><span>{paused ? "Specialist agents paused by owner" : "Owner controls active"}</span></div>
+      <div className="rpl-progress-foot"><span>{route.length} stations in this suggested route · {agentReadyCount} agent-assigned tasks eligible for dispatch</span><span>{paused ? "Specialist agents paused by owner" : "Owner controls active"}</span></div>
     </Card>
 
     {researchMode === "guided" && nextStation && <Card className="rpl-next-card">
@@ -164,6 +169,7 @@ export default function ResearchProductionLine({
         <label>Task name<input required value={title} onChange={event => setTitle(event.target.value)} placeholder="e.g. Define the primary outcome measure"/></label>
         <label>What needs to be done?<textarea rows={2} value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe the expected work or output."/></label>
         <label>Assign specialist (optional)<select value={agentId} onChange={event => setAgentId(event.target.value)}><option value="">Researcher / unassigned</option>{RESEARCH_AGENTS.filter(agent => agent.stationIds.includes(stationId)).map(agent => <option key={agent.id} value={agent.id}>{agent.label}</option>)}</select></label>
+        {tasks.length > 0 && <fieldset className="rpl-dependencies"><legend>Depends on (optional)</legend>{tasks.filter(task => task.status !== "canceled").map(task => <label key={task.id}><input type="checkbox" checked={dependencies.includes(task.id)} onChange={event => setDependencies(current => event.target.checked ? [...current, task.id] : current.filter(id => id !== task.id))}/><span>{task.title} · {taskStatusLabel[task.status]}</span></label>)}</fieldset>}
         <div className="rpl-checks"><label><input type="checkbox" checked={ownerGate} onChange={event => setOwnerGate(event.target.checked)}/> Require my approval before this output is accepted</label><label><input type="checkbox" checked={beforeRun} onChange={event => setBeforeRun(event.target.checked)}/> Require my approval before work begins</label></div>
         {agentId && <p className="rpl-agent-note"><Bot size={14}/> Assignment is recorded with the specialist's permission contract. Automatic execution is only shown when a compatible agent runner is connected; this queue will not pretend an agent has run.</p>}
         <div className="rpl-composer-actions"><Button type="button" variant="ghost" size="sm" onClick={() => setShowComposer(false)}>Cancel</Button><Button type="submit" size="sm"><Plus size={14}/> Add to queue</Button></div>
@@ -181,7 +187,7 @@ export default function ResearchProductionLine({
             {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies</small>}
           </div>
           <div className="rpl-task-actions">
-            {task.status === "queued" && <Button size="sm" variant="outline" onClick={() => void changeTask(task, "start")}>Start work</Button>}
+            {task.status === "queued" && <Button size="sm" variant="outline" disabled={!task.dependencyTaskIds.every(id => tasks.find(dependency => dependency.id === id)?.status === "completed")} onClick={() => void changeTask(task, "start")}>{task.dependencyTaskIds.some(id => tasks.find(dependency => dependency.id === id)?.status !== "completed") ? "Waiting on dependency" : "Start work"}</Button>}
             {task.status === "running" && <Button size="sm" onClick={() => void changeTask(task, "submit")}>Submit output</Button>}
             {task.status === "awaiting-owner" && <><Button size="sm" onClick={() => void changeTask(task, "approve")}>Approve</Button><Button size="sm" variant="outline" onClick={() => void changeTask(task, "request-changes")}>Request changes</Button></>}
             {["failed", "blocked", "stale", "canceled"].includes(task.status) && <Button size="sm" variant="outline" onClick={() => void changeTask(task, "retry")}><RefreshCw size={13}/> Retry</Button>}
@@ -189,6 +195,10 @@ export default function ResearchProductionLine({
           </div>
         </Card>)}
     </section>
+    {researchMode === "professional" && <Card className="rpl-agent-roster">
+      <div className="rpl-station-heading"><div><span className="rpl-eyebrow">AUDIT TRAIL</span><h3>Recent project activity</h3></div></div>
+      {events.length ? <div className="rpl-audit-list">{events.map(event => <div key={event.id}><span>{new Date(event.createdAt).toLocaleString()}</span><strong>{event.event.replaceAll("-", " ")}</strong><p>{event.details}</p></div>)}</div> : <p className="rpl-agent-note">Task and owner-control events will be recorded here as work progresses.</p>}
+    </Card>}
     {researchMode === "professional" && <Card className="rpl-agent-roster">
       <div className="rpl-station-heading"><div><span className="rpl-eyebrow">SPECIALIST NETWORK</span><h3>Agent responsibilities</h3></div><Badge variant="outline">{RESEARCH_AGENTS.length} roles</Badge></div>
       <div className="rpl-agent-grid">{RESEARCH_AGENTS.map(agent => <div key={agent.id}><strong>{agent.label}</strong><p>{agent.purpose}</p><small>Can propose: {agent.canPropose.join(", ")}</small><small>Cannot approve or make owner decisions</small></div>)}</div>
