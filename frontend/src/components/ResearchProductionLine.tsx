@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import type { ResearchPaperType, ResearchEntity } from "../lib/research-blueprint";
 import type { Project } from "../lib/types";
-import { getResearchNextAction } from "../lib/research-intake";
+import { createResearchStationPlan, getResearchNextAction } from "../lib/research-intake";
+import ResearchPlanEditor from "./ResearchPlanEditor";
 import {
   getResearchRoute, getReadyResearchTasks, RESEARCH_AGENTS, summarizeResearchStations,
   type ResearchStationId, type ResearchTask, type ResearchAuditEvent
@@ -62,7 +63,7 @@ export default function ResearchProductionLine({
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
   const agentReadyCount = localModelReady ? getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length : 0;
   const nextStation = summaries.find(item => item.status !== "complete") ?? summaries[0];
-  const nextAction = useMemo(() => getResearchNextAction(project), [project]);
+  const nextAction = useMemo(() => getResearchNextAction(project), [project]);\n  const researchPlan = useMemo(() => project.researchPlan ?? createResearchStationPlan(paperType, project.startPath ?? "idea"), [project.researchPlan, project.id, paperType, project.startPath]);\n\n  useEffect(() => {\n    if (!project.researchPlan) onProjectUpdate({ researchPlan });\n  }, [project.id, project.researchPlan, researchPlan, onProjectUpdate]);
 
   const refresh = async () => {
     setLoading(true);
@@ -185,7 +186,7 @@ export default function ResearchProductionLine({
       <Button type="button" size="sm" onClick={() => { setStationId(nextAction.station as ResearchStationId); setTitle(nextAction.title); setDescription(nextAction.description); setShowComposer(true); }}>Start this step <ArrowRight size={14}/></Button>
     </Card>}
 
-    <div className="rpl-station-heading"><div><span className="rpl-eyebrow">THE RESEARCH LINE</span><h3>Stations</h3></div><Button type="button" variant="outline" size="sm" onClick={() => setShowComposer(value => !value)}><Plus size={14}/> Add task</Button></div>
+    <ResearchPlanEditor plan={researchPlan} onChange={nextPlan => onProjectUpdate({ researchPlan: nextPlan })}/>\n\n    <div className="rpl-station-heading"><div><span className="rpl-eyebrow">THE RESEARCH LINE</span><h3>Stations</h3></div><Button type="button" variant="outline" size="sm" onClick={() => setShowComposer(value => !value)}><Plus size={14}/> Add task</Button></div>
     <div className="rpl-station-grid">
       {summaries.map((station, index) => (
         <Card key={station.id} className={`rpl-station-card status-${station.status}`}>
