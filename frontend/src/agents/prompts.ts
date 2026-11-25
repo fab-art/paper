@@ -64,12 +64,12 @@ export function refinePrompt(
       : authorVoice === "concise"
         ? "Prefer concise academic prose without removing essential scientific detail."
         : "Use accessible scholarly language and explain specialized terms where useful.";
-  return \`Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
-\${focusInstruction}
-\${voiceInstruction}
+  return `Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
+${focusInstruction}
+${voiceInstruction}
 Preserve all factual uncertainty. Check alignment with the research question, balanced braces/environments, citation keys against the bibliography, duplicated text and unsupported factual claims. Do not invent citations, methods, approvals or findings.
 PROJECT BRIEF:
-\${researchBrief(project, 2500)}
-LATEX: \${project.latex.slice(0, 9000)}
-BIB: \${project.bibtex.slice(0, 3500)}\`;
+${researchBrief(project, 2500)}
+LATEX: ${project.latex.slice(0, 9000)}
+BIB: ${project.bibtex.slice(0, 3500)}`;
 }
