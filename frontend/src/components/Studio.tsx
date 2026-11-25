@@ -508,7 +508,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     {evidenceAudit.linked.length === 0 && evidenceAudit.unresolved.length === 0 && <p className="writing-audit-empty">No explicit evidence markers found yet. Add [EVIDENCE: passage-id] or [SOURCE NEEDED] markers while reviewing factual claims.</p>}
     <div className="citation-audit">
       <strong>Citation key check</strong>
-      {citationAudit.missingKeys.length ? <p className="audit-warning">Missing from bibliography: {citationAudit.missingKeys.join(", ")}</p> : <p className="audit-ok">All cited keys were found in the current bibliography.</p>}
+      {citationAudit.citedKeys.length === 0 ? <p className="writing-audit-empty">No citation commands detected in this manuscript.</p> : citationAudit.missingKeys.length ? <p className="audit-warning">Missing from bibliography: {citationAudit.missingKeys.join(", ")}</p> : <p className="audit-ok">All cited keys were found in the current bibliography.</p>}
       {citationAudit.unusedKeys.length > 0 && <small>Unused bibliography entries: {citationAudit.unusedKeys.join(", ")}</small>}
       {citationAudit.duplicateKeys.length > 0 && <small>Duplicate bibliography keys: {citationAudit.duplicateKeys.join(", ")}</small>}
     </div>
