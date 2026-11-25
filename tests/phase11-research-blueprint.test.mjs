@@ -81,6 +81,19 @@ test('legacy project mapping preserves question, objectives, methods, sources an
   assert.equal(entities.find(entity => entity.entityType === 'source').payload.doi, '10.1000/example');
 });
 
+test('legacy migration preserves duplicate DOI records instead of silently deduplicating them', () => {
+  const project = legacyProject({
+    papers: [
+      { title: 'First imported record', authors: [], doi: '10.1000/duplicate' },
+      { title: 'Second imported record', authors: [], doi: '10.1000/duplicate' }
+    ]
+  });
+  const sources = legacyProjectToResearchEntities(project, 1800000000000)
+    .filter(entity => entity.entityType === 'source');
+  assert.equal(sources.length, 2);
+  assert.notEqual(sources[0].id, sources[1].id);
+});
+
 test('legacy migration identifiers are deterministic across repeated mapping', () => {
   const project = legacyProject();
   const first = legacyProjectToResearchEntities(project, 1800000000000);
