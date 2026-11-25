@@ -46,3 +46,11 @@ test("next action advances to source discovery after the brief is present", () =
   });
   assert.equal(next.id, "source-discovery");
 });
+
+test("idea-first starts with question refinement while dataset and review routes start in their own stations", () => {
+  assert.equal(getResearchNextAction({ startPath: "idea", paperType: "empirical-study", researchQuestion: "" }).id, "research-question");
+  assert.equal(getResearchNextAction({ startPath: "dataset", paperType: "dataset-analysis", researchQuestion: "" }).id, "dataset-profile");
+  assert.equal(getResearchNextAction({ startPath: "review", paperType: "systematic-review", researchQuestion: "" }).id, "review-protocol");
+  assert.equal(getResearchNextAction({ startPath: "manuscript", paperType: "existing-manuscript", researchQuestion: "" }).id, "manuscript-inventory");
+  assert.equal(getResearchNextAction({ startPath: "literature", researchQuestion: "" }).id, "source-discovery");
+});
