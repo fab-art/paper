@@ -175,6 +175,6 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       <label className="dml-script-label">Analysis script or documented procedure<textarea rows={5} value={analysisScript} onChange={event => setAnalysisScript(event.target.value)} placeholder="Paste the script or describe the exact analysis steps and transformations."/></label>
       <button type="button" className="dml-primary-action" disabled={savingManifest || !selectedId || !analysisScript.trim()} onClick={() => void saveAnalysisManifest()}>{savingManifest ? "Saving…" : "Save reproducibility record"}</button>
       {manifestNotice && <p role="status" aria-live="polite">{manifestNotice}</p>}
-    </section>
+    </section>}
   </section>;
 }
