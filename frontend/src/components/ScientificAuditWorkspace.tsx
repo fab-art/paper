@@ -154,7 +154,7 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
     </> : view === "reviewer" ? <section className="sa-panel">
       <div className="sa-panel-title"><div><h3>Simulated reviewer perspectives</h3><p>Structured critique prompts based on common editorial review dimensions.</p></div><Badge variant="outline">Simulation only</Badge></div>
       {!reviewer ? <div className="sa-empty-inline">Run a scientific audit first to connect known findings to reviewer prompts.</div> : <div className="sa-reviewer-grid">{reviewer.perspectives.map(item => <article key={item.id}><Badge variant="outline">Prompt only</Badge><h4>{item.title}</h4><p>{item.prompt}</p><small>{item.relatedFindingIds.length} related audit finding(s)</small></article>)}</div>}
-      <p className="sa-footnote">These prompts do not represent a real reviewer, editorial decision, acceptance probability or independent scientific assessment.</p>
+      <p className="sa-footnote">Simulated reviewer checklist — this is not a real peer review, editorial decision or acceptance prediction. It is a prompt for the researcher to examine the manuscript critically.</p>
     </section> : <div className="sa-journal-layout">
       <section className="sa-panel"><div className="sa-panel-title"><div><h3>Journal profile</h3><p>Enter journal details from an official, current source. This tool does not invent missing data.</p></div></div>
         <form className="sa-form" onSubmit={saveJournalProfile}>
