@@ -24,10 +24,11 @@ export function buildResearchAgentPrompt(
 
   const inputs = entities
     .filter(entity => task.inputEntityIds.includes(entity.id))
-    .slice(0, 30)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 8)
     .map(entity => ({
       id: entity.id, type: entity.entityType, title: entity.title,
-      status: entity.status, payload: JSON.stringify(entity.payload).slice(0, 1800)
+      status: entity.status, payload: JSON.stringify(entity.payload).slice(0, 1200)
     }));
 
   return [
