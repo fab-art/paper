@@ -358,6 +358,7 @@ export async function saveResearchEntity(entity: ResearchEntity) {
     const existing = await db.researchEntities.get(entity.id);
     if (existing && existing.projectId !== entity.projectId) throw new Error("Research entities cannot be moved between projects.");
     if (entity.provenance.kind === "agent") {
+      if (!entity.provenance.sourceId) throw new Error("Agent output provenance must identify its task.");
       const task = await db.researchTasks.get(entity.provenance.sourceId);
       const agentId = String(entity.payload.agentId ?? "");
       if (!task || task.projectId !== entity.projectId || task.status !== "running" || task.assignedAgentId !== agentId) {
