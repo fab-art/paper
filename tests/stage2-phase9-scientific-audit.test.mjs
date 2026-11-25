@@ -89,6 +89,7 @@ test("journal fit reports insufficient evidence without inventing metrics", () =
   assert.equal(result.status, "insufficient-data");
   assert.equal(result.acceptanceProbability, null);
   assert.equal(result.apc, null);
+  assert.equal(result.publisher, null);
   assert.equal(result.reviewTimeline, null);
 });
 
