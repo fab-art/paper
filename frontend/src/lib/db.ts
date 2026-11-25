@@ -483,7 +483,7 @@ export async function transitionResearchTaskRecord(
       throw new Error("This task changed elsewhere. Reload it before making another decision.");
     }
     const control = await db.researchControls.get(projectId);
-    if (actor === "agent" && control?.agentsPaused) throw new Error("Specialist agents are paused by the project owner.");
+    if (actor === "agent" && action === "start" && control?.agentsPaused) throw new Error("Specialist agents are paused by the project owner.");
     const tasks = await db.researchTasks.where("projectId").equals(projectId).toArray();
     const outputEntities = await db.researchEntities.bulkGet(outputEntityIds);
     if (outputEntities.some(entity => !entity || entity.projectId !== projectId)) {
