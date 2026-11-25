@@ -76,3 +76,6 @@
 .dml-compliance-list select{width:100%;min-width:0;border:1px solid var(--pw-border,#dedbd1);border-radius:8px;background:white;color:var(--pw-text,#172d31);padding:8px;font:inherit}
 .dml-shell :is(input,select,textarea,button,summary):focus-visible{outline:2px solid var(--pw-accent,#125b69);outline-offset:3px}
 @media(max-width:640px){.dml-compliance-list li{grid-template-columns:1fr}.dml-output-actions>*{width:100%}}
+
+.dml-output-history{display:grid;gap:4px;color:var(--pw-muted,#5d6b6d);font-size:10px;font-weight:650}
+.dml-output-history select{max-width:100%;border:1px solid var(--pw-border,#dedbd1);border-radius:8px;background:white;padding:8px;color:var(--pw-text,#172d31);font:inherit}
