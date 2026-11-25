@@ -78,13 +78,20 @@ export async function runResearchSpecialistTask(projectId: string, taskId: strin
   const [blueprint, entities] = await Promise.all([
     loadResearchBlueprint(projectId), listResearchEntities(projectId)
   ]);
+  const dependencyOutputs = tasks
+    .filter(item => task.dependencyTaskIds.includes(item.id))
+    .flatMap(item => item.outputEntityIds);
+  const executionTask = {
+    ...task,
+    inputEntityIds: [...new Set([...task.inputEntityIds, ...dependencyOutputs])]
+  };
   const running = await transitionResearchTaskRecord(
     projectId, taskId, "start", "agent", false, "", task.version, agentId
   );
   if (!running) throw new Error("The specialist task could not be started.");
 
   try {
-    const prompt = buildResearchAgentPrompt(agentId, running, blueprint, entities);
+    const prompt = buildResearchAgentPrompt(agentId, { ...running, inputEntityIds: executionTask.inputEntityIds }, blueprint, entities);
     const draftText = await complete(prompt);
     if (!draftText.trim()) throw new Error("The specialist returned an empty draft.");
 
