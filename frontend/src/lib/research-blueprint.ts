@@ -42,6 +42,10 @@ export interface ResearchBlueprint {
   researchQuestion: string;
   objectives: string[];
   paperType: ResearchPaperType;
+  intendedAudience: string;
+  availableMaterials: string[];
+  storyArc: string[];
+  researchMode: "guided" | "professional";
   lifecycleState: ResearchLifecycleState;
   legacyProjectRevision: number;
   provenance: ResearchProvenance;
@@ -121,9 +125,13 @@ export function projectToResearchBlueprint(project: Project, now = Date.now()): 
     description: project.notes ?? "",
     researchQuestion: project.researchQuestion ?? "",
     objectives: [...(project.objectives ?? [])],
-    paperType: project.systematicReview
+    paperType: project.paperType ?? (project.systematicReview
       ? (project.systematicReview.protocol.reviewType === "scoping" ? "scoping-review" : "systematic-review")
-      : "unspecified",
+      : "unspecified"),
+    intendedAudience: project.intendedAudience ?? "",
+    availableMaterials: [...(project.availableMaterials ?? [])],
+    storyArc: [...(project.storyArc ?? [])],
+    researchMode: project.researchMode ?? "guided",
     lifecycleState,
     legacyProjectRevision: project.revision ?? 0,
     provenance: { kind: "legacy-migration", sourceId: project.id, sourceLabel: "Existing PaperOrchestra project", recordedAt: now },
