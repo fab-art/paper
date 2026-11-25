@@ -58,7 +58,11 @@ export default function ResearchProductionLine({
   const [ownerGate, setOwnerGate] = useState(false);
   const [beforeRun, setBeforeRun] = useState(false);
 
-  const researchPlan = useMemo(() => project.researchPlan ?? createResearchStationPlan(paperType, project.startPath ?? "idea"), [project.researchPlan, project.id, paperType, project.startPath]);
+  const researchPlan = useMemo(() => {
+    if (project.researchPlan) return project.researchPlan;
+    const generated = createResearchStationPlan(paperType, project.startPath ?? "idea");
+    return project.milestones?.length ? { ...generated, milestones: project.milestones.map(milestone => ({ ...milestone })) } : generated;
+  }, [project.researchPlan, project.id, project.milestones, paperType, project.startPath]);
   const stationOrder = useMemo(() => researchPlan.stations.map(station => station.stationId), [researchPlan.stations]);
   const route = useMemo(() => getResearchRoute(paperType, stationOrder), [paperType, stationOrder]);
   const summaries = useMemo(() => summarizeResearchStations(tasks, paperType, stationOrder), [tasks, paperType, stationOrder]);
@@ -69,7 +73,7 @@ export default function ResearchProductionLine({
   const nextAction = useMemo(() => getResearchNextAction(project), [project]);
 
   useEffect(() => {
-    if (!project.researchPlan) onProjectUpdate({ researchPlan });
+    if (!project.researchPlan) onProjectUpdate({ researchPlan, milestones: researchPlan.milestones });
   }, [project.id, project.researchPlan, researchPlan, onProjectUpdate]);
 
   const refresh = async () => {
@@ -193,7 +197,7 @@ export default function ResearchProductionLine({
       <Button type="button" size="sm" onClick={() => { setStationId(nextAction.station as ResearchStationId); setTitle(nextAction.title); setDescription(nextAction.description); setShowComposer(true); }}>Start this step <ArrowRight size={14}/></Button>
     </Card>}
 
-    <ResearchPlanEditor plan={researchPlan} onChange={nextPlan => onProjectUpdate({ researchPlan: nextPlan })} storyArc={project.storyArc ?? []} onStoryArcChange={storyArc => onProjectUpdate({ storyArc })}/>
+    <ResearchPlanEditor plan={researchPlan} onChange={nextPlan => onProjectUpdate({ researchPlan: nextPlan, milestones: nextPlan.milestones })} storyArc={project.storyArc ?? []} onStoryArcChange={storyArc => onProjectUpdate({ storyArc })}/>
 
     <div className="rpl-station-heading"><div><span className="rpl-eyebrow">THE RESEARCH LINE</span><h3>Stations</h3></div><Button type="button" variant="outline" size="sm" onClick={() => setShowComposer(value => !value)}><Plus size={14}/> Add task</Button></div>
     <div className="rpl-station-grid">
