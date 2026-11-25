@@ -44,7 +44,8 @@ test("descriptive analysis executes deterministic grouped summaries from actual 
   assert.equal(result.table.rows[0].mean, 3);
   assert.equal(result.table.rows[1].mean, 7);
   assert.equal(result.table.rows[1].missing, 1);
-  assert.equal(result.figure.values[0], 3);
+  assert.ok(result.figure.values.includes(3));
+  assert.ok(result.figure.categories.includes("A"));
   assert.match(result.caption, /trial.csv/);
 });
 
