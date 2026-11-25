@@ -326,7 +326,7 @@ export default function ProjectWorkspace({
             </label>
             <label className="pw-field">Research objectives
               <textarea rows={4} value={(project.objectives || []).join("\n")} onChange={e => patch({ objectives: e.target.value.split("\n").map(v => v.trim()).filter(Boolean) })} placeholder={"Enter one objective per line\n1. Describe…\n2. Assess…\n3. Explore…"}/>
-            </label>    </label>
+            </label>
             <label className="pw-field">Methodology and approach
               <textarea rows={4} value={project.methodology || ""} onChange={e => patch({ methodology: e.target.value })} placeholder="Study design, setting, population, data sources and analysis plan…"/>
             </label>
