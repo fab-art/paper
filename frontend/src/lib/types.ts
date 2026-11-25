@@ -80,6 +80,7 @@ export interface Project {
   storyArc?: string[];
   researchMode?: "guided" | "professional";
   startPath?: import("./research-intake").ResearchEntryPath;
+  researchPlan?: import("./research-intake").ResearchStationPlan;
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
 export interface ProjectAttachment { id: string; projectId: string; name: string; mimeType: string; size: number; blob: Blob; description: string; createdAt: number }
