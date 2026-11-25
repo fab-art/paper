@@ -70,6 +70,8 @@ Tasks support dependencies, station ownership, optional specialist assignment, i
 ### Specialist contracts
 The registry defines bounded roles for Research Planning, Methods, Literature, Evidence Extraction, Citation Verification, Compliance, Data/Statistics, Figure/Table creation, Writing, Clarity, Scientific Audit, Reviewer #2, Journal Fit, Formatting and Rebuttal.
 
+The current execution adapter uses the already-installed local WebLLM engine. A researcher loads the model in Writing Studio, then can dispatch an assigned specialist task from the Production Line. The executor reads the canonical Blueprint and linked project entities, includes completed upstream task outputs, applies the specialist's permission contract, and saves the result as a proposed research-note entity with agent provenance. The task moves to Awaiting owner; the output cannot be accepted until the owner approves it. If no local model is loaded, the UI explains how to load one rather than pretending the agent ran. This adapter generates bounded drafts and recommendations; it does not claim to perform external database searches, run statistical analyses, verify full-text claims, compile journal packages or submit manuscripts unless a corresponding tool adapter actually performs that work.
+
 Every role declares:
 - allowed stations;
 - readable inputs;
@@ -77,7 +79,7 @@ Every role declares:
 - prohibited actions;
 - explicit `canApprove: false`.
 
-Agent task transitions must identify the assigned specialist. An agent cannot impersonate a different specialist. The current queue records assignment and governs the task lifecycle; it does not claim a model executed a task unless a real runner produced an auditable result. Provider-specific execution adapters are intentionally kept behind this contract rather than simulated in the interface.
+Agent task transitions must identify the assigned specialist. An agent cannot impersonate a different specialist. The current queue records assignment and governs the task lifecycle; it does not claim a model executed a task unless a real runner produced an auditable result. Additional provider/tool adapters for literature retrieval, statistical execution, citation passage verification and journal compilation must follow the same contracts and record their actual tool provenance; those actions are not simulated.
 
 ## Phase 3 — Guided Research GPS and Professional workspace
 
