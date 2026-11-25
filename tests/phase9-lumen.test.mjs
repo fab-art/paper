@@ -40,4 +40,6 @@ test('dashboard shell remains usable at narrow viewport widths', async () => {
   assert.match(styles, /body:has\(\.dashboard-shell\)[^{]*\{[^}]*min-width:320px/s);
   assert.match(styles, /\.dashboard-shell\s*\{[^}]*min-width:0/s);
   assert.match(styles, /@media\s*\(max-width:\s*580px\)/);
+  assert.match(styles, /\.dash-modal\s*\{[^}]*box-sizing:border-box/s);
+  assert.match(styles, /\.dash-modal-backdrop\s*\{[^}]*padding:12px/s);
 });

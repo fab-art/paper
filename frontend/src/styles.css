@@ -368,3 +368,10 @@ body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
 .dashboard-shell{width:100%;min-width:0;overflow-x:clip}
 @media(max-width:420px){.dash-topbar{padding-left:12px;padding-right:12px}.dash-top-right{width:100%;justify-content:space-between;gap:8px}.dash-main{padding-left:12px;padding-right:12px}.dash-modal{max-height:calc(100dvh - 24px);overflow-y:auto}}
 @media(prefers-reduced-motion:reduce){.dash-lumen-progress .ui-progress__bar{transition:none}}
+
+/* Mobile dialog sizing: include padding and borders inside the viewport width. */
+.dash-modal{box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-width:100%;min-width:0}
+.dash-modal *{box-sizing:border-box}
+.dash-modal input,.dash-modal textarea{min-width:0}
+.dash-modal-actions{flex-wrap:wrap}
+@media(max-width:420px){.dash-modal-backdrop{padding:12px}.dash-modal{width:100%;max-width:100%;padding:20px 18px}}
