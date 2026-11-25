@@ -5,6 +5,8 @@ import {
   RefreshCw, ShieldCheck, Sparkles, Workflow, XCircle
 } from "lucide-react";
 import type { ResearchPaperType, ResearchEntity } from "../lib/research-blueprint";
+import type { Project } from "../lib/types";
+import { getResearchNextAction } from "../lib/research-intake";
 import {
   getResearchRoute, getReadyResearchTasks, RESEARCH_AGENTS, summarizeResearchStations,
   type ResearchStationId, type ResearchTask, type ResearchAuditEvent
@@ -59,6 +61,7 @@ export default function ResearchProductionLine({
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
   const agentReadyCount = localModelReady ? getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length : 0;
   const nextStation = summaries.find(item => item.status !== "complete") ?? summaries[0];
+  const nextAction = useMemo(() => getResearchNextAction(project), [project]);
 
   const refresh = async () => {
     setLoading(true);
@@ -175,10 +178,10 @@ export default function ResearchProductionLine({
       <div className="rpl-progress-foot"><span>{route.length} stations in this suggested route · {agentReadyCount} agent-assigned tasks ready</span><span>{paused ? "Specialist agents paused by owner" : localModelReady ? "Local model ready" : "Load a local model in Writing Studio to enable specialist runs"}</span></div>
     </Card>
 
-    {researchMode === "guided" && nextStation && <Card className="rpl-next-card">
+    {researchMode === "guided" && <Card className="rpl-next-card">
       <div className="rpl-next-icon"><Sparkles size={18}/></div>
-      <div className="rpl-next-copy"><span className="rpl-eyebrow">YOUR NEXT RECOMMENDED STEP</span><h3>{nextStation.label}</h3><p>{nextStation.purpose}</p><small>Expected output: {nextStation.outputs.join(" · ")}</small></div>
-      <Button type="button" size="sm" onClick={() => { setStationId(nextStation.id); setShowComposer(true); }}>Add a task <ArrowRight size={14}/></Button>
+      <div className="rpl-next-copy"><span className="rpl-eyebrow">YOUR NEXT RECOMMENDED STEP</span><h3>{nextAction.title}</h3><p>{nextAction.description}</p><small>Suggested station: {nextAction.station}</small></div>
+      <Button type="button" size="sm" onClick={() => { setStationId(nextAction.station as ResearchStationId); setTitle(nextAction.title); setDescription(nextAction.description); setShowComposer(true); }}>Start this step <ArrowRight size={14}/></Button>
     </Card>}
 
     <div className="rpl-station-heading"><div><span className="rpl-eyebrow">THE RESEARCH LINE</span><h3>Stations</h3></div><Button type="button" variant="outline" size="sm" onClick={() => setShowComposer(value => !value)}><Plus size={14}/> Add task</Button></div>
