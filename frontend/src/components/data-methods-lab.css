@@ -30,3 +30,25 @@
 @media(prefers-reduced-motion:reduce){
   .dml-shell *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+
+
+.dml-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.dml-form-grid label,.dml-script-label{display:grid;gap:6px;color:var(--pw-muted,#5d6b6d);font-size:12px;font-weight:650}
+.dml-form-grid input,.dml-form-grid select,.dml-script-label textarea{width:100%;min-width:0;border:1px solid var(--pw-border,#dedbd1);border-radius:10px;background:var(--pw-panel,#fffefa);padding:10px 12px;color:var(--pw-text,#172d31);font:inherit}
+.dml-form-grid .dml-checkline{display:flex;align-items:center;gap:8px}
+.dml-form-grid .dml-checkline input{width:auto}
+.dml-guidance-card{display:grid;gap:6px;border:1px solid var(--pw-border,#dedbd1);border-radius:12px;padding:14px;margin:10px 0;background:var(--pw-panel,#fffefa)}
+.dml-guidance-card strong{color:var(--pw-text,#172d31);font-size:14px}
+.dml-guidance-card p,.dml-guidance-card small{margin:0;color:var(--pw-muted,#5d6b6d);line-height:1.5}
+.dml-guidance-list{padding-left:20px;color:var(--pw-muted,#5d6b6d);font-size:13px;line-height:1.7}
+.dml-guidance-list li span{display:block;font-size:11px;color:var(--pw-muted,#5d6b6d)}
+.dml-script-label{margin:14px 0}
+.dml-script-label textarea{resize:vertical;line-height:1.5}
+.dml-primary-action{border:0;border-radius:10px;background:var(--pw-accent,#125b69);color:white;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer}
+.dml-primary-action:disabled{opacity:.5;cursor:not-allowed}
+.proposal-diff{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.proposal-diff>div{min-width:0;border:1px solid var(--pw-border,#dedbd1);border-radius:10px;padding:10px;background:var(--pw-panel,#fffefa)}
+.proposal-diff pre{max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 ui-monospace,monospace}
+.proposal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:640px){.dml-form-grid,.proposal-diff{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.dml-primary-action{scroll-behavior:auto;transition:none}}
