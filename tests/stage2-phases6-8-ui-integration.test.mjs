@@ -67,3 +67,20 @@ test("Writing Studio loads source-linked evidence for the project before enablin
   assert.match(studio, /Promise\.all\(\[loadProject\(projectId\), evidencePromise\]\)/);
   assert.match(studio, /setResearchEntities\(entities\)/);
 });
+
+test("Writing Studio drafts only the selected section and stages clarity refinements instead of applying them", async () => {
+  const studio = await readFile(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
+  const start = studio.indexOf("const runWriting = async () =>");
+  const end = studio.indexOf("const acceptWritingProposal", start);
+  const writingRun = studio.slice(start, end);
+  const refineStart = studio.indexOf("const runRefine = async () =>");
+  const refineEnd = studio.indexOf("const runAgent", refineStart);
+  const refineRun = studio.slice(refineStart, refineEnd);
+  assert.match(writingRun, /selectedWritingSection/);
+  assert.match(writingRun, /buildWritingBlockPrompt/);
+  assert.doesNotMatch(writingRun, /for\s*\(const section of sections\)/);
+  assert.match(refineRun, /setWritingProposal/);
+  assert.doesNotMatch(refineRun, /patch\(\{ latex:/);
+  assert.match(studio, /projectRef\.current\.id !== project\.id/);
+  assert.match(studio, /setResearchEntities\(\[\]\)/);
+});
