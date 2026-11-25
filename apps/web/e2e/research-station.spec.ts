@@ -145,3 +145,23 @@ test("Projects route survives a direct load and browser refresh", async ({ page 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Projects", level: 1 })).toBeVisible();
 });
+
+test("keyboard focus reaches skip navigation, brand and theme control", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: /paperorchestra/i })).toBeFocused();
+  await page.keyboard.press("Tab");
+  const themeButton = page.getByRole("button", { name: "Switch to dark theme" });
+  await expect(themeButton).toBeFocused();
+  const outline = await themeButton.evaluate((element) => getComputedStyle(element).outlineStyle);
+  expect(outline).toBe("solid");
+});
+
+test("reduced-motion preference suppresses nonessential transitions", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const duration = await page.locator(".project-card").first().evaluate((element) => getComputedStyle(element).transitionDuration);
+  expect(Number.parseFloat(duration)).toBeLessThan(0.001);
+});
