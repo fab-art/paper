@@ -95,6 +95,7 @@ export function getResearchNextAction(project: {
   researchMode?: "guided" | "professional";
   startPath?: ResearchEntryPath;
 }) {
+
   if (!project.researchQuestion?.trim()) {
     return { id: "research-question", title: "Clarify your research question", description: "Write a first version of what you want to understand. You can refine it later.", station: "intake" };
   }
