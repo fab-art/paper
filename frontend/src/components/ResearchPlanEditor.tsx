@@ -26,9 +26,9 @@ const PAPER_TYPE_LABELS: Record<string, string> = {
   unspecified: "Flexible research plan"
 };
 
-export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEditorProps) {
+export default function ResearchPlanEditor({ plan, onChange, storyArc, onStoryArcChange }: ResearchPlanEditorProps) {
   const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});
-  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});
+  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});\n  const [storyDrafts, setStoryDrafts] = useState<string[]>(storyArc);\n  const [newStoryBeat, setNewStoryBeat] = useState("");
   const [newTaskStation, setNewTaskStation] = useState<ResearchPlanStationId>(plan.stations[0]?.stationId ?? "intake");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -95,6 +95,21 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
       <div><span className="rpl-eyebrow">YOUR RESEARCH ROADMAP</span><h3 id="rpe-title">Editable station plan</h3><p>PaperOrchestra drafted this route from your research type and starting point. Change the tasks, reorder stations and set milestone dates as your project develops.</p></div>
       <Badge>{PAPER_TYPE_LABELS[plan.paperType] ?? "Research plan"}</Badge>
     </div>
+    <Card className="rpe-story-card">
+      <div className="rpe-milestone-heading"><div><span className="rpl-eyebrow">THE STORY YOUR RESEARCH WILL TELL</span><h4>Research story arc</h4><p>Shape the logical journey from the problem to the contribution. Edit each beat in plain language.</p></div><Badge>{storyDrafts.length} beats</Badge></div>
+      <div className="rpe-story-beats">
+        {storyDrafts.map((beat, index) => <div className="rpe-story-beat" key={index}>
+          <span>{String(index + 1).padStart(2, "0")}</span>
+          <textarea aria-label={\`Research story beat \${index + 1}\`} rows={2} value={beat} onChange={event => setStoryDrafts(current => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} onBlur={() => onStoryArcChange(storyDrafts.map(item => item.trim()).filter(Boolean))}/>
+          <Button type="button" variant="ghost" size="sm" aria-label={\`Remove story beat \${index + 1}\`} onClick={() => { const next = storyDrafts.filter((_, itemIndex) => itemIndex !== index); setStoryDrafts(next); onStoryArcChange(next.filter(item => item.trim())); }}><Trash2 size={14}/></Button>
+        </div>)}
+      </div>
+      <form className="rpe-add-story" onSubmit={event => { event.preventDefault(); if (!newStoryBeat.trim()) return; const next = [...storyDrafts, newStoryBeat.trim()]; setStoryDrafts(next); onStoryArcChange(next); setNewStoryBeat(""); }}>
+        <label>Add a story beat<input value={newStoryBeat} onChange={event => setNewStoryBeat(event.target.value)} placeholder="e.g. Explain how this work could change practice"/></label>
+        <Button type="submit" size="sm" variant="outline"><Plus size={14}/> Add beat</Button>
+      </form>
+    </Card>
+
     <div className="rpe-summary" aria-live="polite">
       <div><strong>{plan.stations.length}</strong><span>stations</span></div>
       <div><strong>{completedTasks}/{totalTasks}</strong><span>tasks completed</span></div>
