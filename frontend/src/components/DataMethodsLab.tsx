@@ -121,7 +121,7 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       if (active) setComplianceNotice("Existing local analysis records could not be loaded.");
     });
     return () => { active = false; };
-  }, [project.id]);
+  }, [project.id, project.paperType, project.methodology]);
 
   useEffect(() => {
     if (!csvFiles.length) { setSelectedId(""); setDataset(null); return; }
