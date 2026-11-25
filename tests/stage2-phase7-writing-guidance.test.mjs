@@ -50,7 +50,7 @@ test("draft evidence audit maps markers to exact available evidence and flags un
 test("citation checker detects missing and unused BibTeX keys without treating metadata as evidence", () => {
   const audit = checkCitationKeys(
     "Prior work supports this. \\cite{known2024,missing2023}",
-    "@article{known2024, title={Known}}\n@article{unused2022, title={Unused}}"
+    "@string{journal = {Example Journal}}\n@article{known2024, title={Known}}\n@article{unused2022, title={Unused}}"
   );
   assert.deepEqual(audit.missingKeys, ["missing2023"]);
   assert.deepEqual(audit.unusedKeys, ["unused2022"]);
