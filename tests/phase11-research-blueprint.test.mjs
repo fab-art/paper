@@ -81,6 +81,13 @@ test('Research Blueprint retains guided intake context and selected paper type',
   assert.equal(blueprint.researchMode, 'guided');
 });
 
+test('new researcher-created records carry owner provenance rather than migration provenance', () => {
+  const project = legacyProject();
+  assert.equal(projectToResearchBlueprint(project, 1800000000000, 'owner').provenance.kind, 'owner');
+  const entities = legacyProjectToResearchEntities(project, 1800000000000, 'owner');
+  assert.ok(entities.every(entity => entity.provenance.kind === 'owner'));
+});
+
 test('legacy project mapping preserves question, objectives, methods, sources and nested outline entities', () => {
   const entities = legacyProjectToResearchEntities(legacyProject(), 1800000000000);
   assert.deepEqual(entities.map(entity => entity.entityType), [
