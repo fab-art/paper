@@ -108,8 +108,8 @@ export default function ResearchPlanEditor({ plan, onChange, storyArc, onStoryAr
       <div className="rpe-story-beats">
         {storyDrafts.map((beat, index) => <div className="rpe-story-beat" key={index}>
           <span>{String(index + 1).padStart(2, "0")}</span>
-          <textarea aria-label={\`Research story beat \${index + 1}\`} rows={2} value={beat} onChange={event => setStoryDrafts(current => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} onBlur={() => onStoryArcChange(storyDrafts.map(item => item.trim()).filter(Boolean))}/>
-          <Button type="button" variant="ghost" size="sm" aria-label={\`Remove story beat \${index + 1}\`} onClick={() => { const next = storyDrafts.filter((_, itemIndex) => itemIndex !== index); setStoryDrafts(next); onStoryArcChange(next.filter(item => item.trim())); }}><Trash2 size={14}/></Button>
+          <textarea aria-label={`Research story beat ${index + 1}`} rows={2} value={beat} onChange={event => setStoryDrafts(current => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} onBlur={() => onStoryArcChange(storyDrafts.map(item => item.trim()).filter(Boolean))}/>
+          <Button type="button" variant="ghost" size="sm" aria-label={`Remove story beat ${index + 1}`} onClick={() => { const next = storyDrafts.filter((_, itemIndex) => itemIndex !== index); setStoryDrafts(next); onStoryArcChange(next.filter(item => item.trim())); }}><Trash2 size={14}/></Button>
         </div>)}
       </div>
       <form className="rpe-add-story" onSubmit={event => { event.preventDefault(); if (!newStoryBeat.trim()) return; const next = [...storyDrafts, newStoryBeat.trim()]; setStoryDrafts(next); onStoryArcChange(next); setNewStoryBeat(""); }}>
