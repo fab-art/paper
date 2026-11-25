@@ -59,6 +59,7 @@ test('specialist execution uses local WebLLM, saves proposed provenance and wait
 
 test('research task persistence validates linked inputs and outputs and records an audit trail', () => {
   assert.match(db, /Every task input must reference an existing research entity/);
+  assert.match(db, /db\.researchAuditEvents, db\.researchEntities/);
   assert.match(db, /Every task output must reference an existing research entity/);
   assert.match(db, /Agent outputs can only be saved by the assigned specialist/);
   assert.match(db, /A specialist can submit only its own proposed outputs/);
