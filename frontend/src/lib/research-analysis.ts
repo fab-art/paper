@@ -21,6 +21,9 @@ export function recommendStatisticalOptions(input: StatisticalPlanningInput) {
   return { options, assumptions, requiresOwnerApproval: true as const, status: "recommendation-only" as const };
 }
 
+const MAX_DESCRIPTIVE_SUMMARY_ROWS = 5000;
+const MAX_PUBLICATION_FIGURE_BARS = 40;
+
 export interface DescriptiveAnalysisInput {
   datasetName: string;
   headers: string[];
@@ -111,13 +114,15 @@ export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): Des
       figureValues.push(Number(mean.toFixed(4)));
     }
     if (!figureValues.length) throw new Error("No valid numeric values were found in the selected outcome column.");
+    if (tableRows.length > MAX_DESCRIPTIVE_SUMMARY_ROWS) throw new Error("This analysis creates more than 5,000 group summaries. Reduce the number of groups or refine the dataset before running it.");
+    const figureOrder = figureValues.map((_, index) => index).sort((a, b) => figureValues[b] - figureValues[a]).slice(0, MAX_PUBLICATION_FIGURE_BARS);
     const method = "Grouped descriptive summary";
     return {
       engineVersion: "descriptive-analysis@1.0.0", method, datasetName: input.datasetName,
       rowCountAnalyzed: input.rows.length, outcomeColumn: input.outcomeColumn,
       groupColumn: input.groupColumn ?? "", outcomeType: input.outcomeType,
       table: { columns: ["Group", "N", "Missing", "Mean", "SD", "Median", "Minimum", "Maximum"], rows: tableRows },
-      figure: { title: "Mean " + input.outcomeColumn + " by " + (input.groupColumn || "dataset"), xLabel: input.groupColumn || "Dataset", yLabel: "Mean " + input.outcomeColumn, categories: figureCategories, values: figureValues },
+      figure: { title: "Mean " + input.outcomeColumn + " by " + (input.groupColumn || "dataset") + (figureValues.length > MAX_PUBLICATION_FIGURE_BARS ? " (top 40 of " + figureValues.length + ")" : ""), xLabel: input.groupColumn || "Dataset", yLabel: "Mean " + input.outcomeColumn, categories: figureOrder.map(index => figureCategories[index]), values: figureOrder.map(index => figureValues[index]) },
       caption: "Descriptive mean and sample standard deviation of " + input.outcomeColumn + (input.groupColumn ? " by " + input.groupColumn : "") + " in " + input.datasetName + ". " + input.rows.length + " rows were analyzed; missing outcome values are reported separately.",
       logs
     };
@@ -142,13 +147,15 @@ export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): Des
     if (!values.length) tableRows.push({ group, category: "(No observed values)", count: 0, percent: 0, denominator: 0, missing });
   }
   if (!figureValues.length) throw new Error("No observed categories were found in the selected outcome column.");
+  if (tableRows.length > MAX_DESCRIPTIVE_SUMMARY_ROWS) throw new Error("This analysis creates more than 5,000 category summaries. Refine the dataset or select a lower-cardinality outcome before running it.");
+  const figureOrder = figureValues.map((_, index) => index).sort((a, b) => figureValues[b] - figureValues[a]).slice(0, MAX_PUBLICATION_FIGURE_BARS);
   const method = "Grouped categorical frequency summary";
   return {
     engineVersion: "descriptive-analysis@1.0.0", method, datasetName: input.datasetName,
     rowCountAnalyzed: input.rows.length, outcomeColumn: input.outcomeColumn,
     groupColumn: input.groupColumn ?? "", outcomeType: input.outcomeType,
     table: { columns: ["Group", "Category", "Count", "Percent", "Denominator", "Missing"], rows: tableRows },
-    figure: { title: "Frequency of " + input.outcomeColumn, xLabel: input.groupColumn ? input.groupColumn + " · " + input.outcomeColumn : input.outcomeColumn, yLabel: "Count", categories: figureCategories, values: figureValues },
+    figure: { title: "Frequency of " + input.outcomeColumn + (figureValues.length > MAX_PUBLICATION_FIGURE_BARS ? " (top 40 of " + figureValues.length + ")" : ""), xLabel: input.groupColumn ? input.groupColumn + " · " + input.outcomeColumn : input.outcomeColumn, yLabel: "Count", categories: figureOrder.map(index => figureCategories[index]), values: figureOrder.map(index => figureValues[index]) },
     caption: "Observed frequency and within-group percentage of " + input.outcomeColumn + (input.groupColumn ? " by " + input.groupColumn : "") + " in " + input.datasetName + ". Percentages use non-missing outcome values as the denominator.",
     logs
   };
