@@ -425,7 +425,7 @@ export async function createResearchTaskRecord(input: {
   ownerApprovalBeforeRun?: boolean; ownerApprovalRequired?: boolean;
 }) {
   const task = createResearchTask({ ...input, id: createRecordId("task") });
-  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchAuditEvents], async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchAuditEvents, db.researchEntities], async () => {
     await assertProjectWritable(input.projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
