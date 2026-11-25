@@ -449,7 +449,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
           <input ref={logsRef} hidden type="file" accept=".csv,.json" onChange={e=>uploadText(e.target.files?.[0],"logs")}/>
           {project.figures.map((f,i)=><div className="tree-item" key={i}><Image size={13}/>{f.name}</div>)}
           <div className="tree-section section-gap">CONFERENCE TEMPLATE</div>
-          <select className="template-select" value={project.template} onChange={e=>void selectTemplate(e.target.value)}>{templates.map(t=><option key={t}>{t}</option>)}</select>
+          <select aria-label="Conference manuscript template" className="template-select" value={project.template} onChange={e=>void selectTemplate(e.target.value)}>{templates.map(t=><option key={t}>{t}</option>)}</select>
           <div className="tree-section section-gap">SAVED PROJECTS</div>
           {projects.slice(0,8).map(p=><button type="button" className="saved-project" key={p.id} disabled={busy || p.id === projectId} onClick={()=>void handleSelectProject(p.id)}>{p.name}</button>)}
         </div>

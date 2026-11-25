@@ -1,0 +1,36 @@
+:root{--workspace-ink:#252631;--workspace-line:#e7e8ee;--workspace-surface:#fff;--workspace-accent:#68649a;--workspace-radius:12px}
+.app-shell,.dml-shell,.srw-shell,.sr-shell{min-width:0;color:var(--workspace-ink);-webkit-font-smoothing:antialiased}
+.dml-shell,.srw-shell,.sr-shell{width:min(100%,1440px);margin-inline:auto;padding:clamp(16px,2.4vw,30px);gap:16px}
+.dml-heading,.srw-header,.sr-header{align-items:center;gap:16px;padding:0 0 16px;border-bottom:1px solid var(--workspace-line)}
+.dml-heading h2,.srw-header h2,.sr-header h2{color:var(--workspace-ink);letter-spacing:-.035em;line-height:1.16;text-wrap:balance}
+.dml-info,.dml-warning,.dml-error{border-radius:10px;line-height:1.55}
+.dml-panel,.srw-panel,.sr-panel{min-width:0;border:1px solid var(--workspace-line);border-radius:var(--workspace-radius);background:var(--workspace-surface);box-shadow:0 1px 2px rgb(24 28 40 / 3%)}
+.dml-panel-head,.srw-panel-heading,.sr-panel-title,.srw-paper-card,.srw-form-panel,.srw-bias-study,.sr-finding,.sr-summary>div{min-width:0}
+.dml-table-wrap{max-width:100%;overscroll-behavior-inline:contain;scrollbar-gutter:stable}
+.dml-table-wrap:focus-visible{outline:2px solid var(--workspace-accent);outline-offset:3px}
+.dml-table{font-variant-numeric:tabular-nums}
+.srw-tabs,.srw-tab-list{max-width:100%;scrollbar-width:thin;overscroll-behavior-inline:contain}
+.srw-tab-list button,.srw-tabs button,.srw-icon-button,.sr-secondary-actions button,.dml-shell button,.srw-shell button,.sr-shell button{min-height:36px}
+.srw-field input,.srw-field textarea,.srw-field select,.srw-search input,.dml-filter input,.app-shell input,.app-shell textarea,.app-shell select{min-width:0;max-width:100%}
+.app-shell :is(button,a,input,textarea,select,[tabindex]):focus-visible,.dml-shell :is(button,a,input,textarea,select,[tabindex]):focus-visible,.srw-shell :is(button,a,input,textarea,select,[tabindex]):focus-visible,.sr-shell :is(button,a,input,textarea,select,[tabindex]):focus-visible{outline:2px solid var(--workspace-accent);outline-offset:3px}
+.app-shell button,.dml-shell button,.srw-shell button,.sr-shell button{touch-action:manipulation}
+.app-shell .left-pane,.app-shell .center-pane,.app-shell .right-pane,.app-shell .center-content,.app-shell .editor-wrap,.app-shell .pdf-view{min-width:0}
+.app-shell .editor-toolbar,.app-shell .preview-header,.app-shell .pdf-toolbar{flex-wrap:wrap;row-gap:8px}
+.app-shell .latex-editor{max-width:100%;tab-size:2}
+.sr-finding p,.sr-disclaimer,.srw-disclaimer,.dml-info,.dml-warning,.dml-error{overflow-wrap:anywhere}
+.sr-manual label{min-height:36px;align-items:center;cursor:pointer}
+.sr-manual input[type=checkbox]{width:18px;height:18px;flex:0 0 18px}
+.sr-export,.sr-secondary-actions{min-width:0}
+@media(max-width:760px){.dml-shell,.srw-shell,.sr-shell{padding:16px;gap:13px}.dml-heading,.srw-header,.sr-header{align-items:flex-start;flex-wrap:wrap}.dml-mark{margin-left:0}.app-shell .top-actions,.app-shell .agent-heading{flex-wrap:wrap}}
+@media(max-width:580px){.dml-shell,.srw-shell,.sr-shell{padding:12px}.srw-tabs,.srw-tab-list{display:flex;overflow-x:auto;padding-bottom:4px}.srw-tabs button,.srw-tab-list button{flex:0 0 auto}.sr-secondary-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.sr-secondary-actions button{white-space:normal}.app-shell .left-pane,.app-shell .right-pane{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.app-shell *,.dml-shell *,.srw-shell *,.sr-shell *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.app-shell :is(.muted,.eyebrow,.tree-section,.file-type,.studio-tag,.memory-est,.log-label,.outline-index,.hardware-left>span,.hardware-right>span,.statusbar .muted){color:#5f626d}
+.app-shell :is(.studio-tag,.tree-section,.log-label){font-weight:650}
+.app-shell :is(.brand-light,.telemetry,.tree-action,.sidebar-footer span,.step span,.tab:not(.active),.studio-project-context>span,h1>span,.agent-heading p,.status,.center-footer>span,.pdf-toolbar>span,.pdf-empty>p,.preview-bottom>span,.statusbar>span){color:#555a66!important}
+.app-shell .gpu-pill{color:#26734f!important}
+.dml-shell :is(.dml-eyebrow,.dml-heading p,.dml-mark span,.dml-empty p,.dml-info,.dml-readonly,.dml-counts span,.dml-panel-head p){color:#555a66!important}
+.srw-shell :is(.srw-eyebrow,.srw-header p,.srw-kicker,.srw-footer,.srw-disclaimer,.srw-empty p,.srw-tab-list button:not(.active),.srw-secondary,.srw-paper-card p,.srw-panel-heading p,.srw-flow-stat span){color:#555a66!important}
+.sr-shell :is(.sr-eyebrow,.sr-header p,.sr-score span,.sr-summary span,.sr-finding p,.sr-disclaimer,.sr-panel-title p,.sr-export p,.sr-export small,.sr-manual label){color:#555a66!important}
+.srw-shell small,.srw-shell .srw-protocol-grid span,.srw-shell .srw-empty{color:#555a66!important}
+.sr-shell .sr-tag-warning{color:#765116!important}.sr-shell .sr-tag-action{color:#8c302c!important}.sr-shell .sr-tag-pass{color:#28613c!important}
+.srw-shell .srw-flow-stat p,.srw-overview p{color:#555a66!important}
