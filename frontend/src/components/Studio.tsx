@@ -77,6 +77,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const [writingWordTarget, setWritingWordTarget] = useState("");
   const [writingMicroPrompt, setWritingMicroPrompt] = useState("");
   const [authorVoice, setAuthorVoice] = useState<WritingAuthorVoice>("preserve");
+  const [refinementFocus, setRefinementFocus] = useState<"clarity" | "academic">("clarity");
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
   const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots" | "python">("workspace");
@@ -404,11 +405,11 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const runRefine = async () => {
     setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
-      const raw = await ask(refinePrompt(project));
+      const raw = await ask(refinePrompt(project, refinementFocus, authorVoice));
       if (projectRef.current.id !== project.id) return;
       const result = parseJson<{issues:string[];revised_latex:string}>(raw);
       setWritingProposal(result.revised_latex || project.latex);
-      setWritingProposalLabel("Clarity refinement");
+      setWritingProposalLabel(refinementFocus === "academic" ? "Plain-language to academic refinement" : "Clarity refinement");
       setAgent("refine", "done", (result.issues || []).join("\n").slice(0, 1200));
       setNotice("Clarity edits are proposed, not applied. Inspect the diff and accept or reject them.");
     } catch (e) { setAgent("refine", "error", (e as Error).message); setNotice((e as Error).message); }
@@ -611,6 +612,14 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
                 </>}
               </section>}
               {activeAgent==="writing" && renderWritingAudit(currentWritingEvidenceAudit, currentCitationAudit, "Current manuscript evidence and citation audit")}
+              {activeAgent==="refine" && <section className="writing-coach-panel" aria-label="Manuscript clarity refinement controls">
+                <div className="writing-coach-head"><div><span className="eyebrow">CLARITY & ACADEMIC STYLE</span><strong>Refine without changing the science</strong><p>Choose how to improve the prose. Every revision is staged for your review and acceptance.</p></div></div>
+                <div className="writing-coach-fields">
+                  <label>Refinement focus<select value={refinementFocus} onChange={event => setRefinementFocus(event.target.value as "clarity" | "academic")}><option value="clarity">Clarity, flow and concision</option><option value="academic">Plain language to academic prose</option></select></label>
+                  <label>Author voice<select value={authorVoice} onChange={event => setAuthorVoice(event.target.value as WritingAuthorVoice)}><option value="preserve">Preserve my voice</option><option value="formal">Formal academic</option><option value="concise">Concise academic</option><option value="accessible">Accessible scholarly</option></select></label>
+                </div>
+              </section>}
+
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input aria-label="Plot regeneration instructions" value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button type="button" className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
