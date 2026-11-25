@@ -13,8 +13,6 @@ const severityVariant = (severity: string) => severity === "critical" || severit
 
 export default function ScientificAuditWorkspace({ project }: { project: Project }) {
   const [view, setView] = useState<View>("audit");
-  const [entities, setEntities] = useState<ResearchEntity[]>([]);
-  const [relations, setRelations] = useState<ResearchRelation[]>([]);
   const [report, setReport] = useState<ScientificAuditReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -35,12 +33,21 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
       const [nextEntities, nextRelations] = await Promise.all([
         listResearchEntities(project.id), listResearchRelations(project.id)
       ]);
-      setEntities(nextEntities);
-      setRelations(nextRelations);
       const latest = nextEntities
         .filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "scientific-audit-report")
         .sort((a, b) => b.updatedAt - a.updatedAt)[0];
       setReport(latest?.payload.report as ScientificAuditReport || null);
+      const savedJournal = nextEntities.filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "journal-profile").sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      const profile = savedJournal?.payload.profile as Record<string, unknown> | undefined;
+      if (profile) {
+        setJournalTitle(String(profile.title || ""));
+        setJournalScope(String(profile.aimsAndScope || ""));
+        setJournalTypes(String(profile.acceptedArticleTypes || "empirical-study"));
+        setJournalUrl(String(profile.sourceUrl || ""));
+        setJournalVerifiedDate(String(profile.verifiedDate || ""));
+        setJournalApc(String(profile.apc || ""));
+        setJournalTimeline(String(profile.reviewTimeline || ""));
+      }
     } catch (cause) {
       setError("Could not load the project's audit records: " + (cause as Error).message);
     } finally {
@@ -71,8 +78,6 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
         createdAt: next.generatedAt,
         updatedAt: next.generatedAt
       });
-      setEntities(latestEntities);
-      setRelations(latestRelations);
       setReport(next);
       setNotice("Audit saved to this project's local research record. No manuscript content was changed.");
     } catch (cause) {
@@ -94,7 +99,16 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
     }
   }), [project, journalTitle, journalScope, journalTypes, journalUrl, journalVerifiedDate, journalApc, journalTimeline]);
 
-  const toggleJournalType = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
+  const saveJournalProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const savedAt = Date.now();
+    const profile = { title: journalTitle.trim(), aimsAndScope: journalScope.trim(), acceptedArticleTypes: journalTypes.trim(), sourceUrl: journalUrl.trim(), verifiedDate: journalVerifiedDate, apc: journalApc.trim(), reviewTimeline: journalTimeline.trim() };
+    try {
+      await saveResearchEntity({ id: "journal-profile:" + project.id, projectId: project.id, entityType: "research-note", version: 1, status: "draft", title: "Journal fit profile", payload: { recordType: "journal-profile", profile }, provenance: { kind: "owner", sourceId: project.id, sourceLabel: "Researcher-supplied journal profile", recordedAt: savedAt }, createdAt: savedAt, updatedAt: savedAt });
+      setNotice("Journal profile saved locally. Source metadata remains researcher-supplied and should be checked with the journal.");
+      setError("");
+    } catch (cause) { setError("Could not save the journal profile: " + (cause as Error).message); }
+  };
   const findings = report?.findings ?? [];
 
   return <section className="sa-workspace" aria-busy={loading || running}>
@@ -144,20 +158,21 @@ export default function ScientificAuditWorkspace({ project }: { project: Project
       <p className="sa-footnote">These prompts do not represent a real reviewer, editorial decision, acceptance probability or independent scientific assessment.</p>
     </section> : <div className="sa-journal-layout">
       <section className="sa-panel"><div className="sa-panel-title"><div><h3>Journal profile</h3><p>Enter journal details from an official, current source. This tool does not invent missing data.</p></div></div>
-        <form className="sa-form" onSubmit={toggleJournalType}>
+        <form className="sa-form" onSubmit={saveJournalProfile}>
           <label>Journal name<input value={journalTitle} onChange={event => setJournalTitle(event.target.value)} placeholder="Journal title"/></label>
           <label>Aims and scope<textarea rows={5} value={journalScope} onChange={event => setJournalScope(event.target.value)} placeholder="Paste the journal's stated scope…"/></label>
           <label>Accepted article types<input value={journalTypes} onChange={event => setJournalTypes(event.target.value)} placeholder="empirical-study, systematic-review"/></label>
           <label>Official source URL<input type="url" value={journalUrl} onChange={event => setJournalUrl(event.target.value)} placeholder="https://journal.example/about"/></label>
           <label>Last verified date<input type="date" value={journalVerifiedDate} onChange={event => setJournalVerifiedDate(event.target.value)}/></label>
           <div className="sa-form-row"><label>APC (optional)<input value={journalApc} onChange={event => setJournalApc(event.target.value)} placeholder="Only if verified"/></label><label>Review timeline (optional)<input value={journalTimeline} onChange={event => setJournalTimeline(event.target.value)} placeholder="Only if verified"/></label></div>
+          <Button type="submit">Save journal profile</Button>
         </form>
       </section>
       <section className="sa-panel sa-journal-result"><div className="sa-panel-title"><div><h3>Preliminary fit assessment</h3><p>Scope overlap is a screening aid, not an acceptance prediction.</p></div></div>
-        <Badge variant={journalResult.status === "preliminary-fit" ? "secondary" : "outline"}>{journalResult.status.replaceAll("-", " ")}</Badge>
+        <Badge variant={journalResult.status === "scope-overlap-calculated" ? "secondary" : "outline"}>{journalResult.status.replaceAll("-", " ")}</Badge>
         <div className="sa-fit-score"><strong>{journalResult.scopeFitScore === null ? "—" : journalResult.scopeFitScore + "%"}</strong><span>Scope overlap heuristic</span></div>
         <p>{journalResult.scopeOverlap.length ? "Shared terms: " + journalResult.scopeOverlap.join(", ") : "Add a journal scope and manuscript keywords to compare subject overlap."}</p>
-        <dl><div><dt>Article type match</dt><dd>{journalResult.articleTypeMatch === null ? "Not assessed" : journalResult.articleTypeMatch ? "Listed" : "Not listed"}</dd></div><div><dt>APC</dt><dd>{journalResult.apc ?? "Not provided"}</dd></div><div><dt>Review timeline</dt><dd>{journalResult.reviewTimeline ?? "Not provided"}</dd></div><div><dt>Metadata</dt><dd>{journalResult.metadataStatus}</dd></div></dl>
+        <dl><div><dt>Article type match</dt><dd>{journalResult.articleTypeMatch === null ? "Not assessed" : journalResult.articleTypeMatch ? "Listed" : "Not listed"}</dd></div><div><dt>APC</dt><dd>{journalResult.apc ?? "Not provided"}</dd></div><div><dt>Review timeline</dt><dd>{journalResult.reviewTimeline ?? "Not provided"}</dd></div><div><dt>Metadata</dt><dd>{journalResult.metadataStatus.replaceAll("-", " ")}</dd></div></dl>
         <p className="sa-footnote">{journalResult.warning}</p>
       </section>
     </div>}
