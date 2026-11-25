@@ -109,3 +109,24 @@ test("LaTeX table export escapes special characters and includes the real analys
   assert.match(latex, /A\\&B/);
   assert.match(latex, /Mean score by group/);
 });
+
+test("descriptive analysis bounds very high-cardinality outputs before creating huge local reports", async () => {
+  const { executeDescriptiveAnalysis } = await import("../frontend/src/lib/research-analysis.ts");
+  const rows = Array.from({ length: 5001 }, (_, index) => ["group-" + index, String(index)]);
+  assert.throws(() => executeDescriptiveAnalysis({
+    datasetName: "large.csv", headers: ["group", "score"], rows,
+    outcomeColumn: "score", groupColumn: "group", outcomeType: "continuous"
+  }), /5,000 group summaries/i);
+});
+
+test("publication figures cap the displayed bars and disclose the top-category selection", async () => {
+  const { executeDescriptiveAnalysis } = await import("../frontend/src/lib/research-analysis.ts");
+  const rows = Array.from({ length: 45 }, (_, index) => ["category-" + index]);
+  const result = executeDescriptiveAnalysis({
+    datasetName: "categories.csv", headers: ["category"], rows,
+    outcomeColumn: "category", outcomeType: "categorical"
+  });
+  assert.equal(result.table.rows.length, 45);
+  assert.equal(result.figure.values.length, 40);
+  assert.match(result.figure.title, /top 40 of 45/);
+});
