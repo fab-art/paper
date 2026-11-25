@@ -6,6 +6,7 @@ import {
   inspectDraftEvidence,
   checkCitationKeys
 } from "../frontend/src/lib/writing-guidance.ts";
+import { refinePrompt } from "../frontend/src/agents/prompts.ts";
 
 const project = {
   id: "p1", name: "Study", notes: "Research context", latex: "\\documentclass{article}\\n\\begin{document}\\n\\end{document}",
@@ -54,4 +55,11 @@ test("citation checker detects missing and unused BibTeX keys without treating m
   assert.deepEqual(audit.missingKeys, ["missing2023"]);
   assert.deepEqual(audit.unusedKeys, ["unused2022"]);
   assert.deepEqual(audit.citedKeys, ["known2024", "missing2023"]);
+});
+
+test("academic refinement explicitly converts plain language while preserving voice and uncertainty", () => {
+  const prompt = refinePrompt(project, "academic", "preserve");
+  assert.match(prompt, /Convert plain-language, informal or note-like passages into clear academic prose/);
+  assert.match(prompt, /Preserve the author's existing voice/);
+  assert.match(prompt, /Preserve all factual uncertainty/);
 });
