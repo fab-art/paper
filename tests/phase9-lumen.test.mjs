@@ -42,5 +42,6 @@ test('dashboard shell remains usable at narrow viewport widths', async () => {
   assert.match(styles, /@media\s*\(max-width:\s*580px\)/);
   assert.match(styles, /\.dash-modal\s*\{[^}]*box-sizing:border-box/s);
   assert.match(styles, /\.dash-modal-backdrop\s*\{[^}]*padding:12px/s);
-  assert.match(styles, /@media\s*\(max-width:\s*580px\)\s*\{[^}]*\.dash-modal input[^}]*font-size:16px/s);
+  const mobileRules = styles.slice(styles.lastIndexOf('@media(max-width:580px)'));
+  assert.match(mobileRules, /\.dash-modal input[^}]*font-size:16px/s);
 });
