@@ -21,10 +21,170 @@ export function recommendStatisticalOptions(input: StatisticalPlanningInput) {
   return { options, assumptions, requiresOwnerApproval: true as const, status: "recommendation-only" as const };
 }
 
-export function createAnalysisRunManifest(input: { datasetId: string; datasetFingerprint: string; transformations: string[]; script: string; software: Record<string, string>; parameters: Record<string, string | number | boolean | null>; outputIds: string[]; }) {
+export interface DescriptiveAnalysisInput {
+  datasetName: string;
+  headers: string[];
+  rows: string[][];
+  outcomeColumn: string;
+  groupColumn?: string;
+  outcomeType: StatisticalPlanningInput["outcomeType"];
+  truncated?: boolean;
+}
+
+export interface DescriptiveAnalysisFigure {
+  title: string;
+  xLabel: string;
+  yLabel: string;
+  categories: string[];
+  values: number[];
+}
+
+export interface DescriptiveAnalysisResult {
+  engineVersion: string;
+  method: string;
+  datasetName: string;
+  rowCountAnalyzed: number;
+  outcomeColumn: string;
+  groupColumn: string;
+  outcomeType: StatisticalPlanningInput["outcomeType"];
+  table: { columns: string[]; rows: Array<Record<string, string | number>> };
+  figure: DescriptiveAnalysisFigure;
+  caption: string;
+  logs: string[];
+}
+
+const medianOf = (values: number[]) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+};
+
+export function executeDescriptiveAnalysis(input: DescriptiveAnalysisInput): DescriptiveAnalysisResult {
+  if (input.truncated) throw new Error("The dataset is truncated for preview. Run analysis only after loading the complete dataset.");
+  if (input.outcomeType === "time-to-event") throw new Error("Time-to-event inference is not supported by this descriptive runner. Use a validated survival-analysis workflow.");
+  if (!input.rows.length) throw new Error("The selected dataset contains no data rows.");
+  const outcomeIndex = input.headers.indexOf(input.outcomeColumn);
+  if (outcomeIndex < 0) throw new Error("Choose an outcome column that exists in the dataset.");
+  const groupIndex = input.groupColumn ? input.headers.indexOf(input.groupColumn) : -1;
+  if (input.groupColumn && groupIndex < 0) throw new Error("Choose a grouping column that exists in the dataset.");
+  if (groupIndex === outcomeIndex) throw new Error("The outcome and grouping columns must be different.");
+  const grouped = new Map<string, string[][]>();
+  for (const row of input.rows) {
+    const group = groupIndex >= 0 ? (row[groupIndex] ?? "").trim() || "(Missing group)" : "All records";
+    const existing = grouped.get(group) ?? [];
+    existing.push(row);
+    grouped.set(group, existing);
+  }
+  const groupNames = [...grouped.keys()].sort((a, b) => a.localeCompare(b));
+  const logs = [
+    "Engine: PaperOrchestra descriptive-analysis@1.0.0",
+    "Runtime: deterministic browser JavaScript",
+    "Dataset: " + input.datasetName,
+    "Rows analyzed: " + input.rows.length,
+    "Outcome: " + input.outcomeColumn + " (" + input.outcomeType + ")",
+    "Grouping: " + (input.groupColumn || "none"),
+    "Scope: descriptive summaries only; no inferential test or causal estimate was run."
+  ];
+
+  if (input.outcomeType === "continuous" || input.outcomeType === "count") {
+    const tableRows: Array<Record<string, string | number>> = [];
+    const figureCategories: string[] = [];
+    const figureValues: number[] = [];
+    for (const group of groupNames) {
+      const rows = grouped.get(group)!;
+      const observed = rows.map(row => (row[outcomeIndex] ?? "").trim()).filter(Boolean).map(Number).filter(Number.isFinite);
+      const missing = rows.length - observed.length;
+      if (!observed.length) {
+        tableRows.push({ group, n: 0, missing, mean: "", sd: "", median: "", min: "", max: "" });
+        continue;
+      }
+      const mean = observed.reduce((sum, value) => sum + value, 0) / observed.length;
+      const variance = observed.length > 1 ? observed.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (observed.length - 1) : 0;
+      const sd = Math.sqrt(variance);
+      tableRows.push({
+        group, n: observed.length, missing,
+        mean: Number(mean.toFixed(4)), sd: Number(sd.toFixed(4)),
+        median: Number(medianOf(observed).toFixed(4)),
+        min: Math.min(...observed), max: Math.max(...observed)
+      });
+      figureCategories.push(group);
+      figureValues.push(Number(mean.toFixed(4)));
+    }
+    if (!figureValues.length) throw new Error("No valid numeric values were found in the selected outcome column.");
+    const method = "Grouped descriptive summary";
+    return {
+      engineVersion: "descriptive-analysis@1.0.0", method, datasetName: input.datasetName,
+      rowCountAnalyzed: input.rows.length, outcomeColumn: input.outcomeColumn,
+      groupColumn: input.groupColumn ?? "", outcomeType: input.outcomeType,
+      table: { columns: ["Group", "N", "Missing", "Mean", "SD", "Median", "Minimum", "Maximum"], rows: tableRows },
+      figure: { title: "Mean " + input.outcomeColumn + " by " + (input.groupColumn || "dataset"), xLabel: input.groupColumn || "Dataset", yLabel: "Mean " + input.outcomeColumn, categories: figureCategories, values: figureValues },
+      caption: "Descriptive mean and sample standard deviation of " + input.outcomeColumn + (input.groupColumn ? " by " + input.groupColumn : "") + " in " + input.datasetName + ". " + input.rows.length + " rows were analyzed; missing outcome values are reported separately.",
+      logs
+    };
+  }
+
+  const tableRows: Array<Record<string, string | number>> = [];
+  const figureCategories: string[] = [];
+  const figureValues: number[] = [];
+  for (const group of groupNames) {
+    const rows = grouped.get(group)!;
+    const values = rows.map(row => (row[outcomeIndex] ?? "").trim()).filter(Boolean);
+    const missing = rows.length - values.length;
+    const counts = new Map<string, number>();
+    for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+    for (const category of [...counts.keys()].sort((a, b) => a.localeCompare(b))) {
+      const count = counts.get(category)!;
+      const percent = values.length ? Number((count / values.length * 100).toFixed(2)) : 0;
+      tableRows.push({ group, category, count, percent, denominator: values.length, missing });
+      figureCategories.push((input.groupColumn ? group + " · " : "") + category);
+      figureValues.push(count);
+    }
+    if (!values.length) tableRows.push({ group, category: "(No observed values)", count: 0, percent: 0, denominator: 0, missing });
+  }
+  if (!figureValues.length) throw new Error("No observed categories were found in the selected outcome column.");
+  const method = "Grouped categorical frequency summary";
+  return {
+    engineVersion: "descriptive-analysis@1.0.0", method, datasetName: input.datasetName,
+    rowCountAnalyzed: input.rows.length, outcomeColumn: input.outcomeColumn,
+    groupColumn: input.groupColumn ?? "", outcomeType: input.outcomeType,
+    table: { columns: ["Group", "Category", "Count", "Percent", "Denominator", "Missing"], rows: tableRows },
+    figure: { title: "Frequency of " + input.outcomeColumn, xLabel: input.groupColumn ? input.groupColumn + " · " + input.outcomeColumn : input.outcomeColumn, yLabel: "Count", categories: figureCategories, values: figureValues },
+    caption: "Observed frequency and within-group percentage of " + input.outcomeColumn + (input.groupColumn ? " by " + input.groupColumn : "") + " in " + input.datasetName + ". Percentages use non-missing outcome values as the denominator.",
+    logs
+  };
+}
+
+function escapeSvg(value: string) {
+  return value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[character]!));
+}
+
+export function renderAnalysisFigureSvg(figure: DescriptiveAnalysisFigure): string {
+  const width = 1200, height = 720, left = 110, right = 45, top = 92, bottom = 150;
+  const plotWidth = width - left - right, plotHeight = height - top - bottom;
+  const maximum = Math.max(1, ...figure.values);
+  const step = maximum / 4;
+  const band = plotWidth / Math.max(1, figure.values.length);
+  const barWidth = Math.min(72, band * .58);
+  const grid = Array.from({ length: 5 }, (_, index) => {
+    const value = maximum - step * index;
+    const y = top + plotHeight * index / 4;
+    return '<line x1="' + left + '" y1="' + y + '" x2="' + (width - right) + '" y2="' + y + '" stroke="#d8dce2" stroke-width="1"/><text x="' + (left - 14) + '" y="' + (y + 5) + '" text-anchor="end" font-size="16" fill="#344054">' + value.toFixed(1) + '</text>';
+  }).join("");
+  const bars = figure.values.map((value, index) => {
+    const x = left + band * index + (band - barWidth) / 2;
+    const barHeight = value / maximum * plotHeight;
+    const y = top + plotHeight - barHeight;
+    const label = figure.categories[index] ?? "";
+    const labelX = left + band * (index + .5);
+    return '<rect x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight + '" rx="5" fill="#155d6b"/><text x="' + labelX + '" y="' + (y - 12) + '" text-anchor="middle" font-size="15" fill="#172d31">' + value.toFixed(2) + '</text><text x="' + labelX + '" y="' + (height - bottom + 30) + '" text-anchor="middle" font-size="14" fill="#344054">' + escapeSvg(label.slice(0, 28)) + '</text>';
+  }).join("");
+  return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + escapeSvg(figure.title) + '" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '"><rect width="100%" height="100%" fill="#ffffff"/><text x="' + left + '" y="45" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#172d31">' + escapeSvg(figure.title) + '</text>' + grid + bars + '<text x="' + (width / 2) + '" y="' + (height - 35) + '" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#172d31">' + escapeSvg(figure.xLabel) + '</text><text transform="translate(28 ' + (height / 2) + ') rotate(-90)" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#172d31">' + escapeSvg(figure.yLabel) + '</text></svg>';
+}
+
+export function createAnalysisRunManifest(input: { datasetId: string; datasetFingerprint: string; transformations: string[]; script: string; software: Record<string, string>; parameters: Record<string, string | number | boolean | null>; outputIds: string[]; execution?: { status: "completed" | "failed"; startedAt: number; completedAt: number; durationMs: number; runtime: string; analyzedRows: number; logs: string[] }; }) {
   if (!input.datasetId.trim() || !input.datasetFingerprint.trim()) throw new Error("A dataset ID and immutable dataset fingerprint are required.");
   if (!input.script.trim()) throw new Error("A reproducible analysis script or documented procedure is required.");
-  return { datasetId: input.datasetId, datasetFingerprint: input.datasetFingerprint, transformations: [...input.transformations], script: input.script, software: { ...input.software }, parameters: { ...input.parameters }, outputIds: [...input.outputIds], ownerApproved: false as const, status: "awaiting-owner-review" as const, createdAt: Date.now() };
+  return { datasetId: input.datasetId, datasetFingerprint: input.datasetFingerprint, transformations: [...input.transformations], script: input.script, software: { ...input.software }, parameters: { ...input.parameters }, outputIds: [...input.outputIds], ...(input.execution ? { execution: { ...input.execution, logs: [...input.execution.logs] } } : {}), ownerApproved: false as const, status: "awaiting-owner-review" as const, createdAt: Date.now() };
 }
 
 export function getStudyComplianceChecklist(paperType: ResearchPaperType | undefined, studyDesign: string) {
