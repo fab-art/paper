@@ -22,11 +22,25 @@ function parseCitationKeys(latex) {
   return [...keys].sort();
 }
 
-function parseBibtexKeys(bibtex) {
-  const keys = new Set();
+function parseBibtexKeyList(bibtex) {
   const pattern = /@\w+\s*\{\s*([^,\s]+)\s*,/g;
-  for (const match of String(bibtex || "").matchAll(pattern)) keys.add(match[1].trim());
-  return [...keys].sort();
+  return [...String(bibtex || "").matchAll(pattern)].map(match => match[1].trim());
+}
+
+function parseBibtexKeys(bibtex) {
+  return [...new Set(parseBibtexKeyList(bibtex))].sort();
+}
+
+function normalizeTitle(value) {
+  return text(value).toLowerCase().replace(/[{}]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function sectionHeadings(latex) {
+  return [...String(latex || "").matchAll(/\\(?:section|subsection)\*?\s*\{([^}]+)\}/gi)].map(match => match[1].toLowerCase().trim());
+}
+
+function hasHeading(headings, pattern) {
+  return headings.some(heading => pattern.test(heading));
 }
 
 function getPassageEvidence(claim, entities, relations) {
@@ -78,6 +92,21 @@ export function runScientificAudit({ project, entities = [], relations = [], now
   const citedKeys = parseCitationKeys(project.latex);
   const bibKeys = new Set(parseBibtexKeys(project.bibtex));
   const missingKeys = citedKeys.filter(key => !bibKeys.has(key));
+  const bibKeyList = parseBibtexKeyList(project.bibtex);
+  const duplicateKeys = bibKeyList.filter((key, index) => bibKeyList.indexOf(key) !== index);
+  const uncitedKeys = [...new Set(bibKeyList)].filter(key => !citedKeys.includes(key));
+  if (duplicateKeys.length) findings.push(finding(
+    "citation-integrity", "high", "Duplicate BibTeX citation keys were found",
+    "The bibliography contains repeated keys, which can make citations ambiguous or cause compilation problems.",
+    "project", project.id, "Duplicate keys: " + [...new Set(duplicateKeys)].join(", ") + ".",
+    "Give each bibliography entry a unique key, then check every in-text citation against the corrected bibliography.", "BibTeX bibliography"
+  ));
+  if (uncitedKeys.length) findings.push(finding(
+    "citation-integrity", "low", "Bibliography contains uncited entries",
+    "Some bibliography keys are not used by the current manuscript citation commands.",
+    "project", project.id, "Uncited keys: " + uncitedKeys.slice(0, 20).join(", ") + ".",
+    "Review whether these references belong in the manuscript or should be removed from the bibliography.", "BibTeX bibliography"
+  ));
   if (missingKeys.length) {
     findings.push(finding(
       "citation-integrity", "high", "Manuscript citations are missing from the bibliography",
@@ -89,6 +118,61 @@ export function runScientificAudit({ project, entities = [], relations = [], now
   }
 
   for (const analysis of projectEntities.filter(entity => entity.entityType === "analysis")) {
+    const manifest = analysis.payload?.manifest;
+    const isOutput = analysis.payload?.recordType === "analysis-output";
+    if (!manifest || !text(manifest.datasetId) || !text(manifest.datasetFingerprint) || !text(manifest.script) || !Object.keys(manifest.software || {}).length || !manifest.parameters || typeof manifest.parameters !== "object") {
+      findings.push(finding(
+        "reproducibility", "high", "Analysis reproducibility record is incomplete",
+        "The analysis record is missing one or more required dataset, fingerprint, procedure, software or parameter fields.",
+        "analysis", analysis.id, "Record type: " + (analysis.payload?.recordType || "unspecified") + ".",
+        "Record the immutable dataset identity and fingerprint, analysis script or procedure, software/runtime and all parameters before relying on the result."
+      ));
+    }
+    if (isOutput && manifest) {
+      const execution = manifest.execution;
+      if (!execution || execution.status !== "completed" || !text(execution.runtime) || !Number.isFinite(execution.analyzedRows) || execution.analyzedRows <= 0) {
+        findings.push(finding(
+          "reproducibility", "high", "Analysis execution record is incomplete",
+          "The saved analysis output does not contain a completed execution record with a runtime and positive analyzed-row count.",
+          "analysis", analysis.id, execution ? "Execution status: " + execution.status + "; runtime: " + (execution.runtime || "missing") + "; rows: " + (execution.analyzedRows ?? "missing") + "." : "No execution record is attached.",
+          "Rerun the analysis through the documented execution path and preserve the runtime, execution status, row count and logs."
+        ));
+      }
+      if (analysis.payload.datasetFingerprint && manifest.datasetFingerprint && analysis.payload.datasetFingerprint !== manifest.datasetFingerprint) {
+        findings.push(finding(
+          "calculation-consistency", "critical", "Analysis output and manifest use different dataset fingerprints",
+          "The output-level dataset fingerprint does not match the fingerprint recorded in its reproducibility manifest.",
+          "analysis", analysis.id, "Output: " + analysis.payload.datasetFingerprint + "; manifest: " + manifest.datasetFingerprint + ".",
+          "Do not use this output. Reconcile the dataset version and rerun the analysis against one immutable dataset snapshot."
+        ));
+      }
+      if (Number.isFinite(analysis.payload.rowCountAnalyzed) && Number.isFinite(execution?.analyzedRows) && analysis.payload.rowCountAnalyzed !== execution.analyzedRows) {
+        findings.push(finding(
+          "calculation-consistency", "high", "Analysis row counts do not agree",
+          "The output summary and execution manifest report different analyzed-row counts.",
+          "analysis", analysis.id, "Output: " + analysis.payload.rowCountAnalyzed + "; manifest: " + execution.analyzedRows + ".",
+          "Inspect filters, truncation and execution logs, then regenerate the output from the documented dataset and parameters."
+        ));
+      }
+      const tableRows = Array.isArray(analysis.payload.table?.rows) ? analysis.payload.table.rows : [];
+      const invalidNumbers = tableRows.flatMap(row => Object.entries(row || {}).filter(([, value]) => typeof value === "number" && !Number.isFinite(value)).map(([key]) => key));
+      if (invalidNumbers.length || Number(analysis.payload.rowCountAnalyzed) <= 0) {
+        findings.push(finding(
+          "calculation-consistency", "high", "Analysis output contains invalid numeric or row-count values",
+          "The saved output contains non-finite numeric values or does not report a positive analyzed-row count.",
+          "analysis", analysis.id, invalidNumbers.length ? "Non-finite fields: " + [...new Set(invalidNumbers)].join(", ") + "." : "Analyzed rows: " + (analysis.payload.rowCountAnalyzed ?? "missing") + ".",
+          "Recheck the source data, missing-value handling and calculation pipeline before approving or citing this output."
+        ));
+      }
+    }
+    if (analysis.status === "approved" && manifest && (!manifest.ownerApproved || manifest.status !== "approved")) {
+      findings.push(finding(
+        "analysis-approval", "high", "Analysis approval state is inconsistent",
+        "The research entity is marked approved, but its reproducibility manifest does not carry matching owner approval.",
+        "analysis", analysis.id, "Entity status: " + analysis.status + "; manifest status: " + (manifest.status || "missing") + "; ownerApproved: " + Boolean(manifest.ownerApproved) + ".",
+        "Reconcile the owner decision and manifest together; do not treat the output as approved until both records agree."
+      ));
+    }
     if (analysis.status !== "approved" && analysis.status !== "verified") {
       findings.push(finding(
         "analysis-approval", analysis.status === "stale" ? "high" : "medium",
@@ -101,6 +185,19 @@ export function runScientificAudit({ project, entities = [], relations = [], now
   }
 
   const sources = projectEntities.filter(entity => entity.entityType === "source");
+  const doiOwners = new Map();
+  for (const source of sources) {
+    const doi = text(source.payload?.doi).toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//, "");
+    if (doi) {
+      if (doiOwners.has(doi)) findings.push(finding(
+        "source-consistency", "medium", "Multiple source records share a DOI",
+        "Two or more project source records use the same DOI. They may be duplicate records, but no records were merged or removed.",
+        "source", source.id, "DOI " + doi + " also appears on " + doiOwners.get(doi) + ".",
+        "Compare the original records and decide whether they represent the same publication before merging or retaining them."
+      ));
+      else doiOwners.set(doi, source.id);
+    }
+  }
   for (const source of sources) {
     const doi = text(source.payload?.doi);
     const url = text(source.payload?.url);
@@ -113,6 +210,29 @@ export function runScientificAudit({ project, entities = [], relations = [], now
       ));
     }
   }
+
+  const manuscriptTitle = /\\title\s*\{([^}]*)\}/i.exec(String(project.latex || ""))?.[1]?.trim() || "";
+  if (manuscriptTitle && project.name && normalizeTitle(manuscriptTitle) !== normalizeTitle(project.name)) findings.push(finding(
+    "manuscript-consistency", "medium", "Project and manuscript titles differ",
+    "The project title and the title in the LaTeX manuscript are not the same after basic punctuation normalization.",
+    "project", project.id, "Project: " + project.name + "; manuscript: " + manuscriptTitle + ".",
+    "Confirm which title is authoritative and update the project brief or manuscript so exported materials stay consistent.", "LaTeX title"
+  ));
+
+  const headings = sectionHeadings(project.latex);
+  const requiredSections = project.paperType === "case-report"
+    ? [{ name: "Introduction", pattern: /introduction|background/ }, { name: "Case presentation", pattern: /case presentation|case description/ }, { name: "Discussion", pattern: /discussion/ }]
+    : project.paperType === "research-protocol"
+      ? [{ name: "Introduction", pattern: /introduction|background/ }, { name: "Methods", pattern: /methods?|methodology|study design/ }, { name: "Ethics", pattern: /ethics|ethical considerations/ }, { name: "Dissemination", pattern: /dissemination/ }]
+      : ["empirical-study", "systematic-review", "scoping-review", "dataset-analysis", "conference-paper"].includes(project.paperType)
+        ? [{ name: "Introduction", pattern: /introduction|background/ }, { name: "Methods", pattern: /methods?|methodology|materials and methods/ }, { name: "Results", pattern: /results|findings/ }, { name: "Discussion", pattern: /discussion/ }, { name: "Conclusion", pattern: /conclusions?/ }]
+        : [];
+  for (const section of requiredSections) if (!hasHeading(headings, section.pattern)) findings.push(finding(
+    "reporting-completeness", "medium", "Manuscript section may be missing: " + section.name,
+    "The manuscript headings do not contain a recognizable section for this common reporting component. A different structure may be appropriate for the study.",
+    "project", project.id, "Detected headings: " + (headings.join("; ") || "none") + ".",
+    "Check whether a " + section.name.toLowerCase() + " section is required for this paper type and add or rename it if appropriate.", "LaTeX section headings"
+  ));
 
   const researchQuestion = text(project.researchQuestion);
   const methodology = text(project.methodology);
