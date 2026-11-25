@@ -4,6 +4,7 @@ import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } f
 import { listProjects, loadProject, saveProject, listResearchEntities } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
 import { buildGroundedWritingContext } from "../lib/writing-grounding";
+import { buildWritingBlockPrompt, checkCitationKeys, getWritingSectionGuide, inspectDraftEvidence, type WritingAuthorVoice } from "../lib/writing-guidance";
 import { projectFingerprint, shouldSaveProjectSnapshot } from "../lib/project-save-guard.mjs";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
@@ -71,6 +72,11 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const [project, setProject] = useState<Project>(initialProject);
   const [researchEntities, setResearchEntities] = useState<ResearchEntity[]>([]);
   const [writingProposal, setWritingProposal] = useState<string | null>(null);
+  const [writingProposalLabel, setWritingProposalLabel] = useState("Writing proposal");
+  const [selectedWritingSectionId, setSelectedWritingSectionId] = useState("");
+  const [writingWordTarget, setWritingWordTarget] = useState("");
+  const [writingMicroPrompt, setWritingMicroPrompt] = useState("");
+  const [authorVoice, setAuthorVoice] = useState<WritingAuthorVoice>("preserve");
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
   const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots" | "python">("workspace");
@@ -130,6 +136,28 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   };
   const records = useMemo(() => Object.fromEntries(project.agentRecords.map(r => [r.id, r])), [project.agentRecords]);
   const groundedWritingContext = useMemo(() => buildGroundedWritingContext(researchEntities), [researchEntities]);
+  const selectedWritingSection = project.outline.find(section => section.id === selectedWritingSectionId) ?? project.outline[0];
+  const writingGuide = selectedWritingSection ? getWritingSectionGuide(selectedWritingSection.title, project.paperType ?? "unspecified") : null;
+  const availableWritingEvidenceIds = useMemo(() => [
+    ...groundedWritingContext.passages.map(item => item.id),
+    ...groundedWritingContext.verifiedResults.map(item => item.id)
+  ], [groundedWritingContext]);
+  const currentWritingEvidenceAudit = useMemo(() => inspectDraftEvidence(project.latex, availableWritingEvidenceIds), [project.latex, availableWritingEvidenceIds]);
+  const currentCitationAudit = useMemo(() => checkCitationKeys(project.latex, project.bibtex), [project.latex, project.bibtex]);
+  const proposalEvidenceAudit = useMemo(() => writingProposal ? inspectDraftEvidence(writingProposal, availableWritingEvidenceIds) : { linked: [], unresolved: [] }, [writingProposal, availableWritingEvidenceIds]);
+  const proposalCitationAudit = useMemo(() => writingProposal ? checkCitationKeys(writingProposal, project.bibtex) : { citedKeys: [], missingKeys: [], unusedKeys: [], duplicateKeys: [] }, [writingProposal, project.bibtex]);
+
+  useEffect(() => {
+    if (!project.outline.length) {
+      if (selectedWritingSectionId) setSelectedWritingSectionId("");
+      return;
+    }
+    if (!project.outline.some(section => section.id === selectedWritingSectionId)) {
+      setSelectedWritingSectionId(project.outline[0].id);
+      setWritingWordTarget("");
+      setWritingMicroPrompt("");
+    }
+  }, [project.outline, selectedWritingSectionId]);
 
   useEffect(() => {
     let live = true;
@@ -314,18 +342,28 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     finally { setBusy(false); }
   };
   const runWriting = async () => {
+    if (busy) return;
+    const section = project.outline.find(item => item.id === selectedWritingSectionId) ?? project.outline[0];
+    if (!section) {
+      setNotice("Add or generate an outline section before drafting.");
+      return;
+    }
     setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
     try {
-      let latex = project.latex;
-      const sections = project.outline;
-      if (!sections.length) throw new Error("Generate or add an outline first.");
-      for (const section of sections) {
-        const body = await ask(writingPrompt({ ...project, latex }, section, groundedWritingContext.promptContext), true);
-        latex = insertSection(latex, section.title, body);
-      }
+      const guide = getWritingSectionGuide(section.title, project.paperType ?? "unspecified");
+      const target = Number(writingWordTarget) || guide.defaultWordTarget;
+      const prompt = buildWritingBlockPrompt(
+        project,
+        section,
+        groundedWritingContext.promptContext,
+        { wordTarget: target, authorVoice, microPrompt: writingMicroPrompt }
+      );
+      const body = await ask(prompt, true);
+      const latex = insertSection(project.latex, section.title, body);
       setWritingProposal(latex);
-      setAgent("writing", "done", "Prepared " + sections.length + " section proposals. No manuscript text was changed.");
-      setNotice("Draft proposal ready. Inspect evidence markers and compare it with the current manuscript before accepting.");
+      setWritingProposalLabel("Section draft: " + section.title);
+      setAgent("writing", "done", "Prepared a reviewable draft for “" + section.title + "”. The existing manuscript was not changed.");
+      setNotice("Section proposal ready. Inspect its evidence links and citation keys before accepting.");
     } catch (e) { setAgent("writing", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -333,19 +371,22 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     if (!writingProposal) return;
     patch({ latex: writingProposal });
     setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
     setNotice("Writing proposal accepted by the researcher and saved to the local manuscript.");
   };
   const rejectWritingProposal = () => {
     setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
     setNotice("Writing proposal rejected. The existing manuscript was left unchanged.");
   };
   const runRefine = async () => {
     setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
       const result = parseJson<{issues:string[];revised_latex:string}>(await ask(refinePrompt(project)));
-      patch({ latex: result.revised_latex || project.latex });
+      setWritingProposal(result.revised_latex || project.latex);
+      setWritingProposalLabel("Clarity refinement");
       setAgent("refine", "done", (result.issues || []).join("\n").slice(0, 1200));
-      setNotice(`Refinement complete: ${(result.issues || []).length} review notes.`);
+      setNotice("Clarity edits are proposed, not applied. Inspect the diff and accept or reject them.");
     } catch (e) { setAgent("refine", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
