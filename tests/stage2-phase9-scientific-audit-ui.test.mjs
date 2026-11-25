@@ -38,3 +38,9 @@ test("audit actions never directly rewrite the manuscript", () => {
   assert.doesNotMatch(component, /saveProject\s*\(/);
   assert.doesNotMatch(component, /project\.latex\s*=/);
 });
+
+
+test("reviewer simulation is visibly disclosed as not being real peer review", () => {
+  assert.match(component, /Simulated reviewer checklist/);
+  assert.match(component, /not a real peer review/i);
+});
