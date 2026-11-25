@@ -134,3 +134,10 @@ Repository-wide development rules are defined in [AGENTS.md](AGENTS.md) and [CON
 ### Phase 9 visual prototype
 
 The current Research Station dashboard concept is available in the private [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). It uses preview data only and is not connected to application persistence. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md) for the Lumen package compatibility gate before production integration.
+
+
+
+
+### Phase 9 implementation status
+
+The dashboard visual concept is available in the [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). The production migration will use the published [Lumen React 4.3.0 adapter](https://www.npmjs.com/package/@santi020k/lumen-react) and its matching dependency family, not the newer 5.3.0 MCP catalog contract. The real dashboard's IndexedDB workflows and opt-in Supabase behavior remain authoritative. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md).
