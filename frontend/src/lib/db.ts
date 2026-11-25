@@ -418,7 +418,7 @@ export async function setResearchAgentsPaused(projectId: string, paused: boolean
 export async function transitionResearchTaskRecord(
   projectId: string, taskId: string,
   action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "mark-stale",
-  actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number
+  actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number, actorAgentId?: string
 ) {
   let saved: ResearchTask | undefined;
   await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchApprovals, db.researchControls, db.researchAuditEvents], async () => {
@@ -434,7 +434,7 @@ export async function transitionResearchTaskRecord(
     const control = await db.researchControls.get(projectId);
     if (actor === "agent" && control?.agentsPaused) throw new Error("Specialist agents are paused by the project owner.");
     const tasks = await db.researchTasks.where("projectId").equals(projectId).toArray();
-    const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale);
+    const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale, actorAgentId);
     await db.researchTasks.put(result.task);
     if (result.approval) await db.researchApprovals.add(result.approval);
     await db.researchAuditEvents.add({
