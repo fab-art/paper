@@ -144,6 +144,19 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
     profileColumn(name, dataset.rows.map(row => row[index] ?? ""), dataset.rows.length)
   ) : [], [dataset]);
   const visibleProfiles = profiles.filter(item => item.name.toLowerCase().includes(filter.toLowerCase()));
+
+  useEffect(() => {
+    if (!dataset) {
+      setOutcomeColumn("");
+      setGroupColumn("");
+      return;
+    }
+    const defaultOutcome = profiles.find(item => item.type === "Numeric") ?? profiles[0];
+    setOutcomeColumn(defaultOutcome?.name ?? "");
+    setGroupColumn("");
+    setOutcomeType(defaultOutcome?.type === "Numeric" ? "continuous" : "categorical");
+    setSampleSize(dataset.rows.length);
+  }, [dataset, selectedId]);
   const preview = dataset?.rows.slice(0, 8) ?? [];
   const statisticalGuidance = useMemo(() => recommendStatisticalOptions({ studyDesign, outcomeType, groups, paired, sampleSize }), [studyDesign, outcomeType, groups, paired, sampleSize]);
   const complianceChecklist = useMemo(() => getStudyComplianceChecklist(project.paperType, studyDesign), [project.paperType, studyDesign]);
