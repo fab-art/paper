@@ -61,3 +61,13 @@ test("plan editors reject blank task and milestone titles", () => {
   assert.throws(() => updateResearchPlanTask(plan, plan.stations[0].tasks[0].id, { title: "   " }), /title/i);
   assert.throws(() => addResearchPlanMilestone(plan, "   "), /title/i);
 });
+
+test("researcher can reorder stations without losing their tasks", async () => {
+  const { moveResearchPlanStation } = await import("../frontend/src/lib/research-intake.ts");
+  const plan = createResearchStationPlan("empirical-study", "idea", 1000);
+  const firstTaskId = plan.stations[0].tasks[0].id;
+  const moved = moveResearchPlanStation(plan, 0, 1, 2000);
+  assert.equal(moved.stations[1].stationId, plan.stations[0].stationId);
+  assert.equal(moved.stations[1].tasks[0].id, firstTaskId);
+  assert.throws(() => moveResearchPlanStation(plan, 0, -1), /position/i);
+});
