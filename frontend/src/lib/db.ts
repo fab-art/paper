@@ -12,7 +12,7 @@ import {
 } from "./research-blueprint";
 import {
   createResearchTask, transitionResearchTask, RESEARCH_AGENTS,
-  type ResearchTask, type ResearchTaskStatus, type ResearchActor,
+  type ResearchTask, type ResearchActor,
   type ResearchApproval, type ResearchControl, type ResearchAuditEvent,
   type ResearchStationId
 } from "./research-production-line";
@@ -227,7 +227,11 @@ export async function deleteProjectAndData(projectId: string, expectedRevision?:
       db.researchBlueprints,
       db.researchEntities,
       db.researchRelations,
-      db.researchDecisions
+      db.researchDecisions,
+      db.researchTasks,
+      db.researchApprovals,
+      db.researchControls,
+      db.researchAuditEvents
     ],
     async () => {
       const existing = await db.projects.get(projectId);
@@ -341,7 +345,7 @@ export async function saveResearchRelation(relation: ResearchRelation) {
 
 export async function recordOwnerResearchDecision(decision: ResearchDecision, ownerConfirmed = false) {
   if (!ownerConfirmed || !decision.decidedByOwner) throw new Error("Research decisions require explicit confirmation by the project owner.");
-  await db.transaction("rw", db.projects, db.deletedProjects, db.researchDecisions, async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchDecisions], async () => {
     await assertProjectWritable(decision.projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
@@ -363,7 +367,7 @@ export async function createResearchTaskRecord(input: {
   ownerApprovalBeforeRun?: boolean; ownerApprovalRequired?: boolean;
 }) {
   const task = createResearchTask({ ...input, id: createRecordId("task") });
-  await db.transaction("rw", db.projects, db.deletedProjects, db.researchTasks, db.researchAuditEvents, async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchAuditEvents], async () => {
     await assertProjectWritable(input.projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
@@ -395,7 +399,7 @@ export async function setResearchAgentsPaused(projectId: string, paused: boolean
   const control: ResearchControl = {
     projectId, agentsPaused: paused, updatedAt: Date.now(), updatedByOwner: true
   };
-  await db.transaction("rw", db.projects, db.deletedProjects, db.researchControls, db.researchAuditEvents, async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchControls, db.researchAuditEvents], async () => {
     await assertProjectWritable(projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
@@ -417,7 +421,7 @@ export async function transitionResearchTaskRecord(
   actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number
 ) {
   let saved: ResearchTask | undefined;
-  await db.transaction("rw", db.projects, db.deletedProjects, db.researchTasks, db.researchApprovals, db.researchControls, db.researchAuditEvents, async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchApprovals, db.researchControls, db.researchAuditEvents], async () => {
     await assertProjectWritable(projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
