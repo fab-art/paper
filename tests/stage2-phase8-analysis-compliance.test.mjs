@@ -101,3 +101,11 @@ test("analysis manifest requires an explicit owner approval transition", () => {
   assert.equal(approved.status, "approved");
   assert.equal(approved.approvedAt, 1234);
 });
+
+test("LaTeX table export escapes special characters and includes the real analysis caption", async () => {
+  const { renderAnalysisTableLatex } = await import("../frontend/src/lib/research-analysis.ts");
+  const latex = renderAnalysisTableLatex({ columns: ["Group", "Mean_score"], rows: [{ group: "A&B", mean: 2.5 }] }, "Mean score by group");
+  assert.match(latex, /\\begin\{table\}/);
+  assert.match(latex, /A\\&B/);
+  assert.match(latex, /Mean score by group/);
+});
