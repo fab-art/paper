@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
 import type { Project, ProjectAttachment } from "../lib/types";
-import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, executeDescriptiveAnalysis, renderAnalysisFigureSvg, approveAnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
+import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, renderAnalysisFigureSvg, approveAnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
 import { listResearchEntities, saveResearchEntity } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
 import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
@@ -112,7 +112,7 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       const review = entities.filter(entity => entity.entityType === "research-note" && entity.payload.recordType === "compliance-review").sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? null;
       setComplianceReviewEntity(review);
       const savedDesign = typeof review?.payload.studyDesign === "string" ? review.payload.studyDesign : "";
-      if (savedDesign) setStudyDesign(savedDesign);
+      setStudyDesign(savedDesign || project.methodology || "");
       const savedChecklist = Array.isArray(review?.payload.checklist) ? review.payload.checklist as Array<{ id: string; ownerStatus: ComplianceOwnerStatus }> : [];
       const samePaperType = review?.payload.paperType === (project.paperType ?? "unspecified");
       setComplianceStatuses(samePaperType ? Object.fromEntries(savedChecklist.map(item => [item.id, item.ownerStatus])) : {});
