@@ -59,14 +59,9 @@ export default function ResearchProductionLine({
   const [beforeRun, setBeforeRun] = useState(false);
 
   const researchPlan = useMemo(() => project.researchPlan ?? createResearchStationPlan(paperType, project.startPath ?? "idea"), [project.researchPlan, project.id, paperType, project.startPath]);
-  const route = useMemo(() => {
-    const registry = getResearchRoute(paperType);
-    return researchPlan.stations.map(item => registry.find(station => station.id === item.stationId)).filter((station): station is (typeof registry)[number] => Boolean(station));
-  }, [paperType, researchPlan.stations]);
-  const summaries = useMemo(() => {
-    const registry = summarizeResearchStations(tasks, paperType);
-    return researchPlan.stations.map(item => registry.find(station => station.id === item.stationId)).filter((station): station is (typeof registry)[number] => Boolean(station));
-  }, [tasks, paperType, researchPlan.stations]);
+  const stationOrder = useMemo(() => researchPlan.stations.map(station => station.stationId), [researchPlan.stations]);
+  const route = useMemo(() => getResearchRoute(paperType, stationOrder), [paperType, stationOrder]);
+  const summaries = useMemo(() => summarizeResearchStations(tasks, paperType, stationOrder), [tasks, paperType, stationOrder]);
   const completedTasks = tasks.filter(task => task.status === "completed").length;
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
   const agentReadyCount = localModelReady ? getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length : 0;
