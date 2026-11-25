@@ -106,7 +106,7 @@ export function buildWritingBlockPrompt(
 export interface DraftEvidenceItem { claim: string; evidenceId?: string; status: "evidence-linked" | "awaiting-verification"; reason?: string; }
 
 function precedingClaim(text: string, markerIndex: number): string {
-  const prefix = text.slice(0, markerIndex).slice(-700);
+  const prefix = text.slice(0, markerIndex).slice(-700).trim();
   const segments = prefix.split(/(?:\\par\b|\n|(?<=[.!?])\s+)/);
   return (segments[segments.length - 1] ?? prefix)
     .replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{[^}]*\})?/g, " ")
