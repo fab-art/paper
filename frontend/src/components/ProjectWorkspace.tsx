@@ -397,7 +397,7 @@ export default function ProjectWorkspace({
         project={project}
         paperType={(project.paperType && project.paperType !== "unspecified" ? project.paperType : project.systematicReview?.protocol.reviewType === "scoping" ? "scoping-review" : project.systematicReview ? "systematic-review" : "unspecified") as ResearchPaperType}
         researchMode={project.researchMode ?? "guided"}
-        onModeChange={mode => patch({ researchMode: mode })}
+        onModeChange={mode => patch({ researchMode: mode })}\n        onProjectUpdate={patch}
         onOpenStudio={() => void navigateAfterSave(onOpenStudio)}
       />}
 
