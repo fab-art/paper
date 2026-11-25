@@ -39,6 +39,18 @@ test('a task requiring approval before execution waits for the owner', () => {
   assert.equal(approved.approval?.decidedByOwner, true);
 });
 
+test('requesting changes before execution cannot bypass the owner approval gate', () => {
+  const created = task({ ownerApprovalBeforeRun: true });
+  const returned = transitionResearchTask(created, 'request-changes', 'owner', [created], now + 1, true, 'Clarify the protocol first').task;
+  assert.equal(returned.status, 'queued');
+  assert.equal(returned.ownerApproved, false);
+  assert.equal(returned.approvalStage, 'before-run');
+  assert.throws(() => transitionResearchTask(returned, 'start', 'owner', [returned], now + 2), /Owner approval is required/);
+  const approved = transitionResearchTask(returned, 'approve', 'owner', [returned], now + 3, true).task;
+  assert.equal(approved.ownerApproved, true);
+  assert.equal(transitionResearchTask(approved, 'start', 'owner', [approved], now + 4).task.status, 'running');
+});
+
 test('tasks cannot start until every dependency is complete', () => {
   const dependency = task({ id: 'dependency' });
   const blocked = task({ id: 'dependent', dependencyTaskIds: ['dependency'] });
