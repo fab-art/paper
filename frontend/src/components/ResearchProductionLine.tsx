@@ -193,7 +193,7 @@ export default function ResearchProductionLine({
       <Button type="button" size="sm" onClick={() => { setStationId(nextAction.station as ResearchStationId); setTitle(nextAction.title); setDescription(nextAction.description); setShowComposer(true); }}>Start this step <ArrowRight size={14}/></Button>
     </Card>}
 
-    <ResearchPlanEditor plan={researchPlan} onChange={nextPlan => onProjectUpdate({ researchPlan: nextPlan })}/>
+    <ResearchPlanEditor plan={researchPlan} onChange={nextPlan => onProjectUpdate({ researchPlan: nextPlan })} storyArc={project.storyArc ?? []} onStoryArcChange={storyArc => onProjectUpdate({ storyArc })}/>
 
     <div className="rpl-station-heading"><div><span className="rpl-eyebrow">THE RESEARCH LINE</span><h3>Stations</h3></div><Button type="button" variant="outline" size="sm" onClick={() => setShowComposer(value => !value)}><Plus size={14}/> Add task</Button></div>
     <div className="rpl-station-grid">
