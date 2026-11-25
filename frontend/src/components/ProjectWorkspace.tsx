@@ -6,6 +6,7 @@ import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import ResearchProductionLine from "./ResearchProductionLine";
 import ResearchEvidenceWorkspace from "./ResearchEvidenceWorkspace";
+import ScientificAuditWorkspace from "./ScientificAuditWorkspace";
 import type { ResearchPaperType } from "../lib/research-blueprint";
 import {
   ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
@@ -28,7 +29,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission" | "production" | "evidence">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission" | "production" | "evidence" | "auditor">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -323,6 +324,7 @@ export default function ProjectWorkspace({
         <button className={section === "methods" ? "selected" : ""} aria-pressed={section === "methods"} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} aria-pressed={section === "submission"} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
         <button className={section === "production" ? "selected" : ""} aria-pressed={section === "production"} onClick={() => setSection("production")}><ClipboardList size={15}/> Production line</button>
+        <button className={section === "auditor" ? "selected" : ""} aria-pressed={section === "auditor"} onClick={() => setSection("auditor")}><ShieldCheck size={15}/> Scientific Auditor</button>
       </nav>
       {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="pw-notice-action" onClick={() => void reloadLatestProject()}>Load latest saved version</button>}</div>}
 
@@ -400,6 +402,8 @@ export default function ProjectWorkspace({
       {section === "methods" && <DataMethodsLab attachments={attachments} project={project}/>}
 
       {section === "submission" && <SubmissionReadiness project={project} notes={notes} attachments={attachments} onUpdateProject={patch}/>}
+
+      {section === "auditor" && <ScientificAuditWorkspace project={project}/>}
 
       {section === "production" && <ResearchProductionLine
         projectId={projectId}
