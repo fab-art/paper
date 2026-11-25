@@ -46,6 +46,8 @@ test('Production Line exposes dependency gates, agent assignment, owner approval
   assert.match(production, /Request changes/);
   assert.match(production, /setResearchAgentsPaused/);
   assert.match(production, /Run specialist/);
+  assert.match(production, /Inspect specialist output/);
+  assert.match(production, /open=\{task\.status === "awaiting-owner"\}/);
 });
 
 test('specialist execution uses local WebLLM, saves proposed provenance and waits for owner review', () => {
