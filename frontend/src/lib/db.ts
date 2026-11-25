@@ -72,7 +72,7 @@ export async function saveProject(project: Project) {
   const expectedRevision = project.revision ?? 0;
   let savedProject: Project | undefined;
 
-  await db.transaction("rw", db.projects, db.deletedProjects, async () => {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.researchBlueprints, db.researchEntities, async () => {
     if (await db.deletedProjects.get(project.id)) {
       throw new Error("This project was permanently deleted in another tab. Reload the Research Station before continuing.");
     }
@@ -88,6 +88,14 @@ export async function saveProject(project: Project) {
     if (existing?.archivedAt && !next.archivedAt) next.archivedAt = existing.archivedAt;
     next.updatedAt = Date.now();
     await db.projects.put(next);
+    // New projects and any legacy project missing a canonical record receive a
+    // one-time mapping. Existing Research Blueprint work is never overwritten
+    // by a later save from the legacy Project editor.
+    if (!(await db.researchBlueprints.get(project.id))) {
+      await db.researchBlueprints.put(projectToResearchBlueprint(next));
+      const migratedEntities = legacyProjectToResearchEntities(next);
+      if (migratedEntities.length) await db.researchEntities.bulkPut(migratedEntities);
+    }
     savedProject = next;
   });
 
