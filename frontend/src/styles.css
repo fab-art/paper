@@ -458,3 +458,10 @@ body:has(.dash-topbar) .app-shell{min-height:100vh;height:auto;background:hsl(va
 .dash-modal input:focus,.dash-modal textarea:focus{border-color:hsl(var(--brand))}
 .dash-cancel{border-color:hsl(var(--line));color:hsl(var(--ink-soft))}
 @media(max-width:700px){.dash-main{padding:28px 16px 20px}.dash-welcome{min-height:0;padding:12px 0 24px}.dash-orbit{display:none}.dash-stats{grid-template-columns:1fr;gap:9px;margin-bottom:30px}.dash-project-grid{grid-template-columns:1fr}.dash-section-head{align-items:flex-start;flex-direction:column;gap:12px}.dash-search{width:100%}.dash-topbar{padding-inline:16px}.dash-brand small{display:none}.dash-top-right{gap:10px}}
+
+
+.proposal-diff{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.proposal-diff>div{min-width:0;border:1px solid hsl(var(--line));border-radius:10px;padding:10px;background:hsl(var(--surface))}
+.proposal-diff pre{max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 ui-monospace,monospace}
+.proposal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:720px){.proposal-diff{grid-template-columns:1fr}}
