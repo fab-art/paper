@@ -74,15 +74,17 @@ export async function listNotes(projectId: string): Promise<ProjectNote[]> {
 }
 
 export async function saveNote(note: ProjectNote): Promise<ProjectNote> {
+  const updatedAt = Date.now();
+  const saved = { ...note, updatedAt };
   await db.transaction("rw", [db.projects, db.deletedProjects, db.notes], async () => {
     await assertProjectWritable(note.projectId, projectWriteDependencies());
     const existing = await db.notes.get(note.id);
     if (existing && existing.projectId !== note.projectId) {
       throw new Error("This note belongs to another project and cannot be moved by editing it.");
     }
-    await db.notes.put({ ...note, updatedAt: Date.now() });
+    await db.notes.put(saved);
   });
-  return { ...note, updatedAt: Date.now() };
+  return saved;
 }
 
 export async function deleteNote(projectId: string, noteId: string): Promise<boolean> {
@@ -103,6 +105,12 @@ export async function listAttachments(projectId: string): Promise<ProjectAttachm
 }
 
 export async function saveAttachment(attachment: ProjectAttachment): Promise<ProjectAttachment> {
+  if (attachment.size > 30 * 1024 * 1024) {
+    throw new Error("Attachments must be 30 MB or smaller.");
+  }
+  if (attachment.blob.size !== attachment.size) {
+    throw new Error("The attachment size does not match its stored file.");
+  }
   await db.transaction("rw", [db.projects, db.deletedProjects, db.attachments], async () => {
     await assertProjectWritable(attachment.projectId, projectWriteDependencies());
     const existing = await db.attachments.get(attachment.id);
