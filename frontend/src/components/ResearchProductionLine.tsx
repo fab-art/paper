@@ -154,7 +154,7 @@ export default function ResearchProductionLine({
           <button type="button" aria-pressed={researchMode === "guided"} onClick={() => onModeChange("guided")}>Guided</button>
           <button type="button" aria-pressed={researchMode === "professional"} onClick={() => onModeChange("professional")}>Professional</button>
         </div>
-        <Button type="button" variant={paused ? "secondary" : "outline"} size="sm" onClick={() => void togglePause()}>
+        <Button type="button" variant="outline" size="sm" onClick={() => void togglePause()}>
           {paused ? <Play size={14}/> : <Pause size={14}/>} {paused ? "Resume agents" : "Pause agents"}
         </Button>
       </div>
@@ -181,7 +181,7 @@ export default function ResearchProductionLine({
     <div className="rpl-station-grid">
       {summaries.map((station, index) => (
         <Card key={station.id} className={`rpl-station-card status-${station.status}`}>
-          <div className="rpl-station-top"><span className="rpl-station-number">{String(index + 1).padStart(2, "0")}</span><Badge variant={station.status === "complete" ? "success" : station.status === "attention" ? "warning" : "secondary"}>{statusLabel[station.status]}</Badge></div>
+          <div className="rpl-station-top"><span className="rpl-station-number">{String(index + 1).padStart(2, "0")}</span><Badge variant={station.status === "complete" ? "success" : undefined}>{statusLabel[station.status]}</Badge></div>
           <h4>{station.label}</h4><p>{station.purpose}</p>
           <div className="rpl-station-bottom"><span>{station.completed}/{station.taskCount} tasks done</span><button type="button" onClick={() => { setStationId(station.id); setShowComposer(true); }}>Add task</button></div>
           {researchMode === "professional" && <div className="rpl-station-outputs"><small>Outputs: {station.outputs.join(", ")}</small><small>Agents: {station.agentIds.join(", ")}</small></div>}
@@ -209,7 +209,7 @@ export default function ResearchProductionLine({
       {tasks.length === 0 ? <div className="rpl-empty"><Workflow size={24}/><strong>Your line is ready.</strong><p>Add a task to the first station. PaperOrchestra will keep its dependencies and approvals visible.</p><Button size="sm" onClick={() => { setStationId(route[0].id); setShowComposer(true); }}>Create first task</Button></div> :
         tasks.map(task => <Card key={task.id} className="rpl-task-card">
           <div className="rpl-task-icon">{task.status === "completed" ? <CheckCircle2 size={17}/> : task.status === "failed" || task.status === "blocked" ? <XCircle size={17}/> : task.status === "awaiting-owner" ? <ShieldCheck size={17}/> : task.status === "running" ? <Clock3 size={17}/> : <Circle size={17}/>}</div>
-          <div className="rpl-task-main"><div className="rpl-task-title"><strong>{task.title}</strong><Badge variant={task.status === "completed" ? "success" : task.status === "awaiting-owner" ? "warning" : "secondary"}>{taskStatusLabel[task.status]}</Badge></div>
+          <div className="rpl-task-main"><div className="rpl-task-title"><strong>{task.title}</strong><Badge variant={task.status === "completed" ? "success" : undefined}>{taskStatusLabel[task.status]}</Badge></div>
             <p>{task.description || route.find(station => station.id === task.stationId)?.label}</p>
             <small>{route.find(station => station.id === task.stationId)?.label} {task.assignedAgentId ? `· ${RESEARCH_AGENTS.find(agent => agent.id === task.assignedAgentId)?.label ?? "Specialist"}` : "· Researcher-owned"}</small>
             {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies · {task.inputEntityIds.length} inputs · {task.outputEntityIds.length} outputs</small>}
@@ -229,7 +229,7 @@ export default function ResearchProductionLine({
       {events.length ? <div className="rpl-audit-list">{events.map(event => <div key={event.id}><span>{new Date(event.createdAt).toLocaleString()}</span><strong>{event.event.replaceAll("-", " ")}</strong><p>{event.details}</p></div>)}</div> : <p className="rpl-agent-note">Task and owner-control events will be recorded here as work progresses.</p>}
     </Card>}
     {researchMode === "professional" && <Card className="rpl-agent-roster">
-      <div className="rpl-station-heading"><div><span className="rpl-eyebrow">SPECIALIST NETWORK</span><h3>Agent responsibilities</h3></div><Badge variant="outline">{RESEARCH_AGENTS.length} roles</Badge></div>
+      <div className="rpl-station-heading"><div><span className="rpl-eyebrow">SPECIALIST NETWORK</span><h3>Agent responsibilities</h3></div><Badge>{RESEARCH_AGENTS.length} roles</Badge></div>
       <div className="rpl-agent-grid">{RESEARCH_AGENTS.map(agent => <div key={agent.id}><strong>{agent.label}</strong><p>{agent.purpose}</p><small>Can propose: {agent.canPropose.join(", ")}</small><small>Cannot approve or make owner decisions</small></div>)}</div>
     </Card>}
     <p className="rpl-owner-note"><ShieldCheck size={15}/> You own the research. Specialist agents can prepare drafts and recommendations, but they cannot approve scientific decisions, change ethics declarations, determine authorship or submit your work. Pausing agents stops future dispatch; it does not interrupt a local model generation that is already running.</p>
