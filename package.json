@@ -9,7 +9,7 @@
   "scripts": {
     "install:frontend": "npm --prefix frontend install",
     "build": "npm --prefix frontend run build",
-    "test:regression": "node --test tests/*.test.mjs"
+    "test:regression": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "engines": {
     "node": "22.x"
