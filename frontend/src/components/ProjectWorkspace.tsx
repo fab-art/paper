@@ -4,6 +4,8 @@ import ResearchDiscovery from "./ResearchDiscovery";
 import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
+import ResearchProductionLine from "./ResearchProductionLine";
+import type { ResearchPaperType } from "../lib/research-blueprint";
 import {
   ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
   FileText, FolderOpen, Link2, MessageSquareText, Plus, Save, Search, Trash2,
@@ -25,7 +27,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission" | "production">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -309,6 +311,7 @@ export default function ProjectWorkspace({
         <button className={section === "review" ? "selected" : ""} aria-pressed={section === "review"} onClick={() => setSection("review")}><ClipboardCheck size={15}/> Systematic review</button>
         <button className={section === "methods" ? "selected" : ""} aria-pressed={section === "methods"} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} aria-pressed={section === "submission"} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
+        <button className={section === "production" ? "selected" : ""} aria-pressed={section === "production"} onClick={() => setSection("production")}><ClipboardList size={15}/> Production line</button>
       </nav>
       {notice && <div className={`pw-global-notice ${noticeIsError ? "error" : ""}`} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? "assertive" : "polite"}>{noticeIsError ? <AlertCircle size={14}/> : <Check size={14}/>}<span>{notice}</span>{notice.includes("updated in another tab") && <button type="button" className="pw-notice-action" onClick={() => void reloadLatestProject()}>Load latest saved version</button>}</div>}
 
@@ -384,6 +387,13 @@ export default function ProjectWorkspace({
       {section === "methods" && <DataMethodsLab attachments={attachments}/>}
 
       {section === "submission" && <SubmissionReadiness project={project} notes={notes} attachments={attachments} onUpdateProject={patch}/>}
+
+      {section === "production" && <ResearchProductionLine
+        projectId={projectId}
+        paperType={(project.paperType ?? (project.systematicReview?.protocol.reviewType === "scoping" ? "scoping-review" : project.systematicReview ? "systematic-review" : "unspecified")) as ResearchPaperType}
+        researchMode={project.researchMode ?? "guided"}
+        onModeChange={mode => patch({ researchMode: mode })}
+      />}
 
       {section === "notes" && <div className="pw-notes-layout">
         <section className="pw-panel pw-note-editor"><div className="pw-panel-title"><div><span>✎</span><h2>{editingNote ? "Edit note" : "New project note"}</h2></div>{editingNote && <button className="pw-text-action" onClick={() => { setEditingNote(null); setNoteTitle(""); setNoteContent(""); }}>Cancel edit</button>}</div>
