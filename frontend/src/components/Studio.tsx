@@ -282,6 +282,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const refreshEvidenceContext = async () => {
     try {
       const entities = await listResearchEntities(projectId);
+      if (projectRef.current.id !== projectId) return;
       setResearchEntities(entities);
       setNotice("Evidence context refreshed. " + entities.length + " project research record(s) are available to the writing co-pilot.");
     } catch (error) {
@@ -379,6 +380,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
         { wordTarget: target, authorVoice, microPrompt: writingMicroPrompt }
       );
       const body = await ask(prompt, true);
+      if (projectRef.current.id !== project.id) return;
       const latex = insertSection(project.latex, section.title, body);
       setWritingProposal(latex);
       setWritingProposalLabel("Section draft: " + section.title);
@@ -402,7 +404,9 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const runRefine = async () => {
     setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
-      const result = parseJson<{issues:string[];revised_latex:string}>(await ask(refinePrompt(project)));
+      const raw = await ask(refinePrompt(project));
+      if (projectRef.current.id !== project.id) return;
+      const result = parseJson<{issues:string[];revised_latex:string}>(raw);
       setWritingProposal(result.revised_latex || project.latex);
       setWritingProposalLabel("Clarity refinement");
       setAgent("refine", "done", (result.issues || []).join("\n").slice(0, 1200));
