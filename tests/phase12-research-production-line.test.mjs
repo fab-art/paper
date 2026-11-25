@@ -44,7 +44,7 @@ test('tasks cannot start until every dependency is complete', () => {
   const blocked = task({ id: 'dependent', dependencyTaskIds: ['dependency'] });
   assert.deepEqual(getReadyResearchTasks([dependency, blocked]), []);
   assert.throws(() => transitionResearchTask(blocked, 'start', 'owner', [dependency, blocked], now), /dependencies/);
-  const completedDependency = { ...dependency, status: 'completed' as const };
+  const completedDependency = { ...dependency, status: 'completed' };
   assert.deepEqual(getReadyResearchTasks([completedDependency, blocked]).map(item => item.id), ['dependent']);
 });
 
@@ -74,7 +74,7 @@ test('agent cannot start unassigned work or approve a scientific decision', () =
 test('task transitions reject invalid state changes and support owner retry', () => {
   const queued = task();
   assert.throws(() => transitionResearchTask(queued, 'submit', 'owner', [queued], now), /running task/);
-  const failed = { ...queued, status: 'failed' as const };
+  const failed = { ...queued, status: 'failed' };
   const retried = transitionResearchTask(failed, 'retry', 'owner', [failed], now + 1).task;
   assert.equal(retried.status, 'queued');
 });
