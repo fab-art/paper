@@ -11,7 +11,7 @@ export function buildGroundedWritingContext(entities: ResearchEntity[]): Grounde
     const sourceEntityId = typeof entity.payload.sourceEntityId === "string" ? entity.payload.sourceEntityId.trim() : "";
     if (!quote || !sourceEntityId) return [];
     const raw = entity.payload.judgement;
-    const judgement = raw === "supports" || raw === "partially-supports" || raw === "contradicts" || raw === "irrelevant" ? raw : "unassessed";
+    const judgement: GroundedPassage["judgement"] = raw === "supports" || raw === "partially-supports" || raw === "contradicts" || raw === "irrelevant" ? raw : "unassessed";
     return [{ id: entity.id, quote, sourceEntityId, locator: typeof entity.payload.locator === "string" ? entity.payload.locator : "", judgement }];
   });
   const verifiedResults = entities.flatMap(entity => {
