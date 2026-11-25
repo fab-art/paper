@@ -55,8 +55,8 @@ test('paused agents receive no ready work', () => {
 
 test('agent output requiring review cannot be completed without owner approval', () => {
   const queued = task({ assignedAgentId: 'research-planner', ownerApprovalRequired: true });
-  const running = transitionResearchTask(queued, 'start', 'agent', [queued], now + 1).task;
-  const submitted = transitionResearchTask(running, 'submit', 'agent', [running], now + 2).task;
+  const running = transitionResearchTask(queued, 'start', 'agent', [queued], now + 1, false, '', 'research-planner').task;
+  const submitted = transitionResearchTask(running, 'submit', 'agent', [running], now + 2, false, '', 'research-planner').task;
   assert.equal(submitted.status, 'awaiting-owner');
   assert.equal(submitted.approvalStage, 'after-run');
   assert.throws(() => transitionResearchTask(submitted, 'approve', 'agent', [submitted], now + 3, true), /owner confirmation/);
