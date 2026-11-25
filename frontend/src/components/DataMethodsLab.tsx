@@ -388,15 +388,50 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       <ul className="dml-guidance-list">{statisticalGuidance.assumptions.map(item => <li key={item}>{item}</li>)}</ul>
       <p className="dml-warning">These are candidate methods, not a statistical decision. Confirm the estimand, protocol, assumptions and analysis plan with the researcher or statistician before running inferential analyses.</p>
     </section>
+    <section className="dml-panel" aria-labelledby="dml-execute-title">
+      <div className="dml-panel-head"><div><h3 id="dml-execute-title">Run a reproducible descriptive analysis</h3><p>Execute a deterministic, local summary from the selected dataset and save its actual table, figure, caption and execution record.</p></div><span className="dml-readonly">LOCAL EXECUTION</span></div>
+      {dataset && <>
+        <div className="dml-form-grid">
+          <label>Outcome variable<select value={outcomeColumn} onChange={event => { setOutcomeColumn(event.target.value); if (event.target.value === groupColumn) setGroupColumn(""); }}><option value="">Choose outcome</option>{dataset.headers.map(header => <option key={header} value={header}>{header}</option>)}</select></label>
+          <label>Group by (optional)<select value={groupColumn} onChange={event => setGroupColumn(event.target.value)}><option value="">No grouping</option>{dataset.headers.filter(header => header !== outcomeColumn).map(header => <option key={header} value={header}>{header}</option>)}</select></label>
+        </div>
+        <p className="dml-execution-note">The first executable release produces descriptive summaries only (mean/SD/median or counts/percentages). It does not run inferential tests, estimate causal effects or execute the statistical recommendations above. Truncated preview data cannot be analyzed.</p>
+      </>}
+      <button type="button" className="dml-primary-action" disabled={!dataset || dataset.truncated || !outcomeColumn || outcomeType === "time-to-event" || runningAnalysis} onClick={() => void runDescriptiveAnalysis()}>{runningAnalysis ? "Running local analysis…" : "Run descriptive analysis"}</button>
+      {dataset?.truncated && <p className="dml-warning">Analysis is disabled because the preview is truncated. Load a complete dataset before execution.</p>}
+      {outcomeType === "time-to-event" && <p className="dml-warning">Time-to-event inference is not supported by this descriptive runner. Use a validated survival-analysis workflow.</p>}
+      {analysisError && <p className="dml-error" role="alert">{analysisError}</p>}
+    </section>
+    {analysisOutput && <section className="dml-panel dml-analysis-output" aria-labelledby="dml-output-title">
+      <div className="dml-panel-head"><div><h3 id="dml-output-title">Executed analysis output</h3><p>{analysisOutput.payload.method} · {analysisOutput.payload.rowCountAnalyzed.toLocaleString()} rows analyzed</p></div><span className={analysisOutput.status === "approved" ? "dml-owner-status approved" : "dml-owner-status"}>{analysisOutput.status === "approved" ? "OWNER APPROVED" : "AWAITING OWNER REVIEW"}</span></div>
+      <p className="dml-output-summary">{analysisOutput.payload.summary}</p>
+      <figure className="dml-publication-figure"><img src={"data:image/svg+xml;charset=utf-8," + encodeURIComponent(analysisOutput.payload.figureSvg)} alt={analysisOutput.payload.figure.title}/><figcaption>{analysisOutput.payload.caption}</figcaption></figure>
+      <div className="dml-table-wrap" role="region" aria-label="Executed descriptive analysis table" tabIndex={0}><table className="dml-table"><caption>{analysisOutput.payload.method} — {analysisOutput.payload.datasetName}</caption><thead><tr>{analysisOutput.payload.table.columns.map(column => <th scope="col" key={column}>{column}</th>)}</tr></thead><tbody>{analysisOutput.payload.table.rows.map((row, index) => <tr key={index}>{Object.values(row).map((value, cell) => <td key={cell}>{value === "" ? "—" : value}</td>)}</tr>)}</tbody></table></div>
+      <div className="dml-output-actions">
+        <button type="button" className="dml-secondary-action" onClick={() => downloadTextFile(analysisOutput.payload.datasetName.replace(/\.[^.]+$/, "") + "-descriptive-table.csv", analysisTableCsv(analysisOutput.payload.table), "text/csv;charset=utf-8")}>Download table CSV</button>
+        <button type="button" className="dml-secondary-action" onClick={() => downloadTextFile("paperorchestra-figure.svg", analysisOutput.payload.figureSvg, "image/svg+xml")}>Download figure SVG</button>
+        {analysisOutput.status !== "approved" && <button type="button" className="dml-primary-action" onClick={() => void approveAnalysisOutput(analysisOutput)}>Approve result for grounded writing</button>}
+      </div>
+      <details className="dml-provenance"><summary>Reproducibility record and execution log</summary>
+        <p><strong>Dataset SHA-256:</strong> {analysisOutput.payload.datasetFingerprint}</p>
+        <p><strong>Analysis engine:</strong> {analysisOutput.payload.manifest.software.analysisEngine} · {analysisOutput.payload.manifest.execution?.runtime}</p>
+        <p><strong>Owner approval:</strong> {analysisOutput.payload.manifest.ownerApproved ? "Approved" : "Not yet approved"}</p>
+        <ul>{analysisOutput.payload.manifest.execution?.logs.map((line, index) => <li key={index}>{line}</li>)}</ul>
+      </details>
+      <p className="dml-warning">Approval means you reviewed this descriptive output for use in your manuscript. It does not certify statistical validity or replace a statistician's review.</p>
+    </section>}
     <section className="dml-panel" aria-labelledby="dml-compliance-title">
       <div className="dml-panel-head"><div><h3 id="dml-compliance-title">Study-specific reporting & ethics checklist</h3><p>Selected from the declared paper type and study design. Nothing is auto-confirmed.</p></div></div>
-      <ul className="dml-guidance-list">{complianceChecklist.map(item => <li key={item.id}><strong>{item.guideline}:</strong> {item.label} <span>Researcher confirmation required</span></li>)}</ul>
-      <p className="dml-warning">A checklist helps identify missing information; it does not certify ethics approval, consent, reporting compliance or scientific validity.</p>
+      <ul className="dml-compliance-list">{complianceChecklist.map(item => <li key={item.id}><div><strong>{item.guideline}</strong><p>{item.label}</p></div><label>Owner declaration<select value={complianceStatuses[item.id] ?? "not-reviewed"} onChange={event => setComplianceStatuses(current => ({ ...current, [item.id]: event.target.value as ComplianceOwnerStatus }))}><option value="not-reviewed">Not reviewed</option><option value="confirmed-by-researcher">Confirmed by researcher</option><option value="not-applicable">Not applicable</option><option value="requires-follow-up">Requires follow-up</option></select></label></li>)}</ul>
+      <label className="dml-script-label">Owner review notes<textarea rows={3} value={complianceNotes} onChange={event => setComplianceNotes(event.target.value)} placeholder="Record what was checked, what evidence supports the declaration, and what remains outstanding."/></label>
+      <button type="button" className="dml-primary-action" disabled={savingCompliance} onClick={() => void saveComplianceReview()}>{savingCompliance ? "Saving owner review…" : "Save owner review locally"}</button>
+      {complianceNotice && <p role="status" aria-live="polite">{complianceNotice}</p>}
+      <p className="dml-warning">These are researcher declarations, not automated verification. “Confirmed by researcher” records your statement; it does not independently prove ethics approval, consent, registration or reporting compliance.</p>
     </section>
     {csvFiles.length > 0 && <section className="dml-panel" aria-labelledby="dml-repro-title">
       <div className="dml-panel-head"><div><h3 id="dml-repro-title">Reproducibility record</h3><p>Fingerprint the original dataset and document the analysis procedure before execution.</p></div></div>
-      <label className="dml-script-label">Analysis script or documented procedure<textarea rows={5} value={analysisScript} onChange={event => setAnalysisScript(event.target.value)} placeholder="Paste the script or describe the exact analysis steps and transformations."/></label>
-      <button type="button" className="dml-primary-action" disabled={savingManifest || !selectedId || !analysisScript.trim()} onClick={() => void saveAnalysisManifest()}>{savingManifest ? "Saving…" : "Save reproducibility record"}</button>
+      <label className="dml-script-label">Additional transformation notes (documentation only)<textarea rows={5} value={analysisScript} onChange={event => setAnalysisScript(event.target.value)} placeholder="Document any intended or completed transformations. These notes are recorded but are not automatically executed."/></label>
+      <button type="button" className="dml-primary-action" disabled={savingManifest || !selectedId || !analysisScript.trim()} onClick={() => void saveAnalysisManifest()}>{savingManifest ? "Saving…" : "Save analysis plan only"}</button>
       {manifestNotice && <p role="status" aria-live="polite">{manifestNotice}</p>}
     </section>}
   </section>;
