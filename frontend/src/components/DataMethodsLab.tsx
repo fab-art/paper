@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
 import type { Project, ProjectAttachment } from "../lib/types";
-import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, renderAnalysisFigureSvg, approveAnalysisRunManifest, type AnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
+import { recommendStatisticalOptions, getStudyComplianceChecklist, createAnalysisRunManifest, renderAnalysisFigureSvg, renderAnalysisTableLatex, approveAnalysisRunManifest, type AnalysisRunManifest, type DescriptiveAnalysisResult } from "../lib/research-analysis";
 import { listResearchEntities, saveResearchEntity } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
 import { MAX_DATASET_CELLS } from "../lib/phase6-regressions.mjs";
@@ -415,6 +415,7 @@ export default function DataMethodsLab({ attachments, project }: { attachments: 
       <div className="dml-output-actions">
         <button type="button" className="dml-secondary-action" onClick={() => downloadTextFile(analysisOutput.payload.datasetName.replace(/\.[^.]+$/, "") + "-descriptive-table.csv", analysisTableCsv(analysisOutput.payload.table), "text/csv;charset=utf-8")}>Download table CSV</button>
         <button type="button" className="dml-secondary-action" onClick={() => downloadTextFile("paperorchestra-figure.svg", analysisOutput.payload.figureSvg, "image/svg+xml")}>Download figure SVG</button>
+        <button type="button" className="dml-secondary-action" onClick={() => downloadTextFile("paperorchestra-table.tex", renderAnalysisTableLatex(analysisOutput.payload.table, analysisOutput.payload.caption), "application/x-tex")}>Download LaTeX table</button>
         {analysisOutput.status !== "approved" && <button type="button" className="dml-primary-action" onClick={() => void approveAnalysisOutput(analysisOutput)}>Approve result for grounded writing</button>}
       </div>
       <details className="dml-provenance"><summary>Reproducibility record and execution log</summary>
