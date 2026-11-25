@@ -56,7 +56,7 @@ export default function ResearchProductionLine({
   const summaries = useMemo(() => summarizeResearchStations(tasks, paperType), [tasks, paperType]);
   const completedTasks = tasks.filter(task => task.status === "completed").length;
   const overall = tasks.length ? Math.round(completedTasks / tasks.length * 100) : 0;
-  const agentReadyCount = getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length;
+  const agentReadyCount = localModelReady ? getReadyResearchTasks(tasks, paused).filter(task => Boolean(task.assignedAgentId)).length : 0;
   const nextStation = summaries.find(item => item.status !== "complete") ?? summaries[0];
 
   const refresh = async () => {
@@ -168,7 +168,7 @@ export default function ResearchProductionLine({
         <span className="rpl-progress-value">{overall}%</span>
       </div>
       <Progress value={overall} max={100} aria-label="Research task completion"/>
-      <div className="rpl-progress-foot"><span>{route.length} stations in this suggested route · {agentReadyCount} agent-assigned tasks eligible for dispatch</span><span>{paused ? "Specialist agents paused by owner" : "Owner controls active"}</span></div>
+      <div className="rpl-progress-foot"><span>{route.length} stations in this suggested route · {agentReadyCount} agent-assigned tasks ready</span><span>{paused ? "Specialist agents paused by owner" : localModelReady ? "Local model ready" : "Load a local model in Writing Studio to enable specialist runs"}</span></div>
     </Card>
 
     {researchMode === "guided" && nextStation && <Card className="rpl-next-card">
