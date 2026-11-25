@@ -117,3 +117,9 @@ test("Data & Methods stores owner compliance declarations separately from automa
   assert.match(lab, /not independent verification or certification/);
   assert.match(lab, /Save owner review locally/);
 });
+
+test("Data & Methods reloads compliance declarations when the project type or methodology changes", async () => {
+  const lab = await readFile(new URL("../frontend/src/components/DataMethodsLab.tsx", import.meta.url), "utf8");
+  assert.match(lab, /\}, \[project\.id, project\.paperType, project\.methodology\]\)/);
+  assert.match(lab, /review\?\.payload\.paperType === \(project\.paperType \?\? "unspecified"\)/);
+});
