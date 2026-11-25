@@ -350,13 +350,23 @@ export async function recordProjectSearch(entry: ProjectSearchHistory) {
 
 
 export async function saveResearchEntity(entity: ResearchEntity) {
-  await db.transaction("rw", db.projects, db.deletedProjects, db.researchEntities, async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchEntities, db.researchTasks], async () => {
     await assertProjectWritable(entity.projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
     });
     const existing = await db.researchEntities.get(entity.id);
     if (existing && existing.projectId !== entity.projectId) throw new Error("Research entities cannot be moved between projects.");
+    if (entity.provenance.kind === "agent") {
+      const task = await db.researchTasks.get(entity.provenance.sourceId);
+      const agentId = String(entity.payload.agentId ?? "");
+      if (!task || task.projectId !== entity.projectId || task.status !== "running" || task.assignedAgentId !== agentId) {
+        throw new Error("Agent outputs can only be saved by the assigned specialist during its running task.");
+      }
+      if (existing && (existing.provenance.kind !== "agent" || existing.provenance.sourceId !== task.id)) {
+        throw new Error("A specialist cannot overwrite a researcher-owned or unrelated research entity.");
+      }
+    }
     await db.researchEntities.put({ ...entity, version: (existing?.version ?? 0) + 1, updatedAt: Date.now() });
   });
 }
@@ -488,6 +498,15 @@ export async function transitionResearchTaskRecord(
     const outputEntities = await db.researchEntities.bulkGet(outputEntityIds);
     if (outputEntities.some(entity => !entity || entity.projectId !== projectId)) {
       throw new Error("Every task output must reference an existing research entity in this project.");
+    }
+    if (actor === "agent" && action === "submit") {
+      if (!outputEntityIds.length || outputEntities.some(entity =>
+        entity?.provenance.kind !== "agent" ||
+        entity.provenance.sourceId !== taskId ||
+        String(entity.payload.agentId ?? "") !== actorAgentId
+      )) {
+        throw new Error("A specialist can submit only its own proposed outputs for this task.");
+      }
     }
     const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale, actorAgentId, outputEntityIds);
     await db.researchTasks.put(result.task);
