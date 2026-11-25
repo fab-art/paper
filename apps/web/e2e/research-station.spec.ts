@@ -122,3 +122,19 @@ test("Research Station has no automated WCAG 2.2 A/AA violations", async ({ page
     .analyze();
   expect(results.violations).toEqual([]);
 });
+
+test("dark theme preference persists and passes WCAG 2.2 A/AA checks", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "dark");
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
+
+  await page.reload();
+  await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "light");
+});
