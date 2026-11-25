@@ -1,0 +1,7 @@
+.dash-modal label select{width:100%;box-sizing:border-box;border:1px solid var(--line,#d7dfdd);border-radius:9px;background:var(--surface,#fff);color:var(--ink,#172327);padding:10px 12px;font:inherit;font-size:13px}
+.dash-modal label small{display:block;color:var(--ink-muted,#718084);font-size:11px;line-height:1.5;font-weight:400;margin-top:3px}
+.dash-intake-note{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line,#dbe3e1);border-radius:9px;padding:10px 12px;background:var(--surface-muted,#f4f6f5);color:var(--ink-soft,#526165);font-size:11px;line-height:1.55}
+.dash-intake-note svg{color:var(--brand,#146477);flex:none;margin-top:1px}
+.dash-modal{max-height:min(88vh,780px);overflow-y:auto}
+.dash-modal label input,.dash-modal label textarea,.dash-modal label select{box-sizing:border-box;min-width:0;max-width:100%}
+@media(max-width:520px){.dash-modal{width:min(100% - 24px,520px);padding:20px 16px}.dash-modal-actions{position:sticky;bottom:-20px;background:var(--surface,#fff);padding:12px 0 0}}
