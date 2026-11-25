@@ -226,8 +226,14 @@ export default function ProjectWorkspace({
       return;
     }
     try {
-      const updated = await persistProject({ ...project, papers: [...(project.papers ?? []), paper] });
-      if (updated && "papers" in updated) setProject(updated as Project);
+      const nextProject = { ...project, papers: [...(project.papers ?? []), paper] };
+      projectRef.current = nextProject;
+      setProject(nextProject);
+      const updated = await persistProject(nextProject);
+      if (updated && "papers" in updated) {
+        projectRef.current = updated as Project;
+        setProject(updated as Project);
+      }
       setPaperTitle("");
       setPaperAuthors("");
       setPaperYear("");
