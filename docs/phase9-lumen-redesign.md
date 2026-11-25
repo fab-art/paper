@@ -176,3 +176,14 @@ The new repository quality contract and CI workflow are in place. Commit `6ca4c6
 2. Introduce the shared Lumen foundation and semantic tokens without breaking the existing project workspace.
 3. Replace the dashboard's presentation while retaining its current IndexedDB, archive/restore/delete and auth behavior.
 4. Add a shared responsive shell and migrate one page family at a time, each with regression coverage.
+
+
+## Implementation checkpoint — 25 November 2026
+
+The production Research Station dashboard now uses the published `@santi020k/lumen-react` 4.3.0 adapter. The matching `@santi020k/lumen` and `@santi020k/lumen-core` runtime packages are pinned to 4.3.0 through frontend npm overrides so the lockfile cannot silently resolve a newer component contract.
+
+The dashboard migration applies Lumen Button, Badge, Card and Progress primitives while preserving the existing IndexedDB project lifecycle, search, archive/restore, deletion and optional Supabase authentication flows. Lumen styles load before the PaperOrchestra stylesheet so project-specific tokens and layout rules remain authoritative.
+
+Mobile preview testing identified a create-dialog width overflow on narrow Safari screens. The dialog and its form controls now use border-box sizing and a viewport-constrained width; this is covered by the Phase 9 regression test.
+
+The release candidate remains subject to GitHub Actions, Vercel preview build, iOS Safari and Android Chrome interaction checks, and independent review. The existing production alias is not changed by this phase.
