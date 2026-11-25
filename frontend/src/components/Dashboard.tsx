@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, Progress } from "@santi020k/lumen-react";
-import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpen, RotateCcw, Search, Sparkles, Trash2, X } from "lucide-react";
+import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpen, RotateCcw, Search, Sparkles, Trash2, X, ShieldCheck } from "lucide-react";
 import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
 import AuthPanel from "./AuthPanel";
+import "./dashboard-intake.css";
+import { buildResearchIntake, PAPER_TYPE_BLUEPRINTS } from "../lib/research-intake";
+import type { ResearchPaperType } from "../lib/research-blueprint";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const makeProject = (name: string, question = ""): Project => ({
-  id: uid(), name, notes: question ? `Research question: ${question}` : "", researchQuestion: question || undefined,
+const makeProject = (intake: ReturnType<typeof buildResearchIntake>): Project => ({
+  id: uid(), name: intake.title, notes: intake.description ? `Research context: ${intake.description}` : "", researchQuestion: intake.researchQuestion || undefined,
+  paperType: intake.paperType, intendedAudience: intake.intendedAudience,
+  availableMaterials: intake.availableMaterials, storyArc: intake.storyArc, researchMode: intake.researchMode,
   latex: "\\documentclass{article}\n\\usepackage{graphicx}\n\\usepackage{natbib}\n\\title{Research Manuscript}\n\\begin{document}\n\\maketitle\n\\end{document}",
   bibtex: "", template: "Generic Article", outline: [], papers: [], figures: [], logs: "", templateFiles: {},
   agentRecords: [
@@ -34,6 +39,11 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
   const [question, setQuestion] = useState("");
+  const [problem, setProblem] = useState("");
+  const [audience, setAudience] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [paperType, setPaperType] = useState<ResearchPaperType>("unspecified");
+  const [intakeStep, setIntakeStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState("");
   const createTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -109,13 +119,25 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   ), [scopedProjects, query]);
   const runningAgents = activeProjects.reduce((total, project) => total + project.agentRecords.filter(agent => agent.status === "running").length, 0);
   const completed = activeProjects.filter(project => project.agentRecords.length > 0 && project.agentRecords.every(agent => agent.status === "done")).length;
+  const intakePreview = buildResearchIntake({
+    title: name, problemOrObservation: problem || question, researchQuestion: question,
+    intendedAudience: audience, availableMaterials: materials.split(/[,;\\n]/), paperType
+  });
 
   const create = async () => {
-    const project = makeProject(name.trim() || "Untitled research project", question.trim());
+    const intake = buildResearchIntake({
+      title: name,
+      problemOrObservation: problem || question,
+      researchQuestion: question,
+      intendedAudience: audience,
+      availableMaterials: materials.split(/[,;\\n]/),
+      paperType
+    });
+    const project = makeProject(intake);
     try {
       await saveProject(project);
       setActionError("");
-      setName(""); setQuestion(""); setShowCreate(false);
+      setName(""); setQuestion(""); setProblem(""); setAudience(""); setMaterials(""); setPaperType("unspecified"); setIntakeStep(0); setShowCreate(false);
       await refresh();
       onOpen(project);
     } catch (error) {
@@ -155,7 +177,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   return <div className="dashboard-shell">
     <header className="dash-topbar">
       <div className="dash-brand"><div className="dash-mark"><Sparkles size={18}/></div><span>Paper<span>Orchestra</span></span><small>RESEARCH STATION</small></div>
-      <div className="dash-top-right"><Badge variant="success" className="dash-local"><span aria-hidden="true" /> LOCAL WORKSPACE</Badge><AuthPanel/><Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setActionError(""); setShowCreate(true); }}><FilePlus2 size={15}/> New project</Button></div>
+      <div className="dash-top-right"><Badge variant="success" className="dash-local"><span aria-hidden="true" /> LOCAL WORKSPACE</Badge><AuthPanel/><Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setActionError(""); setIntakeStep(0); setShowCreate(true); }}><FilePlus2 size={15}/> New project</Button></div>
     </header>
     <main className="dash-main">
       {actionError && <div role="alert" className="dash-action-error"><span>{actionError}</span><button type="button" onClick={() => setActionError("")}>Dismiss</button></div>}
@@ -174,7 +196,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
           <button type="button" aria-pressed={scope === "active"} className={scope === "active" ? "selected" : ""} onClick={() => {setScope("active");setQuery("");}}>Active <span>{activeProjects.length}</span></button>
           <button type="button" aria-pressed={scope === "archived"} className={scope === "archived" ? "selected" : ""} onClick={() => {setScope("archived");setQuery("");}}>Archived <span>{archivedProjects.length}</span></button>
         </div>
-        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? <><span>Try another search term.</span><button type="button" className="dash-empty-clear" onClick={clearProjectSearch}>Clear search</button></> : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</Button>}</div> :
+        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? <><span>Try another search term.</span><button type="button" className="dash-empty-clear" onClick={clearProjectSearch}>Clear search</button></> : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setIntakeStep(0);setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</Button>}</div> :
           <div className="dash-project-grid">{filtered.map(project => {
             const done = project.agentRecords.filter(agent=>agent.status==="done").length;
             const totalStages = project.agentRecords.length || 1;
@@ -194,11 +216,31 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       </section>
       <footer className="dash-footer"><span>PaperOrchestra Research Station</span><span>Private by default · Projects stored locally in this browser</span></footer>
     </main>
-    {showCreate && <div className="dash-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}><form ref={createDialogRef} className="dash-modal" role="dialog" aria-modal={true} aria-labelledby="dash-create-title" aria-describedby="dash-create-description" onSubmit={e=>{e.preventDefault();void create();}}>
-      <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
-      <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
-      <label>Research question <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
-      <div className="dash-modal-actions"><Button type="button" variant="outline" size="sm" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</Button><Button type="submit" variant="default" size="sm" className="dash-new"><FilePlus2 size={14}/> Create project</Button></div>
+    {showCreate && <div className="dash-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}><form ref={createDialogRef} className="dash-modal" role="dialog" aria-modal={true} aria-labelledby="dash-create-title" aria-describedby="dash-create-description" onSubmit={e=>{e.preventDefault();if(intakeStep<2)setIntakeStep(step=>step+1);else void create();}}>
+      <div className="dash-kicker">RESEARCH GPS · STEP {intakeStep+1} OF 3</div>
+      <h2 id="dash-create-title">{intakeStep===0?"Start with your idea":intakeStep===1?"Choose your research route":"Review your starting brief"}</h2>
+      <p id="dash-create-description">{intakeStep===0?"Tell us what brought you here. Everyday language is perfect.":intakeStep===1?"Choose the closest paper type and tell us what resources you already have.":"This is a draft starting point, not an approved protocol. You can edit it at any time."}</p>
+      <div className="dash-intake-progress"><Progress value={(intakeStep+1)/3*100} max={100} aria-label={`Research intake step ${intakeStep+1} of 3`}/><div><span aria-current={intakeStep===0?"step":undefined}>1 · Your idea</span><span aria-current={intakeStep===1?"step":undefined}>2 · Your materials</span><span aria-current={intakeStep===2?"step":undefined}>3 · Review</span></div></div>
+      {actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
+      {intakeStep===0 && <>
+        <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness"/></label>
+        <label>What problem or observation brought you here?<textarea value={problem} onChange={e=>setProblem(e.target.value)} placeholder="Describe the issue, observation or idea in your own words." rows={3}/></label>
+        <label>What do you want to find out? <span>OPTIONAL · YOU CAN REFINE THIS LATER</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What question would you like this research to answer?" rows={2}/></label>
+      </>}
+      {intakeStep===1 && <>
+        <label>What kind of research are you preparing?<select value={paperType} onChange={e=>setPaperType(e.target.value as ResearchPaperType)}>{PAPER_TYPE_BLUEPRINTS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select><small>{PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.description}</small><small>Typical first outputs: {PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.firstOutputs.join(" · ")}</small></label>
+        <label>Who should care about the answer? <span>OPTIONAL</span><input value={audience} onChange={e=>setAudience(e.target.value)} placeholder="e.g. clinicians, patients, policy makers"/></label>
+        <label>What do you already have? <span>OPTIONAL · SEPARATE WITH COMMAS</span><input value={materials} onChange={e=>setMaterials(e.target.value)} placeholder="e.g. PDFs, spreadsheet, existing manuscript, no data yet"/></label>
+      </>}
+      {intakeStep===2 && <>
+        <div className="dash-intake-review"><span className="dash-kicker">PROJECT</span><strong>{intakePreview.title}</strong><p>{intakePreview.description || "No background description added yet."}</p><div><span>Research format</span><b>{PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.label}</b></div><div><span>Research question</span><b>{intakePreview.researchQuestion || "To be refined with you"}</b></div><div><span>Audience</span><b>{intakePreview.intendedAudience || "Not specified yet"}</b></div><div><span>Available materials</span><b>{intakePreview.availableMaterials.join(", ") || "Not specified yet"}</b></div></div>
+        <div className="dash-intake-story"><strong>Draft research story arc</strong><ol>{intakePreview.storyArc.map((item,index)=><li key={index}>{item}</li>)}</ol></div>
+        <div className="dash-intake-note"><ShieldCheck size={14}/> Your answers create a draft brief only. Research questions, methods, inclusion decisions, conclusions and ethics declarations remain yours to approve.</div>
+      </>}
+      <div className="dash-modal-actions">
+        <Button type="button" variant="outline" size="sm" className="dash-cancel" onClick={()=>{if(intakeStep>0)setIntakeStep(step=>step-1);else setShowCreate(false);}}>{intakeStep===0?"Cancel":"Back"}</Button>
+        <Button type="submit" size="sm" className="dash-new">{intakeStep===2?<><FilePlus2 size={14}/> Create project</>:<>Continue <ArrowUpRight size={14}/></>}</Button>
+      </div>
     </form></div>}
   </div>;
 }
