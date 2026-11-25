@@ -87,13 +87,15 @@ export function getResearchEntryPlan(path: ResearchEntryPath, paperType?: Resear
   };
 }
 
-export function getResearchNextAction(project: {
-  researchQuestion?: string;
-  paperType?: ResearchPaperType;
-  papers?: unknown[];
-  methodology?: string;
-  researchMode?: "guided" | "professional";
-  startPath?: ResearchEntryPath;
+export function getResearchNextAction(project: { researchQuestion?: string; paperType?: ResearchPaperType; papers?: unknown[]; methodology?: string; researchMode?: "guided" | "professional"; startPath?: ResearchEntryPath; }) {
+  if (project.startPath === "dataset" || project.paperType === "dataset-analysis") return { id: "dataset-profile", title: "Profile your dataset", description: "Inspect variables, missing values and data quality before selecting an analysis.", station: "data" };
+  if (project.startPath === "review" || project.paperType === "systematic-review" || project.paperType === "scoping-review") return { id: "review-protocol", title: "Define your review protocol", description: "Confirm the review question, eligibility criteria and search approach before screening.", station: "protocol" };
+  if (project.startPath === "manuscript" || project.paperType === "existing-manuscript") return { id: "manuscript-inventory", title: "Review your existing manuscript", description: "Check the draft, references and evidence gaps before making revisions.", station: "writing" };
+  if (project.startPath === "literature" && !project.papers?.length) return { id: "source-discovery", title: "Find and organize relevant research", description: "Start a documented literature search and save the sources you plan to use.", station: "literature" };
+  if (!project.researchQuestion?.trim()) return { id: "research-question", title: "Clarify your research question", description: "Write a first version of what you want to understand. You can refine it later.", station: "intake" };
+  if (!project.papers?.length) return { id: "source-discovery", title: "Find and organize relevant research", description: "Start a documented literature search and save the sources you plan to use.", station: "literature" };
+  if (!project.methodology?.trim()) return { id: "methods-plan", title: "Outline your research methods", description: "Record the study design, setting, population, outcomes and analysis plan.", station: "methods" };
+  return { id: "evidence-check", title: "Connect evidence to your key claims", description: "Link important statements to source passages or verified analysis outputs.", station: "evidence" };
 }) {
 
   if (project.startPath === "dataset" || project.paperType === "dataset-analysis") {
