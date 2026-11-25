@@ -131,3 +131,12 @@ test("publication figures cap the displayed bars and disclose the top-category s
   assert.equal(result.figure.values.length, 40);
   assert.match(result.figure.title, /top 40 of 45/);
 });
+
+test("descriptive analysis also bounds ungrouped categorical cardinality", async () => {
+  const { executeDescriptiveAnalysis } = await import("../frontend/src/lib/research-analysis.ts");
+  const rows = Array.from({ length: 5001 }, (_, index) => ["unique-" + index]);
+  assert.throws(() => executeDescriptiveAnalysis({
+    datasetName: "high-cardinality.csv", headers: ["response"], rows,
+    outcomeColumn: "response", outcomeType: "categorical"
+  }), /5,000 category summaries/i);
+});
