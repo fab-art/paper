@@ -43,3 +43,27 @@ test("Research GPS persists the editable blueprint plan, story arc and milestone
   assert.match(production, /onStoryArcChange=\{storyArc => onProjectUpdate\(\{ storyArc \}\)\}/);
   assert.match(types, /researchPlan\?: import\("\.\/research-intake"\)\.ResearchStationPlan/);
 });
+
+test("Writing Studio drafts one section at a time with author voice, word targets and claim/citation audits", async () => {
+  const studio = await readFile(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
+  const guidance = await readFile(new URL("../frontend/src/lib/writing-guidance.ts", import.meta.url), "utf8");
+  assert.match(studio, /Draft one block at a time/);
+  assert.match(studio, /selectedWritingSection/);
+  assert.match(studio, /writingWordTarget/);
+  assert.match(studio, /authorVoice/);
+  assert.match(studio, /writingMicroPrompt/);
+  assert.match(studio, /buildWritingBlockPrompt/);
+  assert.match(studio, /checkCitationKeys/);
+  assert.match(studio, /inspectDraftEvidence/);
+  assert.match(studio, /Refresh evidence/);
+  assert.match(studio, /Clarity edits are proposed, not applied/);
+  assert.match(guidance, /sentenceStarters/);
+  assert.match(guidance, /defaultWordTarget/);
+  assert.match(guidance, /not in the available evidence set/);
+});
+
+test("Writing Studio loads source-linked evidence for the project before enabling grounded writing", async () => {
+  const studio = await readFile(new URL("../frontend/src/components/Studio.tsx", import.meta.url), "utf8");
+  assert.match(studio, /Promise\.all\(\[loadProject\(projectId\), evidencePromise\]\)/);
+  assert.match(studio, /setResearchEntities\(entities\)/);
+});
