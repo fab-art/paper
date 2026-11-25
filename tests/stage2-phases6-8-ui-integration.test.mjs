@@ -93,3 +93,24 @@ test("Writing Studio exposes explicit plain-language-to-academic refinement and 
   assert.match(prompts, /Convert plain-language, informal or note-like passages into clear academic prose/);
   assert.match(studio, /disabled=\{busy\} onClick=\{acceptWritingProposal\}/);
 });
+
+test("Data & Methods executes local descriptive analysis and persists reviewable outputs", async () => {
+  const lab = await readFile(new URL("../frontend/src/components/DataMethodsLab.tsx", import.meta.url), "utf8");
+  const worker = await readFile(new URL("../frontend/src/components/research-analysis-worker.ts", import.meta.url), "utf8");
+  assert.match(lab, /Run a reproducible descriptive analysis/);
+  assert.match(lab, /new Worker\(new URL\("\.\/research-analysis-worker\.ts"/);
+  assert.match(lab, /datasetFingerprint/);
+  assert.match(lab, /Approve result for grounded writing/);
+  assert.match(lab, /Download table CSV/);
+  assert.match(lab, /Download figure SVG/);
+  assert.match(worker, /executeDescriptiveAnalysis/);
+});
+
+test("Data & Methods stores owner compliance declarations separately from automated checks", async () => {
+  const lab = await readFile(new URL("../frontend/src/components/DataMethodsLab.tsx", import.meta.url), "utf8");
+  assert.match(lab, /confirmed-by-researcher/);
+  assert.match(lab, /requires-follow-up/);
+  assert.match(lab, /recordType: "compliance-review"/);
+  assert.match(lab, /not independent verification or certification/);
+  assert.match(lab, /Save owner review locally/);
+});
