@@ -196,6 +196,7 @@ export function assessJournalFit({ manuscript = {}, journal = {} } = {}) {
   return {
     status: !enoughData ? "insufficient-data" : researcherMarkedSource ? "scope-overlap-calculated" : "needs-source-verification",
     journalTitle: text(journal.title),
+    publisher: text(journal.publisher) || null,
     scopeOverlap: overlap,
     scopeFitScore: score,
     articleTypeMatch: enoughData ? typeMatch : null,
