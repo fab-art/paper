@@ -426,6 +426,10 @@ export async function createResearchTaskRecord(input: {
     if (task.dependencyTaskIds.some(id => !existingTasks.some(existing => existing.id === id))) {
       throw new Error("Every task dependency must belong to this project.");
     }
+    const inputEntities = await db.researchEntities.bulkGet(task.inputEntityIds);
+    if (inputEntities.some(entity => !entity || entity.projectId !== input.projectId)) {
+      throw new Error("Every task input must reference an existing research entity in this project.");
+    }
     await db.researchTasks.add(task);
     await db.researchAuditEvents.add({
       id: createRecordId("event"), projectId: input.projectId, taskId: task.id,
@@ -465,10 +469,10 @@ export async function setResearchAgentsPaused(projectId: string, paused: boolean
 export async function transitionResearchTaskRecord(
   projectId: string, taskId: string,
   action: "start" | "submit" | "approve" | "request-changes" | "retry" | "cancel" | "mark-stale",
-  actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number, actorAgentId?: string
+  actor: ResearchActor = "owner", ownerConfirmed = false, rationale = "", expectedVersion?: number, actorAgentId?: string, outputEntityIds: string[] = []
 ) {
   let saved: ResearchTask | undefined;
-  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchApprovals, db.researchControls, db.researchAuditEvents], async () => {
+  await db.transaction("rw", [db.projects, db.deletedProjects, db.researchTasks, db.researchApprovals, db.researchControls, db.researchAuditEvents, db.researchEntities], async () => {
     await assertProjectWritable(projectId, {
       getDeletedProject: id => db.deletedProjects.get(id),
       getProject: id => db.projects.get(id)
@@ -481,7 +485,11 @@ export async function transitionResearchTaskRecord(
     const control = await db.researchControls.get(projectId);
     if (actor === "agent" && control?.agentsPaused) throw new Error("Specialist agents are paused by the project owner.");
     const tasks = await db.researchTasks.where("projectId").equals(projectId).toArray();
-    const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale, actorAgentId);
+    const outputEntities = await db.researchEntities.bulkGet(outputEntityIds);
+    if (outputEntities.some(entity => !entity || entity.projectId !== projectId)) {
+      throw new Error("Every task output must reference an existing research entity in this project.");
+    }
+    const result = transitionResearchTask(task, action, actor, tasks, Date.now(), ownerConfirmed, rationale, actorAgentId, outputEntityIds);
     await db.researchTasks.put(result.task);
     if (result.approval) await db.researchApprovals.add(result.approval);
     await db.researchAuditEvents.add({
