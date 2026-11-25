@@ -181,7 +181,23 @@ export function renderAnalysisFigureSvg(figure: DescriptiveAnalysisFigure): stri
   return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + escapeSvg(figure.title) + '" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '"><rect width="100%" height="100%" fill="#ffffff"/><text x="' + left + '" y="45" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#172d31">' + escapeSvg(figure.title) + '</text>' + grid + bars + '<text x="' + (width / 2) + '" y="' + (height - 35) + '" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#172d31">' + escapeSvg(figure.xLabel) + '</text><text transform="translate(28 ' + (height / 2) + ') rotate(-90)" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#172d31">' + escapeSvg(figure.yLabel) + '</text></svg>';
 }
 
-export function createAnalysisRunManifest(input: { datasetId: string; datasetFingerprint: string; transformations: string[]; script: string; software: Record<string, string>; parameters: Record<string, string | number | boolean | null>; outputIds: string[]; researcherNotes?: string; execution?: { status: "completed" | "failed"; startedAt: number; completedAt: number; durationMs: number; runtime: string; analyzedRows: number; logs: string[] }; }) {
+export interface AnalysisRunManifest {
+  datasetId: string;
+  datasetFingerprint: string;
+  transformations: string[];
+  script: string;
+  software: Record<string, string>;
+  parameters: Record<string, string | number | boolean | null>;
+  outputIds: string[];
+  researcherNotes?: string;
+  execution?: { status: "completed" | "failed"; startedAt: number; completedAt: number; durationMs: number; runtime: string; analyzedRows: number; logs: string[] };
+  ownerApproved: boolean;
+  status: "awaiting-owner-review" | "approved";
+  createdAt: number;
+  approvedAt?: number;
+}
+
+export function createAnalysisRunManifest(input: { datasetId: string; datasetFingerprint: string; transformations: string[]; script: string; software: Record<string, string>; parameters: Record<string, string | number | boolean | null>; outputIds: string[]; researcherNotes?: string; execution?: { status: "completed" | "failed"; startedAt: number; completedAt: number; durationMs: number; runtime: string; analyzedRows: number; logs: string[] }; }): AnalysisRunManifest {
   if (!input.datasetId.trim() || !input.datasetFingerprint.trim()) throw new Error("A dataset ID and immutable dataset fingerprint are required.");
   if (!input.script.trim()) throw new Error("A reproducible analysis script or documented procedure is required.");
   return { datasetId: input.datasetId, datasetFingerprint: input.datasetFingerprint, transformations: [...input.transformations], script: input.script, software: { ...input.software }, parameters: { ...input.parameters }, outputIds: [...input.outputIds], ...(input.researcherNotes?.trim() ? { researcherNotes: input.researcherNotes.trim() } : {}), ...(input.execution ? { execution: { ...input.execution, logs: [...input.execution.logs] } } : {}), ownerApproved: false as const, status: "awaiting-owner-review" as const, createdAt: Date.now() };
@@ -205,6 +221,6 @@ export function getStudyComplianceChecklist(paperType: ResearchPaperType | undef
     { id: "ai-disclosure", guideline: "Disclosure", label: "Check whether AI-use disclosure is required by the target journal or institution." }];
   return items.map(item => ({ ...item, confirmed: false as const, status: "not-confirmed" as const }));
 }
-export function approveAnalysisRunManifest(manifest: ReturnType<typeof createAnalysisRunManifest>, approvedAt = Date.now()) {
-  return { ...manifest, ownerApproved: true as const, status: "approved" as const, approvedAt };
+export function approveAnalysisRunManifest(manifest: AnalysisRunManifest, approvedAt = Date.now()): AnalysisRunManifest {
+  return { ...manifest, ownerApproved: true, status: "approved", approvedAt };
 }
