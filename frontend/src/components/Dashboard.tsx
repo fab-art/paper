@@ -239,7 +239,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       </>}
       <div className="dash-modal-actions">
         <Button type="button" variant="outline" size="sm" className="dash-cancel" onClick={()=>{if(intakeStep>0)setIntakeStep(step=>step-1);else setShowCreate(false);}}>{intakeStep===0?"Cancel":"Back"}</Button>
-        <Button type="submit" variant="default" size="sm" className="dash-new">{intakeStep===2?<><FilePlus2 size={14}/> Create project</>:<>Continue <ArrowUpRight size={14}/></>}</Button>
+        <Button type="submit" size="sm" className="dash-new">{intakeStep===2?<><FilePlus2 size={14}/> Create project</>:<>Continue <ArrowUpRight size={14}/></>}</Button>
       </div>
     </form></div>}
   </div>;
