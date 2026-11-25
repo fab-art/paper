@@ -145,7 +145,7 @@ export async function loadResearchBlueprint(projectId: string) {
   return db.researchBlueprints.get(projectId);
 }
 
-export async function saveResearchBlueprint(blueprint: ResearchBlueprint) {
+export async function saveResearchBlueprint(blueprint: ResearchBlueprint, expectedVersion = blueprint.version) {
   let saved: ResearchBlueprint | undefined;
   await db.transaction("rw", db.projects, db.deletedProjects, db.researchBlueprints, async () => {
     await assertProjectWritable(blueprint.projectId, {
@@ -153,10 +153,14 @@ export async function saveResearchBlueprint(blueprint: ResearchBlueprint) {
       getProject: id => db.projects.get(id)
     });
     const existing = await db.researchBlueprints.get(blueprint.projectId);
+    const actualVersion = existing?.version ?? 0;
+    if (expectedVersion !== actualVersion) {
+      throw new Error("This Research Blueprint changed elsewhere. Reload it before saving to avoid overwriting newer research decisions.");
+    }
     const next: ResearchBlueprint = {
       ...blueprint,
       id: blueprint.projectId,
-      version: (existing?.version ?? 0) + 1,
+      version: actualVersion + 1,
       updatedAt: Date.now()
     };
     await db.researchBlueprints.put(next);
