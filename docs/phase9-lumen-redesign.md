@@ -4,7 +4,7 @@
 
 Redesign every PaperOrchestra surface as one coherent research environment using the Lumen UI React design system. This is a cross-phase visual and interaction refactor, not a rewrite of research logic or storage.
 
-The implementation target is the existing React 19 + Vite PWA. Lumen's current React catalog contract is `@santi020k/lumen-react@5.3.0` (catalog snapshot 5.4.0). The repository currently has no Lumen package installed. Before importing components, add the exact adapter and update the npm lockfile together; do not assume the catalog API is already present in the consumer.
+The implementation target is the existing React 19 + Vite PWA. The verified published adapter is `@santi020k/lumen-react@4.3.0` (MIT; requires React >=19 and Node >=22.12.0). The connected Lumen MCP catalog reports `5.3.0`, so its newer contracts must not be applied to this consumer. The v4.3.0 package manifest, React source exports, component props and stylesheet entry were inspected at the upstream `v4.3.0` tag. Pin the adapter and its resolved dependencies in the frontend manifest and lockfile together, then run compatibility/type/build checks against the installed package.
 
 ## Product design direction
 
@@ -158,3 +158,21 @@ Therefore, do not copy the preview's temporary native presentation wrappers into
 ### Engineering baseline
 
 The new repository quality contract and CI workflow are in place. Commit `6ca4c673809e7e7d135ab3dd3cae512dbc6f5e75` passed root/frontend npm audits, the complete regression suite, and the TypeScript/production build on Node 22.
+
+
+## Verified adapter decision — 25 November 2026
+
+- Published React adapter: `@santi020k/lumen-react@4.3.0`, MIT.
+- Peer requirement: React `>=19`; engine requirement: Node `>=22.12.0`. The repository's React 19 and Node 22.16 runtime satisfy these requirements.
+- Public v4.3.0 source confirms exports for `Button`, `Sidebar`, `Tabs`, `Badge`, `Card`, `Progress`, `Input`, `Label`, and the shared stylesheet at `@santi020k/lumen-react/styles.css`.
+- The React adapter depends on matching `@santi020k/lumen` and `@santi020k/lumen-core` 4.3.0, plus `@tanstack/react-table` and `uqr`. Verify the complete resolved tree and lockfile; do not add only the top-level adapter.
+- The connected catalog reports 5.3.0 and is therefore not a source of compatible v4.3.0 prop contracts. Use the upstream v4.3.0 public source/types for implementation until the catalog exposes a matching release.
+- The current dashboard implementation is already backed by IndexedDB and includes project creation, opening, search, archive, restore, permanent deletion, real progress values and an opt-in Supabase sign-in panel. The visual prototype's illustrative data must not replace these operations.
+- The current global stylesheet contains desktop-only constraints (`body { min-width: 900px; overflow: hidden }`) for the original research workspace. Phase 9 must scope layout behavior by shell/page and verify narrow viewport behavior rather than applying a blanket global override.
+
+### Implementation order after this verification
+
+1. Pin/install the adapter and all transitive dependencies using npm, update the committed frontend lockfile, and verify with `npm ci`.
+2. Introduce the shared Lumen foundation and semantic tokens without breaking the existing project workspace.
+3. Replace the dashboard's presentation while retaining its current IndexedDB, archive/restore/delete and auth behavior.
+4. Add a shared responsive shell and migrate one page family at a time, each with regression coverage.
