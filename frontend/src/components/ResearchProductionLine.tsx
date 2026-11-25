@@ -36,6 +36,7 @@ export default function ResearchProductionLine({
   const [tasks, setTasks] = useState<ResearchTask[]>([]);
   const [events, setEvents] = useState<ResearchAuditEvent[]>([]);
   const [dependencies, setDependencies] = useState<string[]>([]);
+  const [inputEntityIdsText, setInputEntityIdsText] = useState("");
   const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,7 +80,13 @@ export default function ResearchProductionLine({
         : "";
       if ((action === "approve" || action === "request-changes") && !window.confirm(action === "approve" ? "Approve this task output as the project owner?" : "Return this task for changes?")) return;
       if (action === "cancel" && !window.confirm("Cancel this task? Its history will be retained.")) return;
-      await transitionResearchTaskRecord(projectId, task.id, action, "owner", action === "approve" || action === "request-changes", rationale, task.version);
+      let outputEntityIds: string[] = [];
+      if (action === "submit" && researchMode === "professional") {
+        const raw = window.prompt("Enter existing research entity IDs produced by this task, separated by commas. Leave blank if there are no linked outputs yet.");
+        if (raw === null) return;
+        outputEntityIds = raw.split(",").map(value => value.trim()).filter(Boolean);
+      }
+      await transitionResearchTaskRecord(projectId, task.id, action, "owner", action === "approve" || action === "request-changes", rationale, task.version, undefined, outputEntityIds);
       await refresh();
     } catch (cause) {
       setError((cause as Error).message || "The task could not be updated.");
@@ -104,9 +111,10 @@ export default function ResearchProductionLine({
       await createResearchTaskRecord({
         projectId, stationId, title, description, assignedAgentId: agentId || undefined,
         dependencyTaskIds: dependencies,
+        inputEntityIds: inputEntityIdsText.split(",").map(value => value.trim()).filter(Boolean),
         ownerApprovalRequired: ownerGate, ownerApprovalBeforeRun: beforeRun
       });
-      setTitle(""); setDescription(""); setAgentId(""); setDependencies([]); setOwnerGate(false); setBeforeRun(false); setShowComposer(false);
+      setTitle(""); setDescription(""); setAgentId(""); setDependencies([]); setInputEntityIdsText(""); setOwnerGate(false); setBeforeRun(false); setShowComposer(false);
       await refresh();
     } catch (cause) {
       setError((cause as Error).message || "The task could not be added.");
@@ -169,6 +177,7 @@ export default function ResearchProductionLine({
         <label>Task name<input required value={title} onChange={event => setTitle(event.target.value)} placeholder="e.g. Define the primary outcome measure"/></label>
         <label>What needs to be done?<textarea rows={2} value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe the expected work or output."/></label>
         <label>Assign specialist (optional)<select value={agentId} onChange={event => setAgentId(event.target.value)}><option value="">Researcher / unassigned</option>{RESEARCH_AGENTS.filter(agent => agent.stationIds.includes(stationId)).map(agent => <option key={agent.id} value={agent.id}>{agent.label}</option>)}</select></label>
+        {researchMode === "professional" && <label>Input entity IDs (optional, comma-separated)<input value={inputEntityIdsText} onChange={event => setInputEntityIdsText(event.target.value)} placeholder="e.g. source:123, dataset:456"/></label>}
         {tasks.length > 0 && <fieldset className="rpl-dependencies"><legend>Depends on (optional)</legend>{tasks.filter(task => task.status !== "canceled").map(task => <label key={task.id}><input type="checkbox" checked={dependencies.includes(task.id)} onChange={event => setDependencies(current => event.target.checked ? [...current, task.id] : current.filter(id => id !== task.id))}/><span>{task.title} · {taskStatusLabel[task.status]}</span></label>)}</fieldset>}
         <div className="rpl-checks"><label><input type="checkbox" checked={ownerGate} onChange={event => setOwnerGate(event.target.checked)}/> Require my approval before this output is accepted</label><label><input type="checkbox" checked={beforeRun} onChange={event => setBeforeRun(event.target.checked)}/> Require my approval before work begins</label></div>
         {agentId && <p className="rpl-agent-note"><Bot size={14}/> Assignment is recorded with the specialist's permission contract. Automatic execution is only shown when a compatible agent runner is connected; this queue will not pretend an agent has run.</p>}
@@ -184,7 +193,7 @@ export default function ResearchProductionLine({
           <div className="rpl-task-main"><div className="rpl-task-title"><strong>{task.title}</strong><Badge variant={task.status === "completed" ? "success" : task.status === "awaiting-owner" ? "warning" : "secondary"}>{taskStatusLabel[task.status]}</Badge></div>
             <p>{task.description || route.find(station => station.id === task.stationId)?.label}</p>
             <small>{route.find(station => station.id === task.stationId)?.label} {task.assignedAgentId ? `· ${RESEARCH_AGENTS.find(agent => agent.id === task.assignedAgentId)?.label ?? "Specialist"}` : "· Researcher-owned"}</small>
-            {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies</small>}
+            {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies · {task.inputEntityIds.length} inputs · {task.outputEntityIds.length} outputs</small>}
           </div>
           <div className="rpl-task-actions">
             {task.status === "queued" && <Button size="sm" variant="outline" disabled={!task.dependencyTaskIds.every(id => tasks.find(dependency => dependency.id === id)?.status === "completed")} onClick={() => void changeTask(task, "start")}>{task.dependencyTaskIds.some(id => tasks.find(dependency => dependency.id === id)?.status !== "completed") ? "Waiting on dependency" : "Start work"}</Button>}
