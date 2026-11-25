@@ -7,15 +7,7 @@ on:
       - "frontend/src/lib/**"
       - "docs/independent-rebuild-*.md"
       - ".github/workflows/research-factory-web.yml"
-  push:
-    branches:
-      - "feat/independent-research-factory-rebuild"
-    paths:
-      - "apps/web/**"
-      - "frontend/src/lib/**"
-      - "docs/independent-rebuild-*.md"
-      - ".github/workflows/research-factory-web.yml"
-
+  workflow_dispatch:
 permissions:
   contents: read
 
@@ -46,6 +38,14 @@ jobs:
       - name: Install replacement app dependencies
         working-directory: apps/web
         run: npm install --no-audit --no-fund
+
+      - name: Upload generated app lockfile for deterministic dependency pinning
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-factory-web-package-lock
+          path: apps/web/package-lock.json
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Audit replacement app dependencies
         working-directory: apps/web
