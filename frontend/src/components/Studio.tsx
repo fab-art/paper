@@ -162,6 +162,12 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   useEffect(() => {
     let live = true;
     setGpu("gpu" in navigator ? "WebGPU available" : "WebGPU unavailable");
+    setResearchEntities([]);
+    setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
+    setSelectedWritingSectionId("");
+    setWritingWordTarget("");
+    setWritingMicroPrompt("");
     setHydrated(false);
     setLoadError("");
     setPdf(undefined);
