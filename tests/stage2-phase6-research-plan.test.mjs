@@ -71,3 +71,9 @@ test("researcher can reorder stations without losing their tasks", async () => {
   assert.equal(moved.stations[1].tasks[0].id, firstTaskId);
   assert.throws(() => moveResearchPlanStation(plan, 0, -1), /position/i);
 });
+
+test("production route can follow the researcher's editable station order, including stations outside the default paper route", async () => {
+  const { getResearchRoute } = await import("../frontend/src/lib/research-production-line.ts");
+  const route = getResearchRoute("dataset-analysis", ["data", "protocol", "evidence", "writing"]);
+  assert.deepEqual(route.map(station => station.id), ["data", "protocol", "evidence", "writing"]);
+});
