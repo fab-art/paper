@@ -10,8 +10,12 @@ npm run dev
 npm run typecheck
 npm test
 npm run build
+npx playwright install chromium
+npm run test:e2e
 npm run preview
 ```
+
+Browser tests use Playwright + axe to verify the local IndexedDB read path, navigation, responsive widths, browser errors and WCAG 2.2 A/AA rules.
 
 The app uses the existing IndexedDB database `paperorchestra-studio` in read-only mode for its first milestone. It does not create a parallel database or mutate legacy project records.
 
