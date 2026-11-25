@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, CircleHelp, Command, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Search, Settings2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
+import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Search, Settings2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { Button, Card, Sidebar } from "@santi020k/lumen-react";
 import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
@@ -62,8 +62,10 @@ export default function App() {
         </a>
         <div className="topbar-context"><span className="context-dot" /> Independent Research Factory</div>
         <div className="topbar-actions">
-          <span className="local-status"><span className="status-dot" /> Local workspace</span>
-          <Button variant="ghost" size="sm" aria-label="Help and guidance"><CircleHelp size={17} /></Button>
+          <span className={`local-status ${storageError ? "is-error" : loading ? "is-loading" : ""}`}>
+            <span className="status-dot" />
+            {storageError ? "Local library unavailable" : loading ? "Opening local library" : "Local workspace"}
+          </span>
         </div>
       </header>
 
@@ -109,9 +111,6 @@ export default function App() {
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
               <h1>{selectedProject ? selectedProject.name : activeWorkspace.label}</h1>
               <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : "A connected environment for every stage of the research journey."}</p>
-            </div>
-            <div className="heading-actions">
-              <span className="command-hint"><Command size={13} /> Search coming soon</span>
             </div>
           </div>
 
