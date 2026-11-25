@@ -2,6 +2,14 @@ import Dexie, { type Table } from "dexie";
 import { assertProjectWritable } from "./project-write-guard.mjs";
 import { assertProjectRevision } from "./project-revision-guard.mjs";
 import type { Project, ProjectNote, ProjectAttachment, ProjectSearchHistory } from "./types";
+import {
+  legacyProjectToResearchEntities,
+  projectToResearchBlueprint,
+  type ResearchBlueprint,
+  type ResearchDecision,
+  type ResearchEntity,
+  type ResearchRelation
+} from "./research-blueprint";
 
 class StudioDB extends Dexie {
   projects!: Table<Project, string>;
@@ -9,6 +17,11 @@ class StudioDB extends Dexie {
   attachments!: Table<ProjectAttachment, string>;
   searches!: Table<ProjectSearchHistory, string>;
   deletedProjects!: Table<{ id: string; deletedAt: number }, string>;
+  researchBlueprints!: Table<ResearchBlueprint, string>;
+  researchEntities!: Table<ResearchEntity, string>;
+  researchRelations!: Table<ResearchRelation, string>;
+  researchDecisions!: Table<ResearchDecision, string>;
+
   constructor() {
     super("paperorchestra-studio");
     this.version(1).stores({ projects: "id, updatedAt, name" });
@@ -29,6 +42,24 @@ class StudioDB extends Dexie {
       attachments: "id, projectId, createdAt, name",
       searches: "id, projectId, searchedAt",
       deletedProjects: "id, deletedAt"
+    });
+    this.version(5).stores({
+      projects: "id, updatedAt, name, status",
+      notes: "id, projectId, updatedAt, createdAt",
+      attachments: "id, projectId, createdAt, name",
+      searches: "id, projectId, searchedAt",
+      deletedProjects: "id, deletedAt",
+      researchBlueprints: "id, projectId, updatedAt, lifecycleState, paperType",
+      researchEntities: "id, projectId, entityType, updatedAt, status",
+      researchRelations: "id, projectId, fromEntityId, toEntityId, relationType",
+      researchDecisions: "id, projectId, subjectType, subjectId, createdAt, approvedByOwner"
+    }).upgrade(async transaction => {
+      const projects = await transaction.table("projects").toArray() as Project[];
+      const now = Date.now();
+      const blueprints = projects.map(project => projectToResearchBlueprint(project, now));
+      const entities = projects.flatMap(project => legacyProjectToResearchEntities(project, now));
+      if (blueprints.length) await transaction.table("researchBlueprints").bulkPut(blueprints);
+      if (entities.length) await transaction.table("researchEntities").bulkPut(entities);
     });
   }
 }
@@ -91,21 +122,88 @@ export async function listProjects() {
   return db.projects.orderBy("updatedAt").reverse().toArray();
 }
 
-export async function deleteProjectAndData(projectId: string, expectedRevision?: number) {
-  await db.transaction("rw", db.projects, db.notes, db.attachments, db.searches, db.deletedProjects, async () => {
-    const existing = await db.projects.get(projectId);
-    if (expectedRevision !== undefined) {
-      if (!existing) return;
-      assertProjectRevision(expectedRevision, existing.revision ?? 0);
+export async function loadResearchBlueprint(projectId: string) {
+  const existing = await db.researchBlueprints.get(projectId);
+  if (existing) return existing;
+  const project = await db.projects.get(projectId);
+  if (!project || await db.deletedProjects.get(projectId)) return undefined;
+
+  const blueprint = projectToResearchBlueprint(project);
+  const entities = legacyProjectToResearchEntities(project);
+  await db.transaction("rw", db.projects, db.deletedProjects, db.researchBlueprints, db.researchEntities, async () => {
+    const current = await db.researchBlueprints.get(projectId);
+    if (!current) {
+      await db.researchBlueprints.put(blueprint);
+      if (entities.length) await db.researchEntities.bulkPut(entities);
     }
-    await db.deletedProjects.put({ id: projectId, deletedAt: Date.now() });
-    await Promise.all([
-      db.notes.where("projectId").equals(projectId).delete(),
-      db.attachments.where("projectId").equals(projectId).delete(),
-      db.searches.where("projectId").equals(projectId).delete(),
-      db.projects.delete(projectId)
-    ]);
   });
+  return db.researchBlueprints.get(projectId);
+}
+
+export async function saveResearchBlueprint(blueprint: ResearchBlueprint) {
+  let saved: ResearchBlueprint | undefined;
+  await db.transaction("rw", db.projects, db.deletedProjects, db.researchBlueprints, async () => {
+    await assertProjectWritable(blueprint.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    const existing = await db.researchBlueprints.get(blueprint.projectId);
+    const next: ResearchBlueprint = {
+      ...blueprint,
+      id: blueprint.projectId,
+      version: (existing?.version ?? 0) + 1,
+      updatedAt: Date.now()
+    };
+    await db.researchBlueprints.put(next);
+    saved = next;
+  });
+  return saved;
+}
+
+export async function listResearchEntities(projectId: string) {
+  return db.researchEntities.where("projectId").equals(projectId).toArray();
+}
+
+export async function listResearchRelations(projectId: string) {
+  return db.researchRelations.where("projectId").equals(projectId).toArray();
+}
+
+export async function listResearchDecisions(projectId: string) {
+  return db.researchDecisions.where("projectId").equals(projectId).toArray()
+    .then(rows => rows.sort((a, b) => b.createdAt - a.createdAt));
+}
+
+export async function deleteProjectAndData(projectId: string, expectedRevision?: number) {
+  await db.transaction(
+    "rw",
+    db.projects,
+    db.notes,
+    db.attachments,
+    db.searches,
+    db.deletedProjects,
+    db.researchBlueprints,
+    db.researchEntities,
+    db.researchRelations,
+    db.researchDecisions,
+    async () => {
+      const existing = await db.projects.get(projectId);
+      if (expectedRevision !== undefined) {
+        if (!existing) return;
+        assertProjectRevision(expectedRevision, existing.revision ?? 0);
+      }
+      await db.deletedProjects.put({ id: projectId, deletedAt: Date.now() });
+      await Promise.all([
+        db.notes.where("projectId").equals(projectId).delete(),
+        db.attachments.where("projectId").equals(projectId).delete(),
+        db.searches.where("projectId").equals(projectId).delete(),
+        db.researchEntities.where("projectId").equals(projectId).delete(),
+        db.researchRelations.where("projectId").equals(projectId).delete(),
+        db.researchDecisions.where("projectId").equals(projectId).delete(),
+        db.researchBlueprints.delete(projectId),
+        db.projects.delete(projectId)
+      ]);
+    }
+  );
 }
 
 export async function listProjectNotes(projectId: string) {
