@@ -370,7 +370,8 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       setNotice("Add or generate an outline section before drafting.");
       return;
     }
-    setWritingProposal(null);\n    setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
+    setWritingProposal(null);
+    setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
     try {
       const guide = getWritingSectionGuide(section.title, project.paperType ?? "unspecified");
       const target = Number(writingWordTarget) || guide.defaultWordTarget;
@@ -403,7 +404,8 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     setNotice("Writing proposal rejected. The existing manuscript was left unchanged.");
   };
   const runRefine = async () => {
-    setWritingProposal(null);\n    setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
+    setWritingProposal(null);
+    setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
       const raw = await ask(refinePrompt(project, refinementFocus, authorVoice));
       if (projectRef.current.id !== project.id) return;
