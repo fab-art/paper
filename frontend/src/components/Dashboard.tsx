@@ -4,10 +4,14 @@ import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpe
 import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
 import AuthPanel from "./AuthPanel";
+import { buildResearchIntake, PAPER_TYPE_BLUEPRINTS } from "../lib/research-intake";
+import type { ResearchPaperType } from "../lib/research-blueprint";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const makeProject = (name: string, question = ""): Project => ({
-  id: uid(), name, notes: question ? `Research question: ${question}` : "", researchQuestion: question || undefined,
+const makeProject = (intake: ReturnType<typeof buildResearchIntake>): Project => ({
+  id: uid(), name: intake.title, notes: intake.description ? `Research context: ${intake.description}` : "", researchQuestion: intake.researchQuestion || undefined,
+  paperType: intake.paperType, intendedAudience: intake.intendedAudience,
+  availableMaterials: intake.availableMaterials, storyArc: intake.storyArc, researchMode: intake.researchMode,
   latex: "\\documentclass{article}\n\\usepackage{graphicx}\n\\usepackage{natbib}\n\\title{Research Manuscript}\n\\begin{document}\n\\maketitle\n\\end{document}",
   bibtex: "", template: "Generic Article", outline: [], papers: [], figures: [], logs: "", templateFiles: {},
   agentRecords: [
@@ -34,6 +38,10 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
   const [question, setQuestion] = useState("");
+  const [problem, setProblem] = useState("");
+  const [audience, setAudience] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [paperType, setPaperType] = useState<ResearchPaperType>("unspecified");
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState("");
   const createTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -111,11 +119,19 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const completed = activeProjects.filter(project => project.agentRecords.length > 0 && project.agentRecords.every(agent => agent.status === "done")).length;
 
   const create = async () => {
-    const project = makeProject(name.trim() || "Untitled research project", question.trim());
+    const intake = buildResearchIntake({
+      title: name,
+      problemOrObservation: problem || question,
+      researchQuestion: question,
+      intendedAudience: audience,
+      availableMaterials: materials.split(/[,;\\n]/),
+      paperType
+    });
+    const project = makeProject(intake);
     try {
       await saveProject(project);
       setActionError("");
-      setName(""); setQuestion(""); setShowCreate(false);
+      setName(""); setQuestion(""); setProblem(""); setAudience(""); setMaterials(""); setPaperType("unspecified"); setShowCreate(false);
       await refresh();
       onOpen(project);
     } catch (error) {
@@ -195,9 +211,14 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <footer className="dash-footer"><span>PaperOrchestra Research Station</span><span>Private by default · Projects stored locally in this browser</span></footer>
     </main>
     {showCreate && <div className="dash-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}><form ref={createDialogRef} className="dash-modal" role="dialog" aria-modal={true} aria-labelledby="dash-create-title" aria-describedby="dash-create-description" onSubmit={e=>{e.preventDefault();void create();}}>
-      <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
+      <div className="dash-kicker">RESEARCH GPS · STARTING BRIEF</div><h2 id="dash-create-title">Let's set up your research line.</h2><p id="dash-create-description">Answer what you can. You can change every detail later, and nothing is treated as an approved scientific decision until you confirm it.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
       <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
-      <label>Research question <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
+      <label>What problem or observation brought you here?<textarea value={problem} onChange={e=>setProblem(e.target.value)} placeholder="Describe the issue, observation or idea in your own words." rows={2}/></label>
+      <label>What do you want to find out? <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What question would you like this research to answer?" rows={2}/></label>
+      <label>What kind of research are you preparing?<select value={paperType} onChange={e=>setPaperType(e.target.value as ResearchPaperType)}>{PAPER_TYPE_BLUEPRINTS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select><small>{PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.description}</small></label>
+      <label>Who should care about the answer? <span>OPTIONAL</span><input value={audience} onChange={e=>setAudience(e.target.value)} placeholder="e.g. clinicians, patients, policy makers"/></label>
+      <label>What do you already have? <span>OPTIONAL · SEPARATE WITH COMMAS</span><input value={materials} onChange={e=>setMaterials(e.target.value)} placeholder="e.g. PDFs, spreadsheet, existing manuscript, no data yet"/></label>
+      <div className="dash-intake-note"><Sparkles size={14}/> We'll organize these answers into a draft research brief and suggest a station route. You remain in control of the question, methods and approvals.</div>
       <div className="dash-modal-actions"><Button type="button" variant="outline" size="sm" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</Button><Button type="submit" variant="default" size="sm" className="dash-new"><FilePlus2 size={14}/> Create project</Button></div>
     </form></div>}
   </div>;
