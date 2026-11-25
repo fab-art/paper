@@ -27,7 +27,8 @@ const PAPER_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEditorProps) {
-  const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});\n  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});
+  const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});
+  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});
   const [newTaskStation, setNewTaskStation] = useState<ResearchPlanStationId>(plan.stations[0]?.stationId ?? "intake");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -36,7 +37,8 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setTaskDrafts(Object.fromEntries(plan.stations.flatMap(station => station.tasks.map(task => [task.id, { title: task.title, description: task.description }]))));\n    setMilestoneDrafts(Object.fromEntries(plan.milestones.map(milestone => [milestone.id, { title: milestone.title, dueDate: milestone.dueDate ?? "" }])));
+    setTaskDrafts(Object.fromEntries(plan.stations.flatMap(station => station.tasks.map(task => [task.id, { title: task.title, description: task.description }]))));
+    setMilestoneDrafts(Object.fromEntries(plan.milestones.map(milestone => [milestone.id, { title: milestone.title, dueDate: milestone.dueDate ?? "" }])));
     if (!plan.stations.some(station => station.stationId === newTaskStation)) setNewTaskStation(plan.stations[0]?.stationId ?? "intake");
   }, [plan]);
 
