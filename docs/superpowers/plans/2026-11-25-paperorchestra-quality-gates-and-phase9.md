@@ -60,11 +60,12 @@
 - Modify: `frontend/src/App.tsx` and route/workspace surfaces as needed
 - Tests: existing regression tests plus focused component/browser tests
 
-- [ ] Verify the published Lumen React package version and compatibility before installation.
-- [ ] Add the package and update the lockfile together.
-- [ ] Add failing tests for the shared shell, navigation and responsive behavior.
-- [ ] Implement semantic tokens, theme foundations, navigation and page context.
-- [ ] Verify typecheck, regression suite and production build.
+- [x] Verify the published Lumen React package version and inspect the exact v4.3.0 public source/types.
+- [ ] Pin `@santi020k/lumen-react@4.3.0` plus its matching `@santi020k/lumen@4.3.0` and `@santi020k/lumen-core@4.3.0` dependency tree; update the frontend lockfile together.
+- [ ] Add failing tests for the shared shell, navigation and responsive behavior; verify RED before implementation.
+- [ ] Implement semantic tokens, theme foundations, navigation and page context using v4.3.0 contracts only.
+- [ ] Replace dashboard presentation while preserving IndexedDB create/open/search/archive/restore/delete and AuthPanel behavior.
+- [ ] Verify with `npm ci`, TypeScript/production build and the full regression suite.
 
 ### Task 4: Migrate Phase 1–2 surfaces
 
@@ -116,3 +117,14 @@ A task is complete only when its tests were executed and the results are recorde
 - [x] Confirm the Lumen catalog contract version and check compatibility.
 - [ ] Resolve the public npm/catalog version discrepancy for `@santi020k/lumen-react` before installing the production adapter.
 - [ ] After resolving the adapter, implement the actual shared Lumen shell and migrate the dashboard in the repository with regression tests.
+
+
+### Task 3 checkpoint — published Lumen adapter verified
+
+- [x] Confirm npm currently publishes `@santi020k/lumen-react@4.3.0` (MIT).
+- [x] Inspect upstream v4.3.0 package manifest, peer/engine requirements, public exports, component source and stylesheet entry.
+- [x] Confirm React 19 and Node 22.16 meet the adapter's peer/engine requirements.
+- [x] Identify the full dependency family: `@santi020k/lumen`, `@santi020k/lumen-core`, `@tanstack/react-table`, and `uqr`.
+- [x] Identify existing dashboard behavior that must be preserved and the global 900px minimum-width desktop constraint that needs responsive correction.
+- [ ] Install and lock the full dependency tree from a Node 22 environment.
+- [ ] Begin TDD migration of the real dashboard and shell.
