@@ -109,7 +109,7 @@ function stableLegacyId(projectId: string, kind: string, key: string) {
   return `legacy:${encodeURIComponent(projectId)}:${kind}:${encodeURIComponent(key)}`;
 }
 
-export function projectToResearchBlueprint(project: Project, now = Date.now()): ResearchBlueprint {
+export function projectToResearchBlueprint(project: Project, now = Date.now(), provenanceKind: ResearchProvenanceKind = "legacy-migration"): ResearchBlueprint {
   const status = project.status ?? "planning";
   const lifecycleState: ResearchLifecycleState =
     status === "active" ? "in-progress" :
@@ -134,17 +134,17 @@ export function projectToResearchBlueprint(project: Project, now = Date.now()): 
     researchMode: project.researchMode ?? "guided",
     lifecycleState,
     legacyProjectRevision: project.revision ?? 0,
-    provenance: { kind: "legacy-migration", sourceId: project.id, sourceLabel: "Existing PaperOrchestra project", recordedAt: now },
+    provenance: { kind: provenanceKind, sourceId: project.id, sourceLabel: provenanceKind === "owner" ? "Researcher-created project" : "Existing PaperOrchestra project", recordedAt: now },
     createdAt: project.updatedAt || now,
     updatedAt: project.updatedAt || now
   };
 }
 
-export function legacyProjectToResearchEntities(project: Project, now = Date.now()): ResearchEntity[] {
+export function legacyProjectToResearchEntities(project: Project, now = Date.now(), provenanceKind: ResearchProvenanceKind = "legacy-migration"): ResearchEntity[] {
   const provenance: ResearchProvenance = {
-    kind: "legacy-migration",
+    kind: provenanceKind,
     sourceId: project.id,
-    sourceLabel: "Existing PaperOrchestra project",
+    sourceLabel: provenanceKind === "owner" ? "Researcher-created project" : "Existing PaperOrchestra project",
     recordedAt: now
   };
   const entities: ResearchEntity[] = [];
