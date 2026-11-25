@@ -16,7 +16,7 @@
 .rpe-task{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid hsl(var(--line,39 11% 76%));border-radius:10px;min-width:0}
 .rpe-complete{display:grid;place-items:center;color:hsl(var(--brand,193 79% 26%));padding-top:8px;cursor:pointer}
 .rpe-complete input,.rpe-milestone-done input{width:16px;height:16px;accent-color:hsl(var(--brand,193 79% 26%))}
-.rpe-complete svg{display:none}.rpe-complete:has(input:checked) svg{display:block}.rpe-complete:has(input:checked) input{display:none}
+.rpe-complete input{display:block}
 .rpe-task-fields{flex:1;min-width:0;display:grid;gap:5px}
 .rpe-task-fields input,.rpe-task-fields textarea,.rpe-add-card input,.rpe-add-card textarea,.rpe-add-card select,.rpe-milestone input,.rpe-add-milestone input{width:100%;min-width:0;border:1px solid transparent;border-radius:7px;background:transparent;padding:6px 7px;color:hsl(var(--ink,190 22% 12%));font:inherit;font-size:12px}
 .rpe-task-fields input{font-weight:700}.rpe-task-fields textarea{resize:vertical;line-height:1.45;color:hsl(var(--ink-muted,189 8% 36%))}
