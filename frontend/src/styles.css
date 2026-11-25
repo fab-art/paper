@@ -390,3 +390,7 @@ body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
 .dashboard-shell .dash-local.ui-badge{color:#477653}
 .dashboard-shell .dash-stats>div>small,.dashboard-shell .dash-footer,.dashboard-shell .dash-modal label span{color:#62666f}
 .dashboard-shell .dash-scope-tabs button:not(.selected){color:#62666f}
+
+/* Remaining muted cloud and dialog copy must also meet AA on white surfaces. */
+.dashboard-shell .cloud-auth-status{color:#62666f}
+.dashboard-shell #dash-create-description{color:#6c6f78}

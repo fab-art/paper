@@ -1,6 +1,4 @@
-²×hº×.¶Ø^•«-ãM4¡ýµï^›Ê×¬-inline:-2px;padding-bottom:2px}
-  .pw-tabs button{min-height:44px;padding-inline:11px}
-  .pw-library-actions{flex-wrap:wrap}
+²×hº×.¶Ø^•«-ãM4¡ýµó¯Ê×¬-wrap:wrap}
   .pw-library-actions button{min-width:130px}
   .pw-reference{align-items:flex-start}
   .pw-ref-actions{gap:4px}
@@ -42,6 +40,6 @@
 .pw-source-tag.unrecorded{color:#898b93}
 
 /* WCAG 2.2 AA contrast corrections for the light Project Workspace. */
-.app-shell .pw-brand>i,.app-shell .pw-heading p,.app-shell .pw-summary-line,.app-shell .pw-tip>p{color:#6c6f78}
-.app-shell .pw-breadcrumb,.app-shell .pw-footer,.app-shell .pw-status,.app-shell .pw-tabs button:not(.selected),.app-shell .pw-tabs button span,.app-shell .pw-panel-title small,.app-shell .pw-empty-small,.app-shell .pw-stat-grid span{color:#62666f}
-.app-shell .pw-eyebrow,.app-shell .pw-panel-title>div>span{color:#68658e}
+.project-workspace .pw-brand>i,.project-workspace .pw-heading p,.project-workspace .pw-summary-line,.project-workspace .pw-tip>p{color:#6c6f78}
+.project-workspace .pw-breadcrumb,.project-workspace .pw-footer,.project-workspace .pw-status,.project-workspace .pw-tabs button:not(.selected),.project-workspace .pw-tabs button span,.project-workspace .pw-panel-title small,.project-workspace .pw-empty-small,.project-workspace .pw-stat-grid span{color:#62666f}
+.project-workspace .pw-eyebrow,.project-workspace .pw-panel-title>div>span{color:#68658e}
