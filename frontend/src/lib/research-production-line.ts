@@ -182,6 +182,7 @@ export function transitionResearchTask(
     } else if (action === "approve") {
       next.status = "completed";
       next.ownerApproved = true;
+      next.approvalStage = null;
     } else {
       next.status = "queued";
       next.ownerApproved = false;
@@ -192,7 +193,6 @@ export function transitionResearchTask(
       decision: action === "approve" ? "approved" : "changes-requested",
       rationale: rationale.trim(), decidedByOwner: true, createdAt: now
     };
-    next.approvalStage = null;
   } else if (action === "fail") {
     if (actor !== "agent" && actor !== "system") throw new Error("Only the assigned specialist or system can record an execution failure.");
     if (next.status !== "running") throw new Error("Only a running task can fail.");
