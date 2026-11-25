@@ -224,3 +224,30 @@ export function getStudyComplianceChecklist(paperType: ResearchPaperType | undef
 export function approveAnalysisRunManifest(manifest: AnalysisRunManifest, approvedAt = Date.now()): AnalysisRunManifest {
   return { ...manifest, ownerApproved: true, status: "approved", approvedAt };
 }
+
+function escapeLatexCell(value: unknown) {
+  const replacements: Record<string, string> = {
+    "\\": "\\textbackslash{}", "&": "\\&", "%": "\\%", "$": "\\$",
+    "#": "\\#", "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}", "^": "\\textasciicircum{}"
+  };
+  return String(value ?? "").replace(/[\\\\&%$#_{}~^]/g, character => replacements[character] ?? character);
+}
+
+export function renderAnalysisTableLatex(table: DescriptiveAnalysisResult["table"], caption: string): string {
+  const alignment = "l" + "r".repeat(Math.max(0, table.columns.length - 1));
+  const header = table.columns.map(escapeLatexCell).join(" & ") + " \\\\";
+  const rows = table.rows.map(row => Object.values(row).map(escapeLatexCell).join(" & ") + " \\\\");
+  return [
+    "\\begin{table}[htbp]",
+    "\\centering",
+    "\\caption{" + escapeLatexCell(caption) + "}",
+    "\\begin{tabular}{" + alignment + "}",
+    "\\hline",
+    header,
+    "\\hline",
+    ...rows,
+    "\\hline",
+    "\\end{tabular}",
+    "\\end{table}"
+  ].join("\n");
+}
