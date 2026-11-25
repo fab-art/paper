@@ -55,5 +55,13 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
+      - name: Install Chromium for browser tests
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser, responsive and accessibility tests
+        working-directory: apps/web
+        run: npm run test:e2e
+
       - name: Run existing repository regression suite
         run: npm run test:regression
