@@ -5,6 +5,7 @@ import DataMethodsLab from "./DataMethodsLab";
 import SubmissionReadiness from "./SubmissionReadiness";
 import SystematicReviewWorkspace from "./SystematicReviewWorkspace";
 import ResearchProductionLine from "./ResearchProductionLine";
+import ResearchEvidenceWorkspace from "./ResearchEvidenceWorkspace";
 import type { ResearchPaperType } from "../lib/research-blueprint";
 import {
   ArrowLeft, AlertCircle, BookOpen, Check, ClipboardCheck, ClipboardList, Download, FilePlus2,
@@ -27,7 +28,7 @@ export default function ProjectWorkspace({
   const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
-  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission" | "production">("overview");
+  const [section, setSection] = useState<"overview" | "library" | "notes" | "discover" | "review" | "methods" | "submission" | "production" | "evidence">("overview");
   const [loading, setLoading] = useState(true);
   const [showSourceForm, setShowSourceForm] = useState(false);
   const [source, setSource] = useState(emptyPaper);
@@ -308,6 +309,7 @@ export default function ProjectWorkspace({
         <button className={section === "library" ? "selected" : ""} aria-pressed={section === "library"} onClick={() => setSection("library")}><FolderOpen size={15}/> Research library <span>{papers.length + attachments.length}</span></button>
         <button className={section === "notes" ? "selected" : ""} aria-pressed={section === "notes"} onClick={() => setSection("notes")}><MessageSquareText size={15}/> Notes <span>{notes.length}</span></button>
         <button className={section === "discover" ? "selected" : ""} aria-pressed={section === "discover"} onClick={() => setSection("discover")}><Search size={15}/> Discover</button>
+        <button className={section === "evidence" ? "selected" : ""} aria-pressed={section === "evidence"} onClick={() => setSection("evidence")}><BookOpen size={15}/> Evidence & Protocol</button>
         <button className={section === "review" ? "selected" : ""} aria-pressed={section === "review"} onClick={() => setSection("review")}><ClipboardCheck size={15}/> Systematic review</button>
         <button className={section === "methods" ? "selected" : ""} aria-pressed={section === "methods"} onClick={() => setSection("methods")}><FlaskConical size={15}/> Data & Methods</button>
         <button className={section === "submission" ? "selected" : ""} aria-pressed={section === "submission"} onClick={() => setSection("submission")}><ShieldCheck size={15}/> Quality & Export</button>
@@ -381,6 +383,8 @@ export default function ProjectWorkspace({
       </div>}
 
       {section === "discover" && <ResearchDiscovery projectId={projectId} papers={papers} onSavePaper={saveDiscoveredPaper} onOpenLibrary={() => setSection("library")}/>}
+
+      {section === "evidence" && <ResearchEvidenceWorkspace projectId={projectId} papers={papers}/> }
 
       {section === "review" && <SystematicReviewWorkspace project={project} onUpdate={patch}/>}
 
