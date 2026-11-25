@@ -140,3 +140,21 @@ Before implementation, inspect each component's installed-version public exports
 - Lumen is not yet installed in the repository; the React catalog currently reports 5.3.0.
 - Phase 8 GitHub Actions workflow passed for the inspected head, but the Vercel status is `build-rate-limit`; a READY preview for that exact head was not available.
 - The earlier phase PRs are drafts and stacked. Do not merge them solely because GitHub reports `mergeable=true`; mergeability is not equivalent to passing CI, deployment, review or product acceptance.
+
+## Implementation checkpoint — 25 November 2026
+
+### Dashboard visual prototype
+
+A responsive Research Station dashboard prototype has been built in the private MagicPath project **PaperOrchestra — Phase 9 Lumen Redesign**. It includes the proposed navigation structure, workspace overview, project library, responsive mobile navigation, search/filter states, and a create-project interaction. Its project records are explicitly marked as preview data; it is not connected to IndexedDB or Supabase.
+
+Prototype: https://designs.magicpath.ai/v1/radiant-dawn-6040
+
+### Lumen package compatibility gate
+
+The Lumen UI catalog currently reports `@santi020k/lumen-react` version **5.3.0** and its component contracts. The public npm listing currently identifies **4.3.0** as the published version. The Lumen compatibility check confirms 5.3.0 matches the catalog and 4.3.0 does not. The MagicPath build environment also does not include `@santi020k/lumen-react` by default.
+
+Therefore, do not copy the preview's temporary native presentation wrappers into the production app or install an unverified package version. Before the production migration, resolve the published React adapter version and peer dependencies, verify its package tarball and lockfile resolution, and run the compatibility check against the actual installed package. The preview is a layout/interaction reference, not proof of Lumen package integration.
+
+### Engineering baseline
+
+The new repository quality contract and CI workflow are in place. Commit `6ca4c673809e7e7d135ab3dd3cae512dbc6f5e75` passed root/frontend npm audits, the complete regression suite, and the TypeScript/production build on Node 22.
