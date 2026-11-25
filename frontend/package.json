@@ -11,15 +11,16 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.79",
+    "@santi020k/lumen-react": "4.3.0",
+    "@supabase/supabase-js": "2.119.2",
     "@vitejs/plugin-react": "^4.3.4",
     "dexie": "^4.0.11",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.3",
-    "react-resizable-panels": "^2.1.7",
-    "jszip": "^3.10.1",
-    "@supabase/supabase-js": "2.119.2"
+    "react-resizable-panels": "^2.1.7"
   },
   "devDependencies": {
     "@types/react": "^19.0.3",
@@ -32,6 +33,8 @@
   },
   "overrides": {
     "glob": "^14.0.2",
-    "minimatch": "^11.0.1"
+    "minimatch": "^11.0.1",
+    "@santi020k/lumen": "4.3.0",
+    "@santi020k/lumen-core": "4.3.0"
   }
 }

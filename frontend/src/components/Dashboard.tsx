@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Badge, Button, Card, Progress } from "@santi020k/lumen-react";
 import { Activity, Archive, ArrowUpRight, BookOpen, Clock3, FilePlus2, FolderOpen, RotateCcw, Search, Sparkles, Trash2, X } from "lucide-react";
 import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
@@ -154,7 +155,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   return <div className="dashboard-shell">
     <header className="dash-topbar">
       <div className="dash-brand"><div className="dash-mark"><Sparkles size={18}/></div><span>Paper<span>Orchestra</span></span><small>RESEARCH STATION</small></div>
-      <div className="dash-top-right"><span className="dash-local"><span/> LOCAL WORKSPACE</span><AuthPanel/><button ref={createTriggerRef} className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setActionError(""); setShowCreate(true); }}><FilePlus2 size={15}/> New project</button></div>
+      <div className="dash-top-right"><Badge variant="success" className="dash-local"><span aria-hidden="true" /> LOCAL WORKSPACE</Badge><AuthPanel/><Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event => { createTriggerRef.current = event.currentTarget; setActionError(""); setShowCreate(true); }}><FilePlus2 size={15}/> New project</Button></div>
     </header>
     <main className="dash-main">
       {actionError && <div role="alert" className="dash-action-error"><span>{actionError}</span><button type="button" onClick={() => setActionError("")}>Dismiss</button></div>}
@@ -173,22 +174,22 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
           <button type="button" aria-pressed={scope === "active"} className={scope === "active" ? "selected" : ""} onClick={() => {setScope("active");setQuery("");}}>Active <span>{activeProjects.length}</span></button>
           <button type="button" aria-pressed={scope === "archived"} className={scope === "archived" ? "selected" : ""} onClick={() => {setScope("archived");setQuery("");}}>Archived <span>{archivedProjects.length}</span></button>
         </div>
-        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? <><span>Try another search term.</span><button type="button" className="dash-empty-clear" onClick={clearProjectSearch}>Clear search</button></> : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <button ref={createTriggerRef} className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</button>}</div> :
+        {loading ? <div className="dash-empty">Loading your project library…</div> : filtered.length === 0 ? <div className="dash-empty"><FolderOpen size={25}/><strong>{query ? "No matching projects" : scope === "archived" ? "No archived projects" : "Your research station is ready"}</strong><p>{query ? <><span>Try another search term.</span><button type="button" className="dash-empty-clear" onClick={clearProjectSearch}>Clear search</button></> : scope === "archived" ? "Projects you archive will stay here until you restore or permanently delete them." : "Create your first project to begin collecting literature, organizing evidence and writing."}</p>{scope === "active" && <Button ref={createTriggerRef} type="button" variant="default" size="sm" className="dash-new" onClick={event=>{createTriggerRef.current=event.currentTarget;setActionError("");setShowCreate(true);}}><FilePlus2 size={14}/> Create first project</Button>}</div> :
           <div className="dash-project-grid">{filtered.map(project => {
             const done = project.agentRecords.filter(agent=>agent.status==="done").length;
             const totalStages = project.agentRecords.length || 1;
             const pct = Math.round(done / totalStages * 100);
-            return <article className="dash-project-card" key={project.id}>
+            return <Card as="article" variant="unstyled" className="dash-project-card" key={project.id}>
               <div className="dash-card-top"><span className="dash-card-icon"><BookOpen size={17}/></span>
                 {scope === "active"
                   ? <button className="dash-delete" title="Archive project" aria-label={`Archive ${project.name}`} onClick={()=>void archive(project)}><Archive size={14}/></button>
                   : <div className="dash-archive-actions"><button className="dash-restore" title="Restore project" aria-label={`Restore ${project.name}`} onClick={()=>void restore(project)}><RotateCcw size={14}/></button><button className="dash-delete" title="Permanently delete project" aria-label={`Permanently delete ${project.name}`} onClick={()=>void permanentlyDelete(project)}><Trash2 size={14}/></button></div>}
               </div>
               <h3>{project.name}</h3><p className="dash-card-desc">{(project.researchQuestion || project.notes)?.replace(/^Research question:\\s*/i,"").slice(0,125) || "No research question or project description added yet."}</p>
-              <div className="dash-progress"><div><span>WORKFLOW COMPLETION</span><b>{pct}%</b></div><div className="dash-progress-track" role="progressbar" aria-label={`${project.name} workflow completion`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><span style={{width:`${pct}%`}}/></div></div>
-              <div className="dash-card-foot"><span><Clock3 size={13}/>{relativeDate(project.updatedAt)}</span>{scope === "active" && <button onClick={()=>onOpen(project)}>Open project <ArrowUpRight size={14}/></button>}</div>
+              <div className="dash-progress"><div><span>WORKFLOW COMPLETION</span><b>{pct}%</b></div><Progress className="dash-lumen-progress" aria-label={`${project.name} workflow completion`} value={pct} max={100} /></div>
+              <div className="dash-card-foot"><span><Clock3 size={13}/>{relativeDate(project.updatedAt)}</span>{scope === "active" && <Button type="button" variant="ghost" size="sm" className="dash-open-project" onClick={()=>onOpen(project)}>Open project <ArrowUpRight size={14}/></Button>}</div>
               {scope === "archived" && <p className="dash-archived-at">Archived {new Date(project.archivedAt || project.updatedAt).toLocaleDateString()}</p>}
-            </article>;
+            </Card>;
           })}</div>}
       </section>
       <footer className="dash-footer"><span>PaperOrchestra Research Station</span><span>Private by default · Projects stored locally in this browser</span></footer>
@@ -197,7 +198,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <div className="dash-kicker">NEW WORKSPACE</div><h2 id="dash-create-title">Create a research project</h2><p id="dash-create-description">Start with a project title. You can add the research question and materials at any time.</p>{actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
       <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness" /></label>
       <label>Research question <span>OPTIONAL</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do you want to investigate?" rows={3}/></label>
-      <div className="dash-modal-actions"><button type="button" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</button><button type="submit" className="dash-new"><FilePlus2 size={14}/> Create project</button></div>
+      <div className="dash-modal-actions"><Button type="button" variant="outline" size="sm" className="dash-cancel" onClick={()=>setShowCreate(false)}>Cancel</Button><Button type="submit" variant="default" size="sm" className="dash-new"><FilePlus2 size={14}/> Create project</Button></div>
     </form></div>}
   </div>;
 }
