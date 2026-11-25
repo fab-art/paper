@@ -5,14 +5,12 @@ on:
   push:
     branches:
       - main
-      - feat/systematic-review-phase8
-      - feat/lumen-system-redesign-phase9
 
 permissions:
   contents: read
 
 concurrency:
-  group: paperorchestra-ci-${{ github.workflow }}-${{ github.ref }}
+  group: paperorchestra-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
