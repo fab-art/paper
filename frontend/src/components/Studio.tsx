@@ -273,6 +273,15 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     setStream("");
     return complete(prompt, token => { if (streamOutput) setStream(s => s + token); });
   };
+  const refreshEvidenceContext = async () => {
+    try {
+      const entities = await listResearchEntities(projectId);
+      setResearchEntities(entities);
+      setNotice("Evidence context refreshed. " + entities.length + " project research record(s) are available to the writing co-pilot.");
+    } catch (error) {
+      setNotice("Could not refresh the project evidence context: " + (error as Error).message);
+    }
+  };
   const runOutline = async () => {
     setBusy(true); setAgent("outline", "running"); setActiveAgent("outline");
     try {
@@ -572,7 +581,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
               </div> : activeAgent==="plots" ? <div className="plot-grid">{project.figures.map((f,i)=><div className="plot-thumb" key={i}>{f.png&&<img src={`data:${f.mime || "image/png"};base64,${f.png}`} alt={f.name}/>}<span>{f.name}</span></div>)}{!project.figures.length&&<div className="empty-state">Import a CSV or JSON dataset, then run the plotting agent.</div>}</div> :
               <div className="empty-state">{activeAgent==="writing"?"Drafts each outline section sequentially into the LaTeX source.":"Checks LaTeX structure, citation keys, and academic tone. Review suggested edits."}</div>}
               {activeAgent==="writing" && <section className="writing-coach-panel" aria-label="Section writing controls">
-                <div className="writing-coach-head"><div><span className="eyebrow">SECTION-BY-SECTION COACH</span><strong>Draft one block at a time</strong><p>Choose a section, set a target and focus the co-pilot on a specific writing problem. Nothing enters the manuscript until you accept it.</p></div></div>
+                <div className="writing-coach-head"><div><span className="eyebrow">SECTION-BY-SECTION COACH</span><strong>Draft one block at a time</strong><p>Choose a section, set a target and focus the co-pilot on a specific writing problem. Nothing enters the manuscript until you accept it.</p></div><button type="button" className="secondary-button" onClick={() => void refreshEvidenceContext()}><RefreshCw size={12}/> Refresh evidence</button></div>
                 {project.outline.length === 0 ? <p className="writing-audit-empty">Create an outline first. The section list will appear here.</p> : <>
                   <div className="writing-coach-fields">
                     <label>Section to draft<select value={selectedWritingSection?.id ?? ""} onChange={event => { setSelectedWritingSectionId(event.target.value); setWritingWordTarget(""); setWritingMicroPrompt(""); }}>
