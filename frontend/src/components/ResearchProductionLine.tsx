@@ -14,6 +14,7 @@ import {
   setResearchAgentsPaused, transitionResearchTaskRecord
 } from "../lib/db";
 import "./research-production-line.css";
+import { isResearchAgentRunnerReady, runResearchSpecialistTask } from "../lib/research-agent-executor";
 
 const statusLabel: Record<string, string> = {
   "not-started": "Not started", queued: "In queue", running: "In progress",
@@ -26,12 +27,13 @@ const taskStatusLabel: Record<string, string> = {
 const uid = () => Math.random().toString(36).slice(2, 12);
 
 export default function ResearchProductionLine({
-  projectId, paperType, researchMode, onModeChange
+  projectId, paperType, researchMode, onModeChange, onOpenStudio
 }: {
   projectId: string;
   paperType: ResearchPaperType;
   researchMode: "guided" | "professional";
   onModeChange: (mode: "guided" | "professional") => void;
+  onOpenStudio?: () => void;
 }) {
   const [tasks, setTasks] = useState<ResearchTask[]>([]);
   const [events, setEvents] = useState<ResearchAuditEvent[]>([]);
@@ -39,7 +41,9 @@ export default function ResearchProductionLine({
   const [inputEntityIdsText, setInputEntityIdsText] = useState("");
   const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [runningTaskId, setRunningTaskId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const localModelReady = isResearchAgentRunnerReady();
   const [showComposer, setShowComposer] = useState(false);
   const [stationId, setStationId] = useState<ResearchStationId>("intake");
   const [agentId, setAgentId] = useState("");
@@ -90,6 +94,21 @@ export default function ResearchProductionLine({
       await refresh();
     } catch (cause) {
       setError((cause as Error).message || "The task could not be updated.");
+    }
+  };
+
+  const runSpecialist = async (task: ResearchTask) => {
+    if (!task.assignedAgentId) return;
+    setRunningTaskId(task.id);
+    setError("");
+    try {
+      await runResearchSpecialistTask(projectId, task.id, task.assignedAgentId);
+      await refresh();
+    } catch (cause) {
+      setError((cause as Error).message || "The specialist could not complete this task.");
+      await refresh();
+    } finally {
+      setRunningTaskId(null);
     }
   };
 
@@ -180,7 +199,7 @@ export default function ResearchProductionLine({
         {researchMode === "professional" && <label>Input entity IDs (optional, comma-separated)<input value={inputEntityIdsText} onChange={event => setInputEntityIdsText(event.target.value)} placeholder="e.g. source:123, dataset:456"/></label>}
         {tasks.length > 0 && <fieldset className="rpl-dependencies"><legend>Depends on (optional)</legend>{tasks.filter(task => task.status !== "canceled").map(task => <label key={task.id}><input type="checkbox" checked={dependencies.includes(task.id)} onChange={event => setDependencies(current => event.target.checked ? [...current, task.id] : current.filter(id => id !== task.id))}/><span>{task.title} · {taskStatusLabel[task.status]}</span></label>)}</fieldset>}
         <div className="rpl-checks"><label><input type="checkbox" checked={ownerGate} onChange={event => setOwnerGate(event.target.checked)}/> Require my approval before this output is accepted</label><label><input type="checkbox" checked={beforeRun} onChange={event => setBeforeRun(event.target.checked)}/> Require my approval before work begins</label></div>
-        {agentId && <p className="rpl-agent-note"><Bot size={14}/> Assignment is recorded with the specialist's permission contract. Automatic execution is only shown when a compatible agent runner is connected; this queue will not pretend an agent has run.</p>}
+        {agentId && <div className="rpl-agent-note"><Bot size={14}/><div>Specialist output is always held for your review. {localModelReady ? "Your local model is ready to run this agent." : "Load a local WebLLM model in Writing Studio to execute this specialist."}{!localModelReady && onOpenStudio && <Button type="button" size="sm" variant="outline" onClick={onOpenStudio}>Open Writing Studio</Button>}</div></div>}
         <div className="rpl-composer-actions"><Button type="button" variant="ghost" size="sm" onClick={() => setShowComposer(false)}>Cancel</Button><Button type="submit" size="sm"><Plus size={14}/> Add to queue</Button></div>
       </form>
     </Card>}
@@ -196,7 +215,8 @@ export default function ResearchProductionLine({
             {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies · {task.inputEntityIds.length} inputs · {task.outputEntityIds.length} outputs</small>}
           </div>
           <div className="rpl-task-actions">
-            {task.status === "queued" && <Button size="sm" variant="outline" disabled={!task.dependencyTaskIds.every(id => tasks.find(dependency => dependency.id === id)?.status === "completed")} onClick={() => void changeTask(task, "start")}>{task.dependencyTaskIds.some(id => tasks.find(dependency => dependency.id === id)?.status !== "completed") ? "Waiting on dependency" : "Start work"}</Button>}
+            {task.status === "queued" && task.assignedAgentId && <Button size="sm" variant="outline" loading={runningTaskId === task.id} disabled={!localModelReady || runningTaskId !== null || !task.dependencyTaskIds.every(id => tasks.find(dependency => dependency.id === id)?.status === "completed")} onClick={() => void runSpecialist(task)}>{!localModelReady ? "Load model first" : task.dependencyTaskIds.some(id => tasks.find(dependency => dependency.id === id)?.status !== "completed") ? "Waiting on dependency" : "Run specialist"}</Button>}
+            {task.status === "queued" && !task.assignedAgentId && <Button size="sm" variant="outline" disabled={!task.dependencyTaskIds.every(id => tasks.find(dependency => dependency.id === id)?.status === "completed")} onClick={() => void changeTask(task, "start")}>{task.dependencyTaskIds.some(id => tasks.find(dependency => dependency.id === id)?.status !== "completed") ? "Waiting on dependency" : "Start work"}</Button>}
             {task.status === "running" && <Button size="sm" onClick={() => void changeTask(task, "submit")}>Submit output</Button>}
             {task.status === "awaiting-owner" && <><Button size="sm" onClick={() => void changeTask(task, "approve")}>Approve</Button><Button size="sm" variant="outline" onClick={() => void changeTask(task, "request-changes")}>Request changes</Button></>}
             {["failed", "blocked", "stale", "canceled"].includes(task.status) && <Button size="sm" variant="outline" onClick={() => void changeTask(task, "retry")}><RefreshCw size={13}/> Retry</Button>}
