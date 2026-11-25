@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Badge, Button, Card } from "@santi020k/lumen-react";
 import { AlertTriangle, BookOpenCheck, ClipboardCheck, FileSearch, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import type { Project } from "../lib/types";
-import type { ResearchEntity, ResearchRelation } from "../lib/research-blueprint";
 import { listResearchEntities, listResearchRelations, saveResearchEntity } from "../lib/db";
 import { assessJournalFit, runScientificAudit, simulateReviewerPerspectives } from "../lib/scientific-audit.mjs";
 import type { ScientificAuditReport } from "../lib/scientific-audit.mjs";
