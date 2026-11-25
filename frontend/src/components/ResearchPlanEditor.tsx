@@ -122,7 +122,7 @@ export default function ResearchPlanEditor({ plan, onChange, storyArc, onStoryAr
       <div><strong>{plan.stations.length}</strong><span>stations</span></div>
       <div><strong>{completedTasks}/{totalTasks}</strong><span>tasks completed</span></div>
       <div><strong>{completedMilestones}/{plan.milestones.length}</strong><span>milestones reached</span></div>
-      <span className="rpe-save-note">Saved with this project · shared by Guided and Professional modes</span>
+      <span className="rpe-save-note">Autosaves to this project · shared by Guided and Professional modes</span>
     </div>
 
     {error && <p className="rpe-error" role="alert">{error}</p>}
