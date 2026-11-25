@@ -125,6 +125,8 @@ test('database upgrade backfills existing projects using deterministic legacy ma
 test('Research Blueprint reads and writes are project-scoped and concurrency guarded', () => {
   assert.match(db, /loadResearchBlueprint/);
   assert.match(db, /saveResearchBlueprint/);
+  assert.match(db, /if \(!\(await db\.researchBlueprints\.get\(project\.id\)\)\)/);
+  assert.match(db, /projectToResearchBlueprint\(next\)/);
   assert.match(db, /expectedVersion = blueprint\.version/);
   assert.match(db, /actualVersion/);
   assert.match(db, /changed elsewhere/);
