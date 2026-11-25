@@ -7,8 +7,8 @@ const now = 1800000000000;
 
 test("claim creation starts unverified and never infers support from relevance", () => {
   const claim = createClaimRecord({ id: "claim-1", projectId: "project-1", text: "Vaccination coverage is below target.", now });
-  assert.equal(claim.status, "awaiting-verification");
-  assert.equal(claim.evidenceCount, 0);
+  assert.equal(claim.payload.evidenceStatus, "awaiting-verification");
+  assert.equal(claim.payload.evidenceCount, 0);
   assert.equal(assessClaimEvidence(claim, []).status, "awaiting-verification");
 });
 
