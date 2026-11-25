@@ -1,57 +1,59 @@
-²×hº×.¶Ø^•«-ãM4¡þ8ãFòµë™XY
-	Ùœ›Û[™ÜXÚØYÙKšœÛÛ‰ÊJNÂˆÛÛœÝØÚÈH”ÓÓ‹œ\œÙJ]ØZ]™XY
-	Ùœ›Û[™ÜXÚØYÙK[ØÚËšœÛÛ‰ÊJNÂˆ\ÜÙ\™\]X[
-X[šY™\Ý™\[™[˜ÚY\ÖÉÐØ[LŒËÛ[Y[‹\™XXÝ	×K	ÍŒËŒ	ÊNÂˆ\ÜÙ\™\]X[
-X[šY™\Ý›Ý™\œšY\ÖÉÐØ[LŒËÛ[Y[‰×K	ÍŒËŒ	ÊNÂˆ\ÜÙ\™\]X[
-X[šY™\Ý›Ý™\œšY\ÖÉÐØ[LŒËÛ[Y[‹XÛÜ™I×K	ÍŒËŒ	ÊNÂˆ›Üˆ
-ÛÛœÝ˜[YHÙˆÉÐØ[LŒËÛ[Y[‹\™XXÝ	Ë	ÐØ[LŒËÛ[Y[‰Ë	ÐØ[LŒËÛ[Y[‹XÛÜ™I×JHÂˆÛÛœÝ™\ÛÛ™YHØš™XÝ™[šY\ÊØÚËœXÚØYÙ\ÊK™š[\Š
-Ü]JHOˆ]™[™ÕÚ]
-›ÙWÛ[Ù[\ËÉÛ˜[Y_X
-JNÂˆ\ÜÙ\›ÚÊ™\ÛÛ™Y›[™Ýˆ	Û˜[Y_H]\Ý\X\ˆ[ˆHØÚÙš[X
-NÂˆ\ÜÙ\›ÚÊ™\ÛÛ™Y™]™\žJ
-ËÙ×JHOˆÙË™\œÚ[ÛˆOOH	ÍŒËŒ	ÊK	Û˜[Y_H]\Ý™\ÛÛ™HÛ›HÈŒËŒ
-NÂˆBŸJNÂ‚\Ý
-	Ó[Y[ˆÝ[\ÈØY™Y›Ü™H\\“Ü˜Ú\Ý˜HÝ™\œšY\ÉË\Þ[˜È
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
-HOˆÂˆÛÛœÝXZ[ˆH]ØZ]™XY
-	Ùœ›Û[™ÜÜ˜ËÛXZ[‹Þ	ÊNÂˆ\ÜÙ\›X]Ú
-XZ[‹Ú[\ÜÈ‰×PØ[LŒ×Û[Y[‹\™XXÝÜÝ[\×˜ÜÜÖÈ‰×NËÊNÂˆ\ÜÙ\›ÚÊXZ[‹š[™^ÙŠ	ÐØ[LŒËÛ[Y[‹\™XXÝÜÝ[\Ë˜ÜÜÉÊHXZ[‹š[™^ÙŠ	Ë‹ÜÝ[\Ë˜ÜÜÉÊJNÂŸJNÂ‚\Ý
-	Ù\Ú›Ø\™\Ù\È[Y[ˆš[Z]]™\ÈÚ]Ý]™\XÚ[™È[™^Yˆ›Ú™XÝÜ\˜][ÛœÉË\Þ[˜È
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-HOˆÂˆÛÛœÝ\Ú›Ø\™H]ØZ]™XY
-	Ùœ›Û[™ÜÜ˜ËØÛÛ\Û™[ËÑ\Ú›Ø\™Þ	ÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ùœ›ÛHÈ‰×PØ[LŒ×Û[Y[‹\™XXÝÈ‰×KÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ï]Û—‹ÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™ÏØ\™‹ÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ï˜YÙW‹ÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ï›ÙÜ™\Ü×‹ÊNÂˆ›Üˆ
-ÛÛœÝÜ\˜][ÛˆÙˆÉÛ\Ý›Ú™XÝÉË	ÜØ]™T›Ú™XÝ	Ë	Ü™\ÝÜ™T›Ú™XÝ	Ë	Ù[]T›Ú™XÝ[™]I×JHÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™™]È™YÑ^
-‰ÛÜ\˜][ÛŸW˜
-JNÂˆBŸJNÂ‚\Ý
-	Ù\Ú›Ø\™Ú[™[XZ[œÈ\ØX›H]˜\œ›ÝÈšY]ÜÜÚYÉË\Þ[˜È
+ test('Lumen React and its runtime packages are pinned to one verified release', async () => {
+  const manifest = JSON.parse(await read('frontend/package.json'));
+  const lock = JSON.parse(await read('frontend/package-lock.json'));
+  assert.equal(manifest.dependencies['@santi020k/lumen-react'], '4.3.0');
+  assert.equal(manifest.overrides['@santi020k/lumen'], '4.3.0');
+  assert.equal(manifest.overrides['@santi020k/lumen-core'], '4.3.0');
+  for (const name of ['@santi020k/lumen-react', '@santi020k/lumen', '@santi020k/lumen-core']) {
+    const resolved = Object.entries(lock.packages).filter(([path]) => path.endsWith(`node_modules/${name}`));
+    assert.ok(resolved.length > 0, `${name} must appear in the lockfile`);
+    assert.ok(resolved.every(([, pkg]) => pkg.version === '4.3.0'), `${name} must resolve only to 4.3.0`);
+  }
+});
 
-HOˆÂˆÛÛœÝÝ[\ÈH]ØZ]™XY
-	Ùœ›Û[™ÜÜ˜ËÜÝ[\Ë˜ÜÜÉÊNÂˆ\ÜÙ\›X]Ú
-Ý[\ËØ›ÙNš\×
-™\Ú›Ø\™\Ú[
-V×ž×J—Ö×ŸWJ›Z[‹]ÚYŒÌŒÜÊNÂˆ\ÜÙ\›X]Ú
-Ý[\Ë×™\Ú›Ø\™\Ú[Ê—Ö×ŸWJ›Z[‹]ÚYŒÜÊNÂˆ\ÜÙ\›X]Ú
-Ý[\ËÐYYXWÊ—
-X^]ÚY—ÊN
-KÊNÂˆ\ÜÙ\›X]Ú
-Ý[\Ë×™\Ú[[Ù[Ê—Ö×ŸWJ˜›Þ\Ú^š[™Î˜›Ü™\‹X›ÞÜÊNÂˆ\ÜÙ\›X]Ú
-Ý[\Ë×™\Ú[[Ù[X˜XÚÙ›ÜÊ—Ö×ŸWJœY[™ÎŒLœÜÊNÂˆÛÛœÝ[Øš[T[\ÈHÝ[\ËœÛXÙJÝ[\Ë›\Ý[™^ÙŠ	ÐYYXJX^]ÚYN
-IÊJNÂˆ\ÜÙ\›X]Ú
-[Øš[T[\Ë×™\Ú[[Ù[[œ]×ŸWJ™›Û\Ú^™NŒMœÜÊNÂŸJNÂ‚‚\Ý
-	Ù\Ú›Ø\™[™›Ú™XÝÛÜšÜÜXÙH\ÙHÛÛ˜\Ý\ØY™H]]Y^ÚÙ[œÉË\Þ[˜È
+test('Lumen styles load before PaperOrchestra overrides', async () => {
+  const main = await read('frontend/src/main.tsx');
+  assert.match(main, /import ["']@santi020k\/lumen-react\/styles\.css["'];/);
+  assert.ok(main.indexOf('@santi020k/lumen-react/styles.css') < main.indexOf('./styles.css'));
+});
 
-HOˆÂˆÛÛœÝ\Ú›Ø\™Ý[\ÈH]ØZ]™XY
-	Ùœ›Û[™ÜÜ˜ËÜÝ[\Ë˜ÜÜÉÊNÂˆÛÛœÝÛÜšÜÜXÙTÝ[\ÈH]ØZ]™XY
-	Ùœ›Û[™ÜÜ˜ËØÛÛ\Û™[ËÜ›Ú™XÝ]ÛÜšÜÜXÙK˜ÜÜÉÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ý[\Ë×™\Ú]Ù[ÛÛYKXÛÜOœ×ŸWJ—ØÛÛÜŽˆÍ˜Í™ÎKÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ý[\Ë×™\Ú›Ø\™\Ú[™\Ú[ØØ[ZKX˜YÙWØÛÛÜŽˆÍÍÍL×KÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ý[\Ë×™\Ú›Ø\™\Ú[˜ÛÝYX]]\Ý]\×ØÛÛÜŽˆÍŒ™—KÊNÂˆ\ÜÙ\›X]Ú
-\Ú›Ø\™Ý[\ËÈÙ\ÚXÜ™X]KY\ØÜš\[Û—ØÛÛÜŽˆÍ˜Í™ÎKÊNÂˆ\ÜÙ\›X]Ú
-ÛÜšÜÜXÙTÝ[\Ë×œ›Ú™XÝ]ÛÜšÜÜXÙHœËXœ™XYÜ[X–×ŸWJ˜ÛÛÜŽˆÍŒ™‹ÊNÂˆ\ÜÙ\›X]Ú
-ÛÜšÜÜXÙTÝ[\Ë×œ›Ú™XÝ]ÛÜšÜÜXÙHœËY^YXœ›ÝÖ×ŸWJ˜ÛÛÜŽˆÍŽNKÊNÂŸJNÂ
+test('dashboard uses Lumen primitives without replacing IndexedDB project operations', async () => {
+  const dashboard = await read('frontend/src/components/Dashboard.tsx');
+  assert.match(dashboard, /from ["']@santi020k\/lumen-react["']/);
+  assert.match(dashboard, /<Button\b/);
+  assert.match(dashboard, /<Card\b/);
+  assert.match(dashboard, /<Badge\b/);
+  assert.match(dashboard, /<Progress\b/);
+  for (const operation of ['listProjects', 'saveProject', 'restoreProject', 'deleteProjectAndData']) {
+    assert.match(dashboard, new RegExp(`\\b${operation}\\b`));
+  }
+});
+
+test('dashboard shell remains usable at narrow viewport widths', async () => {
+  const styles = await read('frontend/src/styles.css');
+  assert.match(styles, /body:has\(\.dashboard-shell\)[^{]*\{[^}]*min-width:320px/s);
+  assert.match(styles, /\.dashboard-shell\s*\{[^}]*min-width:0/s);
+  assert.match(styles, /@media\s*\(max-width:\s*580px\)/);
+  assert.match(styles, /\.dash-modal\s*\{[^}]*box-sizing:border-box/s);
+  assert.match(styles, /\.dash-modal-backdrop\s*\{[^}]*padding:12px/s);
+  const mobileRules = styles.slice(styles.lastIndexOf('@media(max-width:580px)'));
+  assert.match(mobileRules, /\.dash-modal input[^}]*font-size:16px/s);
+});
+
+
+test('dashboard and project workspace use contrast-safe muted text tokens', async () => {
+  const dashboardStyles = await read('frontend/src/styles.css');
+  const workspaceStyles = await read('frontend/src/components/project-workspace.css');
+  assert.match(dashboardStyles, /\.dash-welcome-copy>p[^}]*\{color:#6c6f78\}/);
+  assert.match(dashboardStyles, /\.dashboard-shell \.dash-local\.ui-badge\{color:#477653\}/);
+  assert.match(dashboardStyles, /\.dashboard-shell \.cloud-auth-status\{color:#62666f\}/);
+  assert.match(dashboardStyles, /#dash-create-description\{color:#6c6f78\}/);
+  assert.match(workspaceStyles, /\.project-workspace \.pw-breadcrumb[^}]*color:#62666f/);
+  assert.match(workspaceStyles, /\.project-workspace \.pw-eyebrow[^}]*color:#68658e/);
+});
