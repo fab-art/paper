@@ -131,7 +131,7 @@ export default function ResearchProductionLine({
         projectId, stationId, title, description, assignedAgentId: agentId || undefined,
         dependencyTaskIds: dependencies,
         inputEntityIds: inputEntityIdsText.split(",").map(value => value.trim()).filter(Boolean),
-        ownerApprovalRequired: ownerGate, ownerApprovalBeforeRun: beforeRun
+        ownerApprovalRequired: ownerGate || Boolean(agentId), ownerApprovalBeforeRun: beforeRun
       });
       setTitle(""); setDescription(""); setAgentId(""); setDependencies([]); setInputEntityIdsText(""); setOwnerGate(false); setBeforeRun(false); setShowComposer(false);
       await refresh();
@@ -198,7 +198,7 @@ export default function ResearchProductionLine({
         <label>Assign specialist (optional)<select value={agentId} onChange={event => setAgentId(event.target.value)}><option value="">Researcher / unassigned</option>{RESEARCH_AGENTS.filter(agent => agent.stationIds.includes(stationId)).map(agent => <option key={agent.id} value={agent.id}>{agent.label}</option>)}</select></label>
         {researchMode === "professional" && <label>Input entity IDs (optional, comma-separated)<input value={inputEntityIdsText} onChange={event => setInputEntityIdsText(event.target.value)} placeholder="e.g. source:123, dataset:456"/></label>}
         {tasks.length > 0 && <fieldset className="rpl-dependencies"><legend>Depends on (optional)</legend>{tasks.filter(task => task.status !== "canceled").map(task => <label key={task.id}><input type="checkbox" checked={dependencies.includes(task.id)} onChange={event => setDependencies(current => event.target.checked ? [...current, task.id] : current.filter(id => id !== task.id))}/><span>{task.title} · {taskStatusLabel[task.status]}</span></label>)}</fieldset>}
-        <div className="rpl-checks"><label><input type="checkbox" checked={ownerGate} onChange={event => setOwnerGate(event.target.checked)}/> Require my approval before this output is accepted</label><label><input type="checkbox" checked={beforeRun} onChange={event => setBeforeRun(event.target.checked)}/> Require my approval before work begins</label></div>
+        <div className="rpl-checks"><label><input type="checkbox" checked={ownerGate || Boolean(agentId)} disabled={Boolean(agentId)} onChange={event => setOwnerGate(event.target.checked)}/> Require my approval before this output is accepted</label><label><input type="checkbox" checked={beforeRun} onChange={event => setBeforeRun(event.target.checked)}/> Require my approval before work begins</label></div>
         {agentId && <div className="rpl-agent-note"><Bot size={14}/><div>Specialist output is always held for your review. {localModelReady ? "Your local model is ready to run this agent." : "Load a local WebLLM model in Writing Studio to execute this specialist."}{!localModelReady && onOpenStudio && <Button type="button" size="sm" variant="outline" onClick={onOpenStudio}>Open Writing Studio</Button>}</div></div>}
         <div className="rpl-composer-actions"><Button type="button" variant="ghost" size="sm" onClick={() => setShowComposer(false)}>Cancel</Button><Button type="submit" size="sm"><Plus size={14}/> Add to queue</Button></div>
       </form>
