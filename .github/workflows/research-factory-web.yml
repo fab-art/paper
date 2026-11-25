@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "feat/independent-research-factory-rebuild"
+      - "feat/research-factory-phase2-project-workspace"
     paths:
       - "apps/web/**"
       - "frontend/src/lib/**"
