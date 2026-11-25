@@ -42,7 +42,7 @@ test('a task requiring approval before execution waits for the owner', () => {
 test('tasks cannot start until every dependency is complete', () => {
   const dependency = task({ id: 'dependency' });
   const blocked = task({ id: 'dependent', dependencyTaskIds: ['dependency'] });
-  assert.deepEqual(getReadyResearchTasks([dependency, blocked]), []);
+  assert.deepEqual(getReadyResearchTasks([dependency, blocked]).map(item => item.id), ['dependency']);
   assert.throws(() => transitionResearchTask(blocked, 'start', 'owner', [dependency, blocked], now), /dependencies/);
   const completedDependency = { ...dependency, status: 'completed' };
   assert.deepEqual(getReadyResearchTasks([completedDependency, blocked]).map(item => item.id), ['dependent']);
