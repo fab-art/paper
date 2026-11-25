@@ -148,7 +148,8 @@ export function transitionResearchTask(
   tasks: ResearchTask[],
   now = Date.now(),
   ownerConfirmed = false,
-  rationale = ""
+  rationale = "",
+  actorAgentId?: string
 ): { task: ResearchTask; approval?: ResearchApproval } {
   const next = { ...task, dependencyTaskIds: [...task.dependencyTaskIds], outputEntityIds: [...task.outputEntityIds] };
   const byId = new Map(tasks.map(item => [item.id, item]));
@@ -158,13 +159,13 @@ export function transitionResearchTask(
   if (action === "start") {
     if (actor !== "owner" && actor !== "agent") throw new Error("Only the owner or assigned agent can start this task.");
     if (next.status !== "queued" || !dependenciesReady) throw new Error("This task is not ready. Complete its dependencies first.");
-    if (actor === "agent" && !next.assignedAgentId) throw new Error("This task has no assigned specialist agent.");
+    if (actor === "agent" && (!next.assignedAgentId || actorAgentId !== next.assignedAgentId)) throw new Error("Only the specialist assigned to this task can start it.");
     next.status = "running";
     next.runCount += 1;
     next.error = undefined;
   } else if (action === "submit") {
     if (next.status !== "running") throw new Error("Only a running task can submit an output.");
-    if (actor === "agent" && !next.assignedAgentId) throw new Error("Unassigned agents cannot submit task output.");
+    if (actor === "agent" && (!next.assignedAgentId || actorAgentId !== next.assignedAgentId)) throw new Error("Only the specialist assigned to this task can submit its output.");
     next.status = next.ownerApprovalRequired ? "awaiting-owner" : "completed";
     next.approvalStage = next.ownerApprovalRequired ? "after-run" : null;
   } else if (action === "approve" || action === "request-changes") {
