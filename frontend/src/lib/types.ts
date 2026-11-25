@@ -74,6 +74,11 @@ export interface Project {
   outline: OutlineSection[]; papers: Paper[]; figures: FigureAsset[]; logs: string; templateFiles?: Record<string, string>;
   agentRecords: AgentRecord[]; updatedAt: number; revision?: number;
   researchQuestion?: string; objectives?: string[]; methodology?: string; status?: ProjectStatus; milestones?: ResearchMilestone[]; archivedAt?: number; submissionChecks?: Record<string, boolean>; systematicReview?: SystematicReviewData;
+  paperType?: import("./research-blueprint").ResearchPaperType;
+  intendedAudience?: string;
+  availableMaterials?: string[];
+  storyArc?: string[];
+  researchMode?: "guided" | "professional";
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
 export interface ProjectAttachment { id: string; projectId: string; name: string; mimeType: string; size: number; blob: Blob; description: string; createdAt: number }
