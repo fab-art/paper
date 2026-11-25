@@ -53,6 +53,11 @@ test('paused agents receive no ready work', () => {
   assert.deepEqual(getReadyResearchTasks([queued], true), []);
 });
 
+test('specialist assignments require owner review by default', () => {
+  const assigned = task({ assignedAgentId: 'research-planner' });
+  assert.equal(assigned.ownerApprovalRequired, true);
+});
+
 test('agent output requiring review cannot be completed without owner approval', () => {
   const queued = task({ assignedAgentId: 'research-planner', ownerApprovalRequired: true });
   const running = transitionResearchTask(queued, 'start', 'agent', [queued], now + 1, false, '', 'research-planner').task;
@@ -80,6 +85,15 @@ test('task transitions reject invalid state changes and support owner retry', ()
   const failed = { ...queued, status: 'failed' };
   const retried = transitionResearchTask(failed, 'retry', 'owner', [failed], now + 1).task;
   assert.equal(retried.status, 'queued');
+});
+
+test('assigned agent can record an execution failure, but owner controls retry', () => {
+  const queued = task({ assignedAgentId: 'research-planner' });
+  const running = transitionResearchTask(queued, 'start', 'agent', [queued], now + 1, false, '', 'research-planner').task;
+  const failed = transitionResearchTask(running, 'fail', 'agent', [running], now + 2, false, 'WebGPU context lost.', 'research-planner').task;
+  assert.equal(failed.status, 'failed');
+  assert.match(failed.error, /WebGPU/);
+  assert.throws(() => transitionResearchTask(failed, 'retry', 'agent', [failed], now + 3, false, '', 'research-planner'), /Only the owner/);
 });
 
 test('station summaries reflect actual task state without inventing completion', () => {
