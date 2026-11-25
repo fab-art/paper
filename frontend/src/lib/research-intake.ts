@@ -96,9 +96,6 @@ export function getResearchNextAction(project: {
   startPath?: ResearchEntryPath;
 }) {
 
-  if (!project.researchQuestion?.trim()) {
-    return { id: "research-question", title: "Clarify your research question", description: "Write a first version of what you want to understand. You can refine it later.", station: "intake" };
-  }
   if (project.startPath === "dataset" || project.paperType === "dataset-analysis") {
     return { id: "dataset-profile", title: "Profile your dataset", description: "Inspect variables, missing values and data quality before selecting an analysis.", station: "data" };
   }
@@ -110,6 +107,9 @@ export function getResearchNextAction(project: {
   }
   if (!project.papers?.length) {
     return { id: "source-discovery", title: "Find and organize relevant research", description: "Start a documented literature search and save the sources you plan to use.", station: "literature" };
+  }
+  if (!project.researchQuestion?.trim()) {
+    return { id: "research-question", title: "Clarify your research question", description: "Write a first version of what you want to understand. You can refine it later.", station: "intake" };
   }
   if (!project.methodology?.trim()) {
     return { id: "methods-plan", title: "Outline your research methods", description: "Record the study design, setting, population, outcomes and analysis plan.", station: "methods" };
