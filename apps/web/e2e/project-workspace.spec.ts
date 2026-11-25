@@ -80,7 +80,7 @@ test("archives, restores and permanently deletes projects as separate actions", 
   await page.locator(".project-workspace-header").getByRole("button", { name: "Projects" }).click();
 
   page.on("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Archive" }).click();
+  await page.getByRole("button", { name: "Archive", exact: true }).click();
   await expect(page.getByText("Start your first research project")).toBeVisible();
 
   await page.getByRole("button", { name: /Archived/ }).click();
