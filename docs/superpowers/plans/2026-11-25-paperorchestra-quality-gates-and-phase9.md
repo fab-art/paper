@@ -109,3 +109,10 @@
 ## Completion rule
 
 A task is complete only when its tests were executed and the results are recorded. A successful static build does not substitute for browser, accessibility, device or production verification.
+### Task 3 checkpoint — dashboard visual exploration
+
+- [x] Create a private MagicPath Phase 9 project and implement a responsive Research Station dashboard prototype.
+- [x] Verify the rendered preview and provide a share URL.
+- [x] Confirm the Lumen catalog contract version and check compatibility.
+- [ ] Resolve the public npm/catalog version discrepancy for `@santi020k/lumen-react` before installing the production adapter.
+- [ ] After resolving the adapter, implement the actual shared Lumen shell and migrate the dashboard in the repository with regression tests.
