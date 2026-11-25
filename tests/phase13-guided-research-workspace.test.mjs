@@ -17,7 +17,8 @@ test('guided Research GPS is a three-step plain-language intake with paper-type 
   assert.match(dashboard, /3 · Review/);
   assert.match(dashboard, /PAPER_TYPE_BLUEPRINTS/);
   assert.match(dashboard, /Draft research story arc/);
-  assert.match(dashboard, /owner-confirmed|owner approval|owner's decision/i);
+  assert.match(dashboard, /not an approved protocol/);
+  assert.match(dashboard, /remain yours to approve/);
 });
 
 test('Project Workspace exposes the Research Production Line without replacing existing workspaces', () => {
