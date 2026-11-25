@@ -31,3 +31,15 @@ test("Data & Methods exposes design-aware recommendations, study-specific checkl
   assert.match(lab, /saveResearchEntity\(entity\)/);
   assert.match(lab, /not evidence that the analysis has been executed or validated/);
 });
+
+test("Research GPS persists the editable blueprint plan, story arc and milestones in the shared project", async () => {
+  const editor = await readFile(new URL("../frontend/src/components/ResearchPlanEditor.tsx", import.meta.url), "utf8");
+  const production = await readFile(new URL("../frontend/src/components/ResearchProductionLine.tsx", import.meta.url), "utf8");
+  const types = await readFile(new URL("../frontend/src/lib/types.ts", import.meta.url), "utf8");
+  assert.match(editor, /Research story arc/);
+  assert.match(editor, /Milestones and target dates/);
+  assert.match(editor, /moveResearchPlanStation/);
+  assert.match(production, /onProjectUpdate\(\{ researchPlan: nextPlan \}\)/);
+  assert.match(production, /onStoryArcChange=\{storyArc => onProjectUpdate\(\{ storyArc \}\)\}/);
+  assert.match(types, /researchPlan\?: import\("\.\/research-intake"\)\.ResearchStationPlan/);
+});
