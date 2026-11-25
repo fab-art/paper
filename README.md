@@ -120,3 +120,8 @@ The collaboration migrations in `supabase/migrations/` have been applied to the 
 ## Phase 8 — Systematic Review & Evidence Synthesis
 
 The project workspace now includes a local-first systematic review area for protocol details, DOI/title deduplication, title/abstract and full-text screening, PRISMA-style working counts, structured study extraction, domain-level risk-of-bias notes and evidence-matrix CSV export. Decisions remain researcher-led and are stored in the local IndexedDB project. See [Phase 8 architecture and counting rules](docs/phase8-systematic-review.md). The displayed flow is a working count summary, not a certified PRISMA 2020 diagram. Cloud sync, automated screening and automated extraction are not included in this phase.
+
+
+## Phase 9 — Lumen UI System-Wide Redesign
+
+Phase 9 establishes the cross-phase redesign specification for the React PWA using the Lumen UI React design system. It covers the application shell and every Phase 1–8 surface while preserving local-first IndexedDB, optional Supabase/RLS, browser WebLLM, bounded local data processing, export safeguards and researcher-led review decisions. See [Phase 9 redesign architecture and acceptance criteria](docs/phase9-lumen-redesign.md). The implementation must pin the Lumen adapter and lockfile together, then pass regression, accessibility, responsive, production-build and exact-commit Vercel Preview checks before release.
