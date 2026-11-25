@@ -205,3 +205,6 @@ export function getStudyComplianceChecklist(paperType: ResearchPaperType | undef
     { id: "ai-disclosure", guideline: "Disclosure", label: "Check whether AI-use disclosure is required by the target journal or institution." }];
   return items.map(item => ({ ...item, confirmed: false as const, status: "not-confirmed" as const }));
 }
+export function approveAnalysisRunManifest(manifest: ReturnType<typeof createAnalysisRunManifest>, approvedAt = Date.now()) {
+  return { ...manifest, ownerApproved: true as const, status: "approved" as const, approvedAt };
+}
