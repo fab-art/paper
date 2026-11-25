@@ -388,7 +388,7 @@ export default function ProjectWorkspace({
 
       {section === "review" && <SystematicReviewWorkspace project={project} onUpdate={patch}/>}
 
-      {section === "methods" && <DataMethodsLab attachments={attachments}/>}
+      {section === "methods" && <DataMethodsLab attachments={attachments} project={project}/>}
 
       {section === "submission" && <SubmissionReadiness project={project} notes={notes} attachments={attachments} onUpdateProject={patch}/>}
 
