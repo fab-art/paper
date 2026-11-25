@@ -125,9 +125,9 @@ export function projectToResearchBlueprint(project: Project, now = Date.now(), p
     description: project.notes ?? "",
     researchQuestion: project.researchQuestion ?? "",
     objectives: [...(project.objectives ?? [])],
-    paperType: project.paperType ?? (project.systematicReview
+    paperType: project.paperType && project.paperType !== "unspecified" ? project.paperType : project.systematicReview
       ? (project.systematicReview.protocol.reviewType === "scoping" ? "scoping-review" : "systematic-review")
-      : "unspecified"),
+      : project.paperType ?? "unspecified",
     intendedAudience: project.intendedAudience ?? "",
     availableMaterials: [...(project.availableMaterials ?? [])],
     storyArc: [...(project.storyArc ?? [])],
