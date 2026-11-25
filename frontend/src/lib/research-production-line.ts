@@ -149,7 +149,8 @@ export function transitionResearchTask(
   now = Date.now(),
   ownerConfirmed = false,
   rationale = "",
-  actorAgentId?: string
+  actorAgentId?: string,
+  outputEntityIds: string[] = []
 ): { task: ResearchTask; approval?: ResearchApproval } {
   const next = { ...task, dependencyTaskIds: [...task.dependencyTaskIds], outputEntityIds: [...task.outputEntityIds] };
   const byId = new Map(tasks.map(item => [item.id, item]));
@@ -166,6 +167,7 @@ export function transitionResearchTask(
   } else if (action === "submit") {
     if (next.status !== "running") throw new Error("Only a running task can submit an output.");
     if (actor === "agent" && (!next.assignedAgentId || actorAgentId !== next.assignedAgentId)) throw new Error("Only the specialist assigned to this task can submit its output.");
+    next.outputEntityIds = [...new Set([...next.outputEntityIds, ...outputEntityIds])];
     next.status = next.ownerApprovalRequired ? "awaiting-owner" : "completed";
     next.approvalStage = next.ownerApprovalRequired ? "after-run" : null;
   } else if (action === "approve" || action === "request-changes") {
