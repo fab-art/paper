@@ -1,10 +1,14 @@
 import Dexie, { type Table } from "dexie";
-import type { Project, ProjectNote, ProjectAttachment } from "./types";
+import { assertProjectWritable } from "./project-write-guard.mjs";
+import { assertProjectRevision } from "./project-revision-guard.mjs";
+import type { Project, ProjectNote, ProjectAttachment, ProjectSearchHistory } from "./types";
 
 class StudioDB extends Dexie {
   projects!: Table<Project, string>;
   notes!: Table<ProjectNote, string>;
   attachments!: Table<ProjectAttachment, string>;
+  searches!: Table<ProjectSearchHistory, string>;
+  deletedProjects!: Table<{ id: string; deletedAt: number }, string>;
   constructor() {
     super("paperorchestra-studio");
     this.version(1).stores({ projects: "id, updatedAt, name" });
@@ -13,23 +17,147 @@ class StudioDB extends Dexie {
       notes: "id, projectId, updatedAt, createdAt",
       attachments: "id, projectId, createdAt, name"
     });
+    this.version(3).stores({
+      projects: "id, updatedAt, name, status",
+      notes: "id, projectId, updatedAt, createdAt",
+      attachments: "id, projectId, createdAt, name",
+      searches: "id, projectId, searchedAt"
+    });
+    this.version(4).stores({
+      projects: "id, updatedAt, name, status",
+      notes: "id, projectId, updatedAt, createdAt",
+      attachments: "id, projectId, createdAt, name",
+      searches: "id, projectId, searchedAt",
+      deletedProjects: "id, deletedAt"
+    });
   }
 }
 export const db = new StudioDB();
 
 export async function saveProject(project: Project) {
-  project.updatedAt = Date.now();
-  await db.projects.put(project);
+  // Capture the caller's snapshot revision before awaiting IndexedDB. Reading a
+  // mutable per-tab revision after the transaction is queued can let an older
+  // debounce callback adopt a newer revision and overwrite newer content.
+  const expectedRevision = project.revision ?? 0;
+  let savedProject: Project | undefined;
+
+  await db.transaction("rw", db.projects, db.deletedProjects, async () => {
+    if (await db.deletedProjects.get(project.id)) {
+      throw new Error("This project was permanently deleted in another tab. Reload the Research Station before continuing.");
+    }
+    const existing = await db.projects.get(project.id);
+    const actualRevision = existing?.revision ?? 0;
+    if (existing) {
+      assertProjectRevision(expectedRevision, actualRevision);
+    } else if (expectedRevision > 0) {
+      throw new Error("This project no longer exists in the local research library. Reload the Research Station before continuing.");
+    }
+
+    const next: Project = { ...project, revision: actualRevision + 1 };
+    if (existing?.archivedAt && !next.archivedAt) next.archivedAt = existing.archivedAt;
+    next.updatedAt = Date.now();
+    await db.projects.put(next);
+    savedProject = next;
+  });
+
+  return savedProject;
 }
-export async function loadProject(id: string) { return db.projects.get(id); }
-export async function listProjects() { return db.projects.orderBy("updatedAt").reverse().toArray(); }
+
+export async function restoreProject(project: Project) {
+  // As with saveProject, the expected revision belongs to this exact snapshot.
+  const expectedRevision = project.revision ?? 0;
+  let restoredProject: Project | undefined;
+
+  await db.transaction("rw", db.projects, db.deletedProjects, async () => {
+    if (await db.deletedProjects.get(project.id)) return;
+    const existing = await db.projects.get(project.id);
+    if (!existing) return;
+    const actualRevision = existing.revision ?? 0;
+    assertProjectRevision(expectedRevision, actualRevision);
+    const restored: Project = { ...existing, ...project, revision: actualRevision + 1, updatedAt: Date.now() };
+    delete restored.archivedAt;
+    await db.projects.put(restored);
+    restoredProject = restored;
+  });
+
+  return restoredProject;
+}
+
+export async function loadProject(id: string) {
+  return db.projects.get(id);
+}
+
+export async function listProjects() {
+  return db.projects.orderBy("updatedAt").reverse().toArray();
+}
+
+export async function deleteProjectAndData(projectId: string, expectedRevision?: number) {
+  await db.transaction("rw", db.projects, db.notes, db.attachments, db.searches, db.deletedProjects, async () => {
+    const existing = await db.projects.get(projectId);
+    if (expectedRevision !== undefined) {
+      if (!existing) return;
+      assertProjectRevision(expectedRevision, existing.revision ?? 0);
+    }
+    await db.deletedProjects.put({ id: projectId, deletedAt: Date.now() });
+    await Promise.all([
+      db.notes.where("projectId").equals(projectId).delete(),
+      db.attachments.where("projectId").equals(projectId).delete(),
+      db.searches.where("projectId").equals(projectId).delete(),
+      db.projects.delete(projectId)
+    ]);
+  });
+}
+
 export async function listProjectNotes(projectId: string) {
-  return db.notes.where("projectId").equals(projectId).reverse().sortBy("updatedAt");
+  return db.notes.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a, b) => b.updatedAt - a.updatedAt));
 }
-export async function saveProjectNote(note: ProjectNote) { note.updatedAt = Date.now(); await db.notes.put(note); }
-export async function deleteProjectNote(id: string) { await db.notes.delete(id); }
+
+export async function saveProjectNote(note: ProjectNote) {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.notes, async () => {
+    await assertProjectWritable(note.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.notes.put({ ...note, updatedAt: Date.now() });
+  });
+}
+
+export async function deleteProjectNote(id: string) {
+  await db.notes.delete(id);
+}
+
 export async function listProjectAttachments(projectId: string) {
-  return db.attachments.where("projectId").equals(projectId).reverse().sortBy("createdAt");
+  return db.attachments.where("projectId").equals(projectId).toArray().then(rows => rows.sort((a, b) => b.createdAt - a.createdAt));
 }
-export async function saveProjectAttachment(file: ProjectAttachment) { await db.attachments.put(file); }
-export async function deleteProjectAttachment(id: string) { await db.attachments.delete(id); }
+
+export async function saveProjectAttachment(file: ProjectAttachment) {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.attachments, async () => {
+    await assertProjectWritable(file.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.attachments.put(file);
+  });
+}
+
+export async function deleteProjectAttachment(id: string) {
+  await db.attachments.delete(id);
+}
+
+export async function listProjectSearchHistory(projectId: string) {
+  const entries = await db.searches.where("projectId").equals(projectId).toArray();
+  return entries.sort((a, b) => b.searchedAt - a.searchedAt);
+}
+
+export async function recordProjectSearch(entry: ProjectSearchHistory) {
+  await db.transaction("rw", db.projects, db.deletedProjects, db.searches, async () => {
+    await assertProjectWritable(entry.projectId, {
+      getDeletedProject: id => db.deletedProjects.get(id),
+      getProject: id => db.projects.get(id)
+    });
+    await db.searches.put(entry);
+    const history = await db.searches.where("projectId").equals(entry.projectId).toArray();
+    const stale = history.sort((a, b) => b.searchedAt - a.searchedAt).slice(12);
+    if (stale.length) await db.searches.bulkDelete(stale.map(item => item.id));
+  });
+}

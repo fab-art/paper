@@ -41,9 +41,11 @@ Set these variables in Vercel → Project → Settings → Environment Variables
 
 - PAPERORCHESTRA_ENGINE_URL = Railway public URL (without trailing slash).
 - PAPERORCHESTRA_ENGINE_TOKEN = the same secret configured in Railway.
+- UPSTASH_REDIS_REST_URL = Upstash Redis REST endpoint used for compute abuse protection.
+- UPSTASH_REDIS_REST_TOKEN = Upstash Redis REST token. Compute proxy requests fail closed until both rate-limit variables are configured.
 - Optional SEMANTIC_SCHOLAR_API_KEY = Semantic Scholar API key.
 
-Apply to Production and Preview as appropriate, then redeploy. The browser calls Vercel /api/engine/*; the Vercel proxy adds the secret token. The token is never sent to browser code.
+Apply to Production and Preview as appropriate, then redeploy. The browser calls Vercel /api/engine/*; the Vercel proxy adds the secret token. The token is never sent to browser code. The proxy applies per-IP limits of 4 LaTeX compilations and 20 plot requests per minute using Upstash Redis; configure both Upstash variables in Vercel Preview and Production.
 
 ## D. Test
 
@@ -68,9 +70,18 @@ Install dependencies:
     npm --prefix frontend install
     npm --prefix frontend run dev
 
-For the backend install backend/requirements.txt, install TeX Live/MiKTeX with latexmk, set PAPERORCHESTRA_ENGINE_TOKEN and CORS_ORIGINS=http://localhost:5173, then run:
+For the backend install backend/requirements.txt and install TeX Live/MiKTeX with latexmk. Set the same local secret in both PowerShell terminals; it must match the token expected by FastAPI and is read only by the Vite development server and backend, never by browser code.
 
+Terminal 1 — start FastAPI:
+
+    $env:PAPERORCHESTRA_ENGINE_TOKEN="your-long-local-secret"
+    $env:CORS_ORIGINS="http://localhost:5173"
     uvicorn backend.main:app --reload --port 8000
+
+Terminal 2 — start Vite with the proxy secret:
+
+    $env:PAPERORCHESTRA_ENGINE_TOKEN="your-long-local-secret"
+    npm --prefix frontend run dev
 
 ## Upstream source
 
@@ -90,3 +101,43 @@ The optional Windows companion adds a desktop window for the Vercel PWA and runs
 The local engine binds only to `127.0.0.1:8765`. It creates `%USERPROFILE%\\PaperOrchestra\\workspace` as the default working directory. The pairing token is stored under `%USERPROFILE%\\PaperOrchestra\\local-engine-token`.
 
 See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python scripts run with the permissions of the signed-in Windows account; the workspace is not a security sandbox. Only execute code you trust. Never forward port 8765 to the internet.
+
+
+## Phase 7 — Optional cloud collaboration
+
+PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
+
+To enable the optional account UI during local development, copy `frontend/.env.example` to `frontend/.env.local` and set:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY` (preferred; the legacy `VITE_SUPABASE_ANON_KEY` is also accepted)
+
+Use only the Supabase publishable key in browser configuration. Never place a Supabase service-role or secret key in a `VITE_*` variable, frontend source, or Vercel client environment. Configure the exact production and preview callback URLs in Supabase Auth before testing email links.
+
+The collaboration migrations in `supabase/migrations/` have been applied to the dedicated PaperOrchestra Supabase project. The Health Advisor reports no findings. The Security Advisor currently reports one warning: leaked-password protection is disabled and must be enabled in Supabase Auth before production use. Performance Advisor reports unused indexes because the collaboration tables are still empty. The sign-in UI is enabled on the Phase 7 Vercel preview only; project sharing, invitations, sync, comments UI and version restore are subsequent delivery slices. Existing local projects remain local until an explicit Share action is implemented.
+
+
+## Phase 8 — Systematic Review & Evidence Synthesis
+
+The project workspace now includes a local-first systematic review area for protocol details, DOI/title deduplication, title/abstract and full-text screening, PRISMA-style working counts, structured study extraction, domain-level risk-of-bias notes and evidence-matrix CSV export. Decisions remain researcher-led and are stored in the local IndexedDB project. See [Phase 8 architecture and counting rules](docs/phase8-systematic-review.md). The displayed flow is a working count summary, not a certified PRISMA 2020 diagram. Cloud sync, automated screening and automated extraction are not included in this phase.
+
+
+## Phase 9 — Lumen UI System-Wide Redesign
+
+Phase 9 establishes the cross-phase redesign specification for the React PWA using the Lumen UI React design system. It covers the application shell and every Phase 1–8 surface while preserving local-first IndexedDB, optional Supabase/RLS, browser WebLLM, bounded local data processing, export safeguards and researcher-led review decisions. See [Phase 9 redesign architecture and acceptance criteria](docs/phase9-lumen-redesign.md). The implementation must pin the Lumen adapter and lockfile together, then pass regression, accessibility, responsive, production-build and exact-commit Vercel Preview checks before release.
+
+## Engineering standards and release gates
+
+Repository-wide development rules are defined in [AGENTS.md](AGENTS.md) and [CONSTRAINTS.md](CONSTRAINTS.md). The current blocking GitHub Actions checks are npm dependency audits, the full regression suite and the TypeScript/production build. Browser automation, runtime accessibility, Lighthouse and Limrun device evidence are required before the integrated Phase 9 release; they are not claimed as automated until their test harnesses are added and verified. Vercel production deployment is a separate release decision after the quality gates pass.
+
+
+### Phase 9 visual prototype
+
+The current Research Station dashboard concept is available in the private [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). It uses preview data only and is not connected to application persistence. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md) for the Lumen package compatibility gate before production integration.
+
+
+
+
+### Phase 9 implementation status
+
+The dashboard visual concept is available in the [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). The production migration will use the published [Lumen React 4.3.0 adapter](https://www.npmjs.com/package/@santi020k/lumen-react) and its matching dependency family, not the newer 5.3.0 MCP catalog contract. The real dashboard's IndexedDB workflows and opt-in Supabase behavior remain authoritative. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md).

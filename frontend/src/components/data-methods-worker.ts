@@ -1,0 +1,63 @@
+import { assertDatasetColumnCount, canRetainDatasetRow } from "../lib/phase6-regressions.mjs";
+
+type ParseMessage = { source: string; delimiter: string; maxRows: number };
+type ParseResult = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean } | { error: string };
+
+self.onmessage = (event: MessageEvent<ParseMessage>) => {
+  const { source, delimiter, maxRows } = event.data;
+  try {
+    const retained: string[][] = [];
+    let row: string[] = [];
+    let field = "";
+    let quoted = false;
+    let headers: string[] = [];
+    let totalRows = 0;
+    let retainedCells = 0;
+
+    const commitRow = () => {
+      assertDatasetColumnCount(row.length + 1);
+      row.push(field.replace(/\r$/, ""));
+      field = "";
+      const physicallyBlank = row.length === 1 && row[0].trim() === "";
+      if (!physicallyBlank) {
+        if (!headers.length) headers = row.map((value, index) => value.trim() || "Column " + (index + 1));
+        else {
+          totalRows += 1;
+          // Normalize each retained row in place and keep a strict cell budget.
+          if (row.length > headers.length) row.length = headers.length;
+          while (row.length < headers.length) row.push("");
+          if (retained.length < maxRows && canRetainDatasetRow(retainedCells, row.length)) {
+            retained.push(row);
+            retainedCells += row.length;
+          }
+        }
+      }
+      row = [];
+    };
+
+    for (let index = 0; index < source.length; index++) {
+      const char = source[index];
+      if (quoted) {
+        if (char === '"' && source[index + 1] === '"') { field += '"'; index++; }
+        else if (char === '"') quoted = false;
+        else field += char;
+      } else if (char === '"' && field.length === 0) quoted = true;
+      else if (char === delimiter) { assertDatasetColumnCount(row.length + 2); row.push(field); field = ""; }
+      else if (char === "\n") commitRow();
+      else field += char;
+    }
+    if (field.length || row.length) commitRow();
+
+    if (headers.length === 0 || totalRows === 0) {
+      self.postMessage({ error: "This file needs a header row and at least one data row." } satisfies ParseResult);
+      return;
+    }
+    // Rows are already normalized and retained by reference. Avoid a second
+    // full matrix allocation before postMessage performs its one structured clone.
+    self.postMessage({
+      headers, rows: retained, totalRows, truncated: totalRows > retained.length
+    } satisfies ParseResult);
+  } catch (error) {
+    self.postMessage({ error: error instanceof Error ? error.message : "Could not parse this dataset." } satisfies ParseResult);
+  }
+};

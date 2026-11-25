@@ -1,5 +1,17 @@
 import type { Paper, FigureAsset } from "./types";
 
+export class ApiRequestError extends Error {
+  status: number;
+  retryAfterSeconds: number;
+
+  constructor(message: string, status: number, retryAfterSeconds = 0) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch("/api/" + path, {
     method: "POST",
@@ -8,7 +20,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
-    throw new Error(payload?.detail || "API error " + response.status);
+    const headerRetry = Number(response.headers.get("Retry-After")) || 0;
+    const bodyRetry = Number(payload?.retryAfterSeconds) || 0;
+    throw new ApiRequestError(
+      payload?.detail || "API error " + response.status,
+      response.status,
+      Math.max(headerRetry, bodyRetry, 0)
+    );
   }
   return response.json();
 }
@@ -21,6 +39,54 @@ function escapeXml(value: unknown) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"
   }[c]!));
+}
+
+function bibtexToHtml(bibtex: string) {
+  const starts = [...bibtex.matchAll(/@[a-z]+\s*\{\s*([^,]+),/gi)];
+  if (!starts.length) return "";
+  const field = (source: string, name: string) => {
+    const matcher = new RegExp("(?:^|,)\\s*" + name + "\\s*=\\s*", "i");
+    const match = matcher.exec(source);
+    if (!match) return "";
+    let index = match.index + match[0].length;
+    while (/\s/.test(source[index] || "")) index++;
+    const opener = source[index];
+    if (opener !== "{" && opener !== '"') return "";
+    index++;
+    let value = "";
+    let depth = opener === "{" ? 1 : 0;
+    const quoted = opener === '"';
+    let escaped = false;
+    for (; index < source.length; index++) {
+      const char = source[index];
+      if (escaped) { value += char; escaped = false; continue; }
+      if (char === "\\") { value += char; escaped = true; continue; }
+      if (quoted) {
+        if (char === '"') break;
+        value += char;
+      } else {
+        if (char === "{") { depth++; if (depth > 1) value += char; }
+        else if (char === "}") { depth--; if (depth === 0) break; value += char; }
+        else value += char;
+      }
+    }
+    return value.replace(/[{}]/g, "").trim();
+  };
+  const rows = starts.map((entry, index) => {
+    const bodyStart = entry.index! + entry[0].length;
+    const nextStart = starts[index + 1]?.index ?? bibtex.length;
+    const source = bibtex.slice(bodyStart, nextStart).replace(/\s*\}\s*$/, "");
+    const author = field(source, "author").replace(/\s+and\s+/gi, ", ");
+    const year = field(source, "year");
+    const title = field(source, "title") || entry[1] || ("Reference " + (index + 1));
+    const venue = field(source, "journal") || field(source, "booktitle") || field(source, "publisher");
+    const doi = field(source, "doi");
+    const url = field(source, "url");
+    const details = [author, year, venue, doi ? "DOI: " + doi : ""].filter(Boolean).join(". ");
+    const linked = /^https?:\/\//i.test(url) ? ' <a href="' + escapeXml(url) + '">' + escapeXml(url) + '</a>' : "";
+    return "<li><strong>" + escapeXml(title) + "</strong>" + (details ? ". " + escapeXml(details) : "") + linked + "</li>";
+  }).join("");
+  return '<section class="references"><h2>References</h2><ol>' + rows + "</ol></section>";
 }
 
 function browserSvg(data: unknown[], x: string, y: string, title: string) {
@@ -56,7 +122,7 @@ export async function generatePlot(data: unknown[], x: string, y: string, title:
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN")) throw error;
+    if (!message.includes("Rate-limit service is temporarily unavailable") && !message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
     return browserSvg(data,x,y,title);
   }
 }
@@ -77,7 +143,7 @@ export async function compileLatex(
     );
   } catch (error) {
     const message=(error as Error).message;
-    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN")) throw error;
+    if (!message.includes("Engine service is not configured") && !message.includes("PAPERORCHESTRA_ENGINE_TOKEN") && !message.includes("Compute requests are disabled until UPSTASH_REDIS_REST_URL") && !message.includes("Rate-limit service") && !message.includes("rate-limit window")) throw error;
     const esc=(s:string)=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]!));
     const title=tex.match(/\\title\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g,"")||"Research Manuscript";
     const author=tex.match(/\\author\{([\s\S]*?)\}/)?.[1]?.replace(/\\\\/g," ")||"";
@@ -95,7 +161,7 @@ export async function compileLatex(
       .replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?/g,"")
       .replace(/[{}]/g,"").split(/\n{2,}/).map(p=>p.trim()).filter(Boolean)
       .map(p=>/^<h[23]>/.test(p)?p:"<p>"+p.replace(/\n/g," ")+"</p>").join("\n");
-    const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>body{font:11pt/1.6 Georgia,serif;max-width:820px;margin:50px auto;padding:0 40px}h1{text-align:center;margin:60px 0 12px}h2{margin-top:28px;border-bottom:1px solid #ddd}p{text-align:justify}@media print{body{margin:0 auto;padding:0 12mm}}</style></head><body><h1>'+esc(title)+'</h1><p style="text-align:center">'+esc(author)+'</p>'+body+'<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),500))</script></body></html>';
+    const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>body{font:11pt/1.6 Georgia,serif;max-width:820px;margin:50px auto;padding:0 40px}h1{text-align:center;margin:60px 0 12px}h2{margin-top:28px;border-bottom:1px solid #ddd}p{text-align:justify}.references{page-break-before:auto;margin-top:36px}.references li{margin:0 0 10px;text-align:left;overflow-wrap:anywhere}.references a{color:#333}@media print{body{margin:0 auto;padding:0 12mm}}</style></head><body><h1>'+esc(title)+'</h1><p style="text-align:center">'+esc(author)+'</p>'+body+bibtexToHtml(bibtex)+'<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),500))</script></body></html>';
     const url=URL.createObjectURL(new Blob([html],{type:"text/html"}));
     const opened=window.open(url,"_blank");
     if(!opened){URL.revokeObjectURL(url);throw new Error("Pop-up blocked. Allow pop-ups and try again.");}

@@ -24,3 +24,380 @@
 .dash-modal-backdrop{position:fixed;inset:0;background:#050609bb;z-index:20;display:grid;place-items:center;padding:20px}.dash-modal{width:min(460px,100%);background:#1a1c22;border:1px solid #3b3d48;border-radius:11px;padding:24px;box-shadow:0 22px 70px #000b}.dash-modal h2{font-size:21px;margin:0 0 8px}.dash-modal>p{color:#9296a2;font-size:11px;line-height:1.6;margin:0 0 20px}.dash-modal label{display:block;color:#b8bbc5;font-size:10px;margin:13px 0}.dash-modal label span{font:8px 'DM Mono';color:#777b88;margin-left:5px}.dash-modal input,.dash-modal textarea{display:block;width:100%;margin-top:7px;background:#111318;border:1px solid #393c47;border-radius:6px;padding:10px;color:#eee;outline:0;resize:vertical;font-size:11px}.dash-modal input:focus,.dash-modal textarea:focus{border-color:#8276f1}.dash-modal-actions{display:flex;justify-content:end;gap:9px;margin-top:22px}.dash-cancel{border:1px solid #3a3d47;background:transparent;color:#b5b8c2;border-radius:6px;padding:9px 13px;font-size:10px}
 @media(max-width:850px){.dash-project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-orbit{margin-right:0;transform:scale(.8)}.dash-main{padding-top:35px}}
 @media(max-width:580px){.dash-project-grid,.dash-stats{grid-template-columns:1fr}.dash-orbit{display:none}.dash-brand small,.dash-local{display:none}.dash-section-head{align-items:start;gap:12px;flex-direction:column}.dash-search{width:100%}.dash-footer{gap:12px;flex-direction:column}.dash-main{padding-left:17px;padding-right:17px}}
+
+
+/* PaperOrchestra design refresh — Research Station */
+.dashboard-shell{background:#f5f5f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.dash-topbar{background:#ffffffed;border-bottom-color:#e5e5ea;backdrop-filter:blur(18px)}
+.dash-brand{color:#202126;font-size:16px}
+.dash-brand>span>span{color:#777982}
+.dash-mark{background:#656297;border-radius:9px}
+.dash-brand small{color:#77749f;border-color:#e2e1ed}
+.dash-local{color:#858790}
+.dash-local span{background:#69a987;box-shadow:none}
+.dash-new{background:#625f98;border:1px solid #625f98;border-radius:9px}
+.dash-new:hover{background:#555281}
+.dash-main{max-width:1240px;padding-top:42px}
+.dash-kicker{color:#77749f}
+.dash-welcome h1{color:#1d1d1f;font-weight:650;letter-spacing:-1.9px}
+.dash-welcome p{color:#777982}
+.orbit-ring{border-color:#dedde9}
+.ring-two{border-color:#e6e5ed}
+.orbit-core{background:#eeedf5;border-color:#d8d6e8;color:#656297;box-shadow:0 0 35px #77749f15}
+.orbit-dot{background:#77749f;box-shadow:none}
+.dot-b{background:#78a98d}.dot-c{background:#c6a77c}
+.dash-stats{gap:12px}
+.dash-stats>div{border:1px solid #e5e5ea;background:#fff;border-radius:13px;box-shadow:0 2px 8px #25293606}
+.dash-stats>div>span{color:#777982}
+.dash-stats strong{color:#292a30;font-weight:650}
+.dash-stats small{color:#9698a0}
+.dash-section-head h2{color:#202126}
+.dash-search{border:1px solid #dedfe5;border-radius:10px;background:#fff;color:#858790}
+.dash-search input{color:#202126}
+.dash-project-card{border:1px solid #e5e5ea;background:#fff;border-radius:13px;box-shadow:0 2px 8px #25293606;transition:transform .16s,border-color .16s,box-shadow .16s}
+.dash-project-card:hover{border-color:#c5c3dc;box-shadow:0 8px 24px #2529360c;transform:translateY(-2px)}
+.dash-card-icon{background:#f0eff7;color:#656297;border-radius:10px}
+.dash-delete{color:#9b9da5}
+.dash-project-card h3{color:#25262b}
+.dash-card-desc{color:#777982}
+.dash-progress>div{color:#92949b}
+.dash-progress b{color:#625f98}
+.dash-progress i{background:#ececf1}
+.dash-progress i span{background:#77749f}
+.dash-card-foot{border-top-color:#eeeeF1}
+.dash-card-foot>span{color:#858790}
+.dash-card-foot button{color:#625f98}
+.dash-empty{border-color:#d8d9df;color:#858790}
+.dash-empty strong{color:#292a30}
+.dash-footer{border-top-color:#e5e5ea;color:#92949b}
+.dash-modal{background:#fff;border:1px solid #e5e5ea;border-radius:14px;box-shadow:0 22px 70px #1d1d1f20;color:#202126}
+.dash-modal h2{color:#202126}
+.dash-modal>p{color:#777982}
+.dash-modal label{color:#555861}
+.dash-modal label span{color:#9698a0}
+.dash-modal input,.dash-modal textarea{background:#fafafd;border:1px solid #dedfe5;border-radius:9px;color:#202126}
+.dash-modal input:focus,.dash-modal textarea:focus{border-color:#9290bd;box-shadow:0 0 0 3px #8d8ab51b}
+.dash-cancel{border:1px solid #dedfe5;background:#fff;color:#555861;border-radius:9px}
+@media(max-width:580px){.dash-main{padding-top:26px}}
+
+
+/* Phase 4 — shared light-first research interface and responsive layout */
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f;background:#f5f5f7;font-synthesis:none;text-rendering:optimizeLegibility}
+body:has(.dashboard-shell),body:has(.app-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
+.dashboard-shell{min-width:0;min-height:100vh;height:auto}
+.dash-scope-tabs{display:flex;gap:6px;margin:-4px 0 16px;padding:4px;border:1px solid #e5e5ea;border-radius:10px;background:#eeeff2;width:max-content}
+.dash-scope-tabs button{display:flex;align-items:center;gap:7px;padding:8px 12px;border:0;border-radius:7px;background:transparent;color:#777982;font-size:10px;font-weight:600}
+.dash-scope-tabs button.selected{background:#fff;color:#4f4c80;box-shadow:0 1px 3px #20232b12}
+.dash-scope-tabs span{padding:2px 6px;border-radius:10px;background:#f0f0f3;color:#858790;font-size:9px}
+.dash-archive-actions{display:flex;align-items:center;gap:4px}
+.dash-restore{display:inline-flex;align-items:center;justify-content:center;padding:6px;border:0;border-radius:6px;background:transparent;color:#5d8b6e}
+.dash-restore:hover{background:#edf6f0}
+.dash-archived-at{margin:9px 0 0;color:#92949b;font-size:9px}
+.dash-delete:hover{background:#fff0f0;color:#a44d4d}
+.dash-project-card{min-width:0}
+.dash-project-card h3,.dash-card-desc{overflow-wrap:anywhere}
+.app-shell{height:auto;min-height:100vh;background:#f5f5f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.topbar{position:sticky;top:0;z-index:10;min-height:62px;height:auto;padding:9px clamp(12px,2vw,24px);gap:16px;flex-wrap:wrap;border-bottom:1px solid #e5e5ea;background:#ffffffed;backdrop-filter:blur(18px);color:#202126}
+.brand{color:#202126}.brand-light{color:#777982}.brand-mark{background:#656297}
+.studio-tag{color:#77749f;border-color:#e2e1ed}
+.project-title input{color:#202126}
+.muted{color:#858790}
+.top-actions{gap:8px;flex-wrap:wrap}
+.gpu-pill,.telemetry{color:#777982}
+.secondary-button,.tiny-button,.compile-button{border:1px solid #dedfe5;border-radius:9px;background:#fff;color:#555861}
+.secondary-button:hover,.tiny-button:hover,.compile-button:hover{border-color:#c4c2d9;background:#f8f8fc;color:#4e4b80}
+.primary-button{border:1px solid #625f98;border-radius:9px;background:#625f98;color:#fff}
+.primary-button:hover{background:#555281}
+.icon-button{color:#777982}.icon-button:hover{background:#f0f0f4;color:#4f4c80}
+.hardware-row{min-height:42px;height:auto;padding:8px 18px;flex-wrap:wrap;gap:8px;border-bottom:1px solid #e5e5ea;background:#fff;color:#777982}
+.progress-track{background:#e9e9ee}.progress-track div{background:#77749f}
+.live-dot{background:#69a987;box-shadow:none}
+.workspace{min-height:calc(100vh - 108px);grid-template-columns:210px minmax(0,1fr) minmax(280px,32%);background:#f5f5f7}
+.left-pane{border-right:1px solid #e5e5ea;background:#fff}
+.pane-title{color:#555861;border-bottom-color:#eeeeF1}
+.project-tree{background:#fff}
+.tree-section{color:#92949b}
+.tree-item{color:#666a73}
+.tree-item.active{background:#f0eff7;color:#565382}
+.tree-action,.saved-project{color:#777982}
+.tree-action:hover,.saved-project:hover{color:#4f4c80;background:#f5f5fa}
+.template-select,.settings-pop select,.settings-pop input:not([type=checkbox]){background:#fff;color:#292a30;border-color:#dedfe5}
+.sidebar-footer{border-top-color:#eeeeF1;color:#858790}
+.center-pane{background:#f5f5f7}
+.agent-stepper{border-bottom-color:#e5e5ea;background:#fff}
+.step{color:#858790}.step.selected{color:#4f4c80}
+.step-num{border-color:#d9dae1;color:#777982}
+.step-num.complete{background:#edf6f0;border-color:#cfe4d7;color:#4f8065}
+.step.selected .step-num{border-color:#bcb9d8;background:#f0eff7;color:#565382}
+.step-line{background:#e2e2e8}
+.center-tabs{border-bottom-color:#e5e5ea;background:#fff}
+.tab{color:#858790}.active-tab{color:#4f4c80}.active-tab:after{background:#77749f}
+.center-content{padding:22px clamp(14px,2.4vw,28px)}
+.agent-heading h1{color:#202126}.agent-heading p{color:#777982}
+.eyebrow{color:#77749f}
+.agent-card,.feedback-box{background:#fff;border:1px solid #e5e5ea;border-radius:13px;box-shadow:0 2px 8px #25293606}
+.card-top{border-bottom-color:#eeeeF1}
+.card-title{color:#292a30}.card-title svg{color:#77749f}
+.status{color:#858790}.status.done{color:#4f8065}.status.running{color:#77749f}.status.error{color:#a34f4f}
+.outline-row{border-bottom-color:#eeeeF1}
+.outline-row input{color:#292a30}
+.outline-index{color:#92949b}
+.drag-handle{color:#b1b3ba}
+.add-row{color:#625f98}
+.empty-state{color:#858790}
+.agent-summary{background:#f8f8fb;border-top-color:#eeeeF1;color:#666a73}
+.agent-summary strong{color:#4f4c80}
+.paper-row{border-bottom-color:#eeeeF1}
+.paper-icon{background:#f0eff7;color:#656297}
+.paper-row strong{color:#292a30}
+.paper-row p{color:#777982}
+.paper-row a{color:#625f98}
+.feedback-box label{color:#555861}
+.feedback-box input{background:#fafafd;border-color:#dedfe5;color:#292a30}
+.runtime-log{border-top-color:#e5e5ea}
+.log-label{color:#92949b}
+.runtime-log p{color:#666a73}
+.runtime-log pre{background:#f8f8fb;color:#555281}
+.center-footer{border-top-color:#e5e5ea;color:#858790}
+.right-pane{border-left:1px solid #e5e5ea;background:#fff}
+.preview-header{border-bottom-color:#eeeeF1;color:#555861}
+.pdf-toolbar{border-bottom-color:#eeeeF1;color:#777982}
+.compile-button{background:#f0eff7;border-color:#d9d7e8;color:#565382}
+.pdf-view{background:#ececf0}
+.pdf-empty{color:#858790}
+.pdf-empty strong{color:#292a30}
+.pdf-empty p{color:#777982}
+.preview-bottom{border-top-color:#eeeeF1;color:#858790}
+.statusbar{border-top-color:#e5e5ea;background:#fff;color:#858790}
+.statusbar>span:nth-child(2){color:#4f8065}
+.settings-pop{background:#fff;border:1px solid #e5e5ea;border-radius:13px;box-shadow:0 15px 45px #20232b18;color:#292a30}
+.panel-heading{color:#292a30}
+.settings-pop label{color:#555861}
+.hint{color:#777982}
+.editor-wrap{border-color:#e5e5ea;background:#fff}
+.editor-toolbar{background:#f8f8fb;color:#555861}
+.latex-editor{background:#fff;color:#292a30}
+.plot-large span{background:#f8f8fb;color:#555861}
+.studio-project-context{margin:0 0 17px;padding:14px 16px;border:1px solid #e5e5ea;border-radius:12px;background:#fff}
+.studio-project-context>span{display:block;color:#77749f;font-size:9px;font-weight:700;letter-spacing:.09em}
+.studio-project-context p{margin:7px 0 0;color:#454750;font-size:12px;line-height:1.6}
+.studio-project-context small{display:block;margin-top:8px;color:#858790;font-size:10px;line-height:1.55}
+.studio-loading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:#f5f5f7;color:#202126;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.studio-loading strong{font-size:17px;font-weight:650}
+.studio-loading span{max-width:440px;color:#777982;font-size:12px;line-height:1.6}
+.studio-loading-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#eeedf5;color:#656297}
+.saved-project:disabled{color:#4f4c80;background:#f0eff7;cursor:default}
+.pw-global-notice{display:flex;align-items:flex-start;gap:8px;margin:-9px 0 20px;padding:11px 13px;border:1px solid #dcebe3;border-radius:10px;background:#f5faf7;color:#4f8065;font-size:11px;line-height:1.5}
+.pw-global-notice svg{flex-shrink:0;margin-top:1px}
+.pw-global-notice.error{border-color:#f0d0cd;background:#fff5f4;color:#98443d}
+@media(max-width:1050px){.workspace{grid-template-columns:185px minmax(0,1fr)}.right-pane{grid-column:1/-1;min-height:390px;border-top:1px solid #e5e5ea;border-left:0}.topbar{gap:10px}.project-title{min-width:160px}.memory-est{display:none}}
+@media(max-width:680px){.workspace{display:flex;flex-direction:column}.left-pane{max-height:220px;border-right:0;border-bottom:1px solid #e5e5ea}.project-tree{max-height:170px}.agent-stepper{justify-content:flex-start;overflow-x:auto}.center-tabs{overflow-x:auto;gap:14px;padding:0 12px}.center-tabs .tab{white-space:nowrap}.center-content{padding:16px 12px}.right-pane{min-height:350px}.topbar{align-items:flex-start}.brand{width:100%}.project-title{flex:1;min-width:100%;order:2}.top-actions{order:3}.hardware-row{align-items:flex-start}.hardware-right{flex-wrap:wrap}.dash-topbar{padding-left:14px;padding-right:14px}.dash-top-right{gap:10px}.dash-scope-tabs{max-width:100%}}
+
+
+/* Phase 7 — optional cloud account access */
+.cloud-auth-status,.cloud-auth-user,.cloud-auth-user>span{display:inline-flex;align-items:center;gap:7px}
+.cloud-auth-status{color:#858790;font-size:10px;white-space:nowrap}
+.cloud-auth-user{gap:10px;color:#666a73;font-size:10px}
+.cloud-auth-user>span{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cloud-auth-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 11px;border:1px solid #dedfe5;border-radius:9px;background:#fff;color:#555861;font-size:11px;font-weight:600;white-space:nowrap}
+.cloud-auth-button:hover{border-color:#c4c2d9;background:#f8f8fc;color:#4e4b80}
+.cloud-auth-button:disabled{opacity:.6;cursor:wait}
+.cloud-auth-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:#15152266;backdrop-filter:blur(5px)}
+.cloud-auth-dialog{position:relative;width:min(100%,430px);padding:30px;border:1px solid #e5e5ea;border-radius:20px;background:#fff;box-shadow:0 24px 80px #17172b30;color:#202126}
+.cloud-auth-close{position:absolute;top:15px;right:15px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:8px;background:#f5f5f7;color:#777982}
+.cloud-auth-mark{display:grid;place-items:center;width:42px;height:42px;margin-bottom:17px;border-radius:13px;background:#f0eff7;color:#656297}
+.cloud-auth-eyebrow{color:#77749f;font-size:9px;font-weight:750;letter-spacing:.12em}
+.cloud-auth-dialog h2{margin:8px 0;color:#202126;font-size:22px;letter-spacing:-.04em}
+.cloud-auth-dialog>p{margin:0 0 20px;color:#777982;font-size:12px;line-height:1.65}
+.cloud-auth-modes{display:flex;gap:4px;margin-bottom:18px;padding:4px;border-radius:10px;background:#f5f5f7}
+.cloud-auth-modes button{flex:1;padding:8px 5px;border:0;border-radius:7px;background:transparent;color:#777982;font-size:10px;font-weight:650}
+.cloud-auth-modes button.active{background:#fff;color:#4f4c80;box-shadow:0 1px 4px #25293612}
+.cloud-auth-dialog form{display:grid;gap:13px}
+.cloud-auth-dialog form label{display:grid;gap:6px;color:#555861;font-size:11px;font-weight:650}
+.cloud-auth-dialog form input{width:100%;padding:11px 12px;border:1px solid #dedfe5;border-radius:9px;background:#fff;color:#292a30;font:inherit;font-size:12px;outline:none}
+.cloud-auth-dialog form input:focus{border-color:#77749f;box-shadow:0 0 0 3px #77749f20}
+.cloud-auth-submit{margin-top:3px;padding:12px;border:1px solid #625f98;border-radius:9px;background:#625f98;color:#fff;font-size:12px;font-weight:700}
+.cloud-auth-submit:disabled{opacity:.6;cursor:wait}
+.cloud-auth-message,.cloud-auth-error{margin:13px 0 0!important;padding:10px 11px;border-radius:8px;font-size:11px!important;line-height:1.5}
+.cloud-auth-message{background:#f1f8f3;color:#427557!important}
+.cloud-auth-error{background:#fff3f2;color:#a34f4f!important}
+.cloud-auth-dialog>small{display:flex;align-items:flex-start;gap:6px;margin-top:18px;color:#858790;font-size:9px;line-height:1.5}
+.cloud-auth-dialog>small svg{flex-shrink:0;margin-top:1px}
+@media(max-width:680px){.dash-top-right{flex-wrap:wrap;justify-content:flex-end}.cloud-auth-user>span{max-width:120px}.cloud-auth-dialog{padding:24px 20px}}
+
+
+/* Keyboard focus visibility for dashboard and account dialogs */
+.dash-modal button:focus-visible,
+.dash-modal input:focus-visible,
+.dash-modal textarea:focus-visible,
+.dash-search input:focus-visible,
+.cloud-auth-dialog button:focus-visible,
+.cloud-auth-dialog input:focus-visible {
+  outline: 2px solid #77749f;
+  outline-offset: 2px;
+}
+
+
+.dash-action-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 13px;
+  border: 1px solid #efcbc7;
+  border-radius: 10px;
+  background: #fff5f4;
+  color: #913f39;
+  font-size: 12px;
+}
+.dash-action-error button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+.pw-global-notice .pw-notice-action {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  padding: 5px 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+
+.studio-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+  border-bottom: 1px solid #efcbc7;
+  background: #fff5f4;
+  color: #913f39;
+  font-size: 12px;
+}
+.studio-error-banner .secondary-button {
+  flex: 0 0 auto;
+}
+
+
+/* Search controls: readable placeholder and focus-preserving clear actions */
+.dash-search input::placeholder{color:#6b6e77;opacity:1}
+.dash-search-clear{
+  display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;
+  border:0;border-radius:8px;background:transparent;color:#6b6e77;cursor:pointer
+}
+.dash-search-clear:hover,.dash-search-clear:focus-visible{background:#f0eff7;color:#514f82}
+.dash-search-clear:focus-visible,.dash-empty-clear:focus-visible{
+  outline:2px solid #625f98;outline-offset:2px
+}
+.dash-empty-clear{
+  display:inline-flex;align-items:center;justify-content:center;min-height:34px;
+  margin-top:9px;padding:6px 11px;border:1px solid #dcdce6;border-radius:8px;
+  background:#fff;color:#555281;font-size:10px;font-weight:650;cursor:pointer
+}
+.dash-empty-clear:hover{border-color:#b9b7d2;background:#f8f8fc}
+
+
+/* Phase 7 — Writing Studio keyboard focus and reduced motion */
+.app-shell :is(button,input,select,textarea):focus-visible{
+  outline:2px solid #9a90ff;
+  outline-offset:2px;
+}
+.app-shell button:disabled{cursor:not-allowed}
+.progress-track:focus-visible{outline:2px solid #9a90ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  .app-shell *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+@media(max-width:760px){
+  .app-shell{height:auto;min-height:100vh;overflow-x:hidden}
+  .topbar{height:auto;min-height:58px;flex-wrap:wrap;gap:10px;padding:10px 12px}
+  .project-title{order:2;flex:1 1 100%;min-width:0}
+  .project-title input{width:100%;min-width:0}
+  .top-actions{flex:1 1 auto;justify-content:flex-end;flex-wrap:wrap;gap:7px}
+  .gpu-pill,.telemetry{font-size:9px}
+  .hardware-row{height:auto;min-height:39px;flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .hardware-left,.hardware-right{flex-wrap:wrap;gap:7px}
+  .memory-est{margin-left:0}
+  .workspace{display:flex;flex-direction:column;min-height:0}
+  .left-pane{order:1;max-height:220px;border-right:0;border-bottom:1px solid #292b32}
+  .center-pane{order:2;min-height:620px}
+  .right-pane{order:3;min-height:440px;border-left:0;border-top:1px solid #292b32}
+  .agent-stepper{justify-content:flex-start;overflow-x:auto}
+  .center-tabs{overflow-x:auto;gap:14px;padding:0 12px}
+  .center-content{padding:16px 13px}
+  .settings-pop{right:8px;left:8px;top:62px;width:auto}
+  .statusbar{height:auto;min-height:25px;flex-wrap:wrap;gap:7px;padding:7px 10px}
+}
+@media(max-width:420px){
+  .brand{font-size:13px}
+  .studio-tag{display:none}
+  .top-actions .gpu-pill,.top-actions .telemetry{display:none}
+  .agent-heading{align-items:flex-start;gap:12px;flex-direction:column}
+  .agent-heading .primary-button{width:100%}
+  .feedback-box>div{flex-direction:column}
+  .feedback-box .secondary-button{width:100%}
+  .center-footer{height:auto;min-height:31px;gap:8px;flex-wrap:wrap;padding:7px 10px}
+}
+
+/* Phase 9 — Lumen-backed dashboard primitives and narrow-screen safeguards */
+.dash-local.ui-badge{min-height:0;padding:0;border:0;background:transparent;color:#5e8f70;font-size:10px;font-weight:650;letter-spacing:.04em}
+.dash-local.ui-badge>span{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#69a987}
+.dash-project-card.ui-card--unstyled{display:flex;min-width:0}
+.dash-lumen-progress.ui-progress{height:3px;margin-top:7px;background:#ececf1}
+.dash-lumen-progress .ui-progress__bar{background:#77749f;transition:width 180ms ease}
+.dash-open-project.ui-button{min-height:28px;padding:4px 7px;color:#625f98;font-size:10px;font-weight:650}
+.dash-new.ui-button{min-height:36px;padding:8px 13px;color:#fff;font-size:11px;font-weight:650}
+.dash-cancel.ui-button{min-height:34px;padding:7px 12px;color:#555861;font-size:11px}
+.dash-scope-tabs .ui-button{min-height:32px;padding:7px 11px;border-radius:7px;font-size:10px}
+.dash-delete.ui-button,.dash-restore.ui-button{min-width:30px;min-height:30px;padding:6px}
+body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
+.dashboard-shell{width:100%;min-width:0;overflow-x:clip}
+@media(max-width:420px){.dash-topbar{padding-left:12px;padding-right:12px}.dash-top-right{width:100%;justify-content:space-between;gap:8px}.dash-main{padding-left:12px;padding-right:12px}.dash-modal{max-height:calc(100dvh - 24px);overflow-y:auto}}
+@media(prefers-reduced-motion:reduce){.dash-lumen-progress .ui-progress__bar{transition:none}}
+
+/* Mobile dialog sizing: include padding and borders inside the viewport width. */
+.dash-modal{box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-width:100%;min-width:0}
+.dash-modal *{box-sizing:border-box}
+.dash-modal input,.dash-modal textarea{min-width:0}
+.dash-modal-actions{flex-wrap:wrap}
+@media(max-width:420px){.dash-modal-backdrop{padding:12px}.dash-modal{width:100%;max-width:100%;padding:20px 18px}}
+
+/* iOS Safari auto-zooms focused form controls below 16px. Keep mobile dialogs in the viewport. */
+@media(max-width:580px){
+  .dash-modal-backdrop{padding:12px}
+  .dash-modal{width:min(100%,460px);max-width:100%;padding:20px 18px}
+  .dash-modal input,.dash-modal textarea,.cloud-auth-dialog input,.cloud-auth-dialog textarea,.dash-search input{font-size:16px}
+  .dash-modal h2{overflow-wrap:anywhere}
+}
+
+/* WCAG 2.2 AA contrast corrections for the light Research Station dashboard. */
+.dashboard-shell .dash-brand>span>span,.dashboard-shell .dash-welcome-copy>p,.dashboard-shell .dash-stats>div>span,.dashboard-shell .dash-empty>p{color:#6c6f78}
+.dashboard-shell .dash-brand>small,.dashboard-shell .dash-kicker{color:#68658e}
+.dashboard-shell .dash-local.ui-badge{color:#477653}
+.dashboard-shell .dash-stats>div>small,.dashboard-shell .dash-footer,.dashboard-shell .dash-modal label span{color:#62666f}
+.dashboard-shell .dash-scope-tabs button:not(.selected){color:#62666f}
+
+/* Remaining muted cloud and dialog copy must also meet AA on white surfaces. */
+.dashboard-shell .cloud-auth-status{color:#62666f}
+.dashboard-shell #dash-create-description{color:#6c6f78}
+
+/* Supabase sign-in dialog contrast and mobile input zoom safeguards. */
+.cloud-auth-dialog .cloud-auth-eyebrow{color:#68658e}
+.cloud-auth-dialog #cloud-auth-description{color:#6c6f78}
+.cloud-auth-dialog .cloud-auth-modes button:not(.active){color:#62666f}
+.cloud-auth-dialog>small{color:#62666f}
+@media(max-width:580px){.cloud-auth-dialog form input{font-size:16px}}
