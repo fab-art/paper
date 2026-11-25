@@ -30,10 +30,11 @@ const taskStatusLabel: Record<string, string> = {
 const uid = () => Math.random().toString(36).slice(2, 12);
 
 export default function ResearchProductionLine({
-  projectId, project, paperType, researchMode, onModeChange, onOpenStudio
+  projectId, project, paperType, researchMode, onModeChange, onOpenStudio, onProjectUpdate
 }: {
   projectId: string;
   project: Project;
+  onProjectUpdate: (changes: Partial<Project>) => void;
   paperType: ResearchPaperType;
   researchMode: "guided" | "professional";
   onModeChange: (mode: "guided" | "professional") => void;
