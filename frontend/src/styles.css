@@ -383,3 +383,10 @@ body:has(.dashboard-shell){min-width:320px;overflow-x:hidden;overflow-y:auto}
   .dash-modal input,.dash-modal textarea,.cloud-auth-dialog input,.cloud-auth-dialog textarea,.dash-search input{font-size:16px}
   .dash-modal h2{overflow-wrap:anywhere}
 }
+
+/* WCAG 2.2 AA contrast corrections for the light Research Station dashboard. */
+.dashboard-shell .dash-brand>span>span,.dashboard-shell .dash-welcome-copy>p,.dashboard-shell .dash-stats>div>span,.dashboard-shell .dash-empty>p{color:#6c6f78}
+.dashboard-shell .dash-brand>small,.dashboard-shell .dash-kicker{color:#68658e}
+.dashboard-shell .dash-local.ui-badge{color:#477653}
+.dashboard-shell .dash-stats>div>small,.dashboard-shell .dash-footer,.dashboard-shell .dash-modal label span{color:#62666f}
+.dashboard-shell .dash-scope-tabs button:not(.selected){color:#62666f}

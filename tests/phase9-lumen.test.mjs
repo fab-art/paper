@@ -1,47 +1,59 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+²×hº×.¶Ø^•«-ãM4¡ş6×fòµë‹ÉÜ]X[\Ü›Y]K\›
+K	İ]	ÊNÂ‚ˆ\İ
+	Ó[Y[ˆ™XXİ[™]È[[YHXÚØYÙ\È\™H[›™YÈÛ™H™\šYšYY™[X\ÙIË\Ş[˜È
 
-const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+HOˆÂˆÛÛœİX[šY™\İH”ÓÓ‹œ\œÙJ]ØZ]™XY
+	Ùœ›Û[™ÜXÚØYÙKšœÛÛ‰ÊJNÂˆÛÛœİØÚÈH”ÓÓ‹œ\œÙJ]ØZ]™XY
+	Ùœ›Û[™ÜXÚØYÙK[ØÚËšœÛÛ‰ÊJNÂˆ\ÜÙ\™\]X[
+X[šY™\İ™\[™[˜ÚY\ÖÉĞØ[LŒËÛ[Y[‹\™XXİ	×K	ÍŒËŒ	ÊNÂˆ\ÜÙ\™\]X[
+X[šY™\İ›İ™\œšY\ÖÉĞØ[LŒËÛ[Y[‰×K	ÍŒËŒ	ÊNÂˆ\ÜÙ\™\]X[
+X[šY™\İ›İ™\œšY\ÖÉĞØ[LŒËÛ[Y[‹XÛÜ™I×K	ÍŒËŒ	ÊNÂˆ›Üˆ
+ÛÛœİ˜[YHÙˆÉĞØ[LŒËÛ[Y[‹\™XXİ	Ë	ĞØ[LŒËÛ[Y[‰Ë	ĞØ[LŒËÛ[Y[‹XÛÜ™I×JHÂˆÛÛœİ™\ÛÛ™YHØš™Xİ™[šY\ÊØÚËœXÚØYÙ\ÊK™š[\Š
+Ü]JHOˆ]™[™ÕÚ]
+›ÙWÛ[Ù[\ËÉÛ˜[Y_X
+JNÂˆ\ÜÙ\›ÚÊ™\ÛÛ™Y›[™İˆ	Û˜[Y_H]\İ\X\ˆ[ˆHØÚÙš[X
+NÂˆ\ÜÙ\›ÚÊ™\ÛÛ™Y™]™\J
+ËÙ×JHOˆÙË™\œÚ[ÛˆOOH	ÍŒËŒ	ÊK	Û˜[Y_H]\İ™\ÛÛ™HÛ›HÈŒËŒ
+NÂˆBŸJNÂ‚\İ
+	Ó[Y[ˆİ[\ÈØY™Y›Ü™H\\“Ü˜Ú\İ˜Hİ™\œšY\ÉË\Ş[˜È
 
- test('Lumen React and its runtime packages are pinned to one verified release', async () => {
-  const manifest = JSON.parse(await read('frontend/package.json'));
-  const lock = JSON.parse(await read('frontend/package-lock.json'));
-  assert.equal(manifest.dependencies['@santi020k/lumen-react'], '4.3.0');
-  assert.equal(manifest.overrides['@santi020k/lumen'], '4.3.0');
-  assert.equal(manifest.overrides['@santi020k/lumen-core'], '4.3.0');
-  for (const name of ['@santi020k/lumen-react', '@santi020k/lumen', '@santi020k/lumen-core']) {
-    const resolved = Object.entries(lock.packages).filter(([path]) => path.endsWith(`node_modules/${name}`));
-    assert.ok(resolved.length > 0, `${name} must appear in the lockfile`);
-    assert.ok(resolved.every(([, pkg]) => pkg.version === '4.3.0'), `${name} must resolve only to 4.3.0`);
-  }
-});
+HOˆÂˆÛÛœİXZ[ˆH]ØZ]™XY
+	Ùœ›Û[™ÜÜ˜ËÛXZ[‹Ş	ÊNÂˆ\ÜÙ\›X]Ú
+XZ[‹Ú[\ÜÈ‰×PØ[LŒ×Û[Y[‹\™XXİÜİ[\×˜ÜÜÖÈ‰×NËÊNÂˆ\ÜÙ\›ÚÊXZ[‹š[™^ÙŠ	ĞØ[LŒËÛ[Y[‹\™XXİÜİ[\Ë˜ÜÜÉÊHXZ[‹š[™^ÙŠ	Ë‹Üİ[\Ë˜ÜÜÉÊJNÂŸJNÂ‚\İ
+	Ù\Ú›Ø\™\Ù\È[Y[ˆš[Z]]™\ÈÚ]İ]™\XÚ[™È[™^Yˆ›Ú™XİÜ\˜][ÛœÉË\Ş[˜È
 
-test('Lumen styles load before PaperOrchestra overrides', async () => {
-  const main = await read('frontend/src/main.tsx');
-  assert.match(main, /import ["']@santi020k\/lumen-react\/styles\.css["'];/);
-  assert.ok(main.indexOf('@santi020k/lumen-react/styles.css') < main.indexOf('./styles.css'));
-});
+HOˆÂˆÛÛœİ\Ú›Ø\™H]ØZ]™XY
+	Ùœ›Û[™ÜÜ˜ËØÛÛ\Û™[ËÑ\Ú›Ø\™Ş	ÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™Ùœ›ÛHÈ‰×PØ[LŒ×Û[Y[‹\™XXİÈ‰×KÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™Ï]Û—‹ÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™ÏØ\™‹ÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™Ï˜YÙW‹ÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™Ï›ÙÜ™\Ü×‹ÊNÂˆ›Üˆ
+ÛÛœİÜ\˜][ÛˆÙˆÉÛ\İ›Ú™XİÉË	ÜØ]™T›Ú™Xİ	Ë	Ü™\İÜ™T›Ú™Xİ	Ë	Ù[]T›Ú™Xİ[™]I×JHÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™™]È™YÑ^
+‰ÛÜ\˜][ÛŸW˜
+JNÂˆBŸJNÂ‚\İ
+	Ù\Ú›Ø\™Ú[™[XZ[œÈ\ØX›H]˜\œ›İÈšY]ÜÜÚYÉË\Ş[˜È
 
-test('dashboard uses Lumen primitives without replacing IndexedDB project operations', async () => {
-  const dashboard = await read('frontend/src/components/Dashboard.tsx');
-  assert.match(dashboard, /from ["']@santi020k\/lumen-react["']/);
-  assert.match(dashboard, /<Button\b/);
-  assert.match(dashboard, /<Card\b/);
-  assert.match(dashboard, /<Badge\b/);
-  assert.match(dashboard, /<Progress\b/);
-  for (const operation of ['listProjects', 'saveProject', 'restoreProject', 'deleteProjectAndData']) {
-    assert.match(dashboard, new RegExp(`\\b${operation}\\b`));
-  }
-});
+HOˆÂˆÛÛœİİ[\ÈH]ØZ]™XY
+	Ùœ›Û[™ÜÜ˜ËÜİ[\Ë˜ÜÜÉÊNÂˆ\ÜÙ\›X]Ú
+İ[\ËØ›ÙNš\×
+™\Ú›Ø\™\Ú[
+V××J—Ö×ŸWJ›Z[‹]ÚYŒÌŒÜÊNÂˆ\ÜÙ\›X]Ú
+İ[\Ë×™\Ú›Ø\™\Ú[Ê—Ö×ŸWJ›Z[‹]ÚYŒÜÊNÂˆ\ÜÙ\›X]Ú
+İ[\ËĞYYXWÊ—
+X^]ÚY—ÊN
+KÊNÂˆ\ÜÙ\›X]Ú
+İ[\Ë×™\Ú[[Ù[Ê—Ö×ŸWJ˜›Ş\Ú^š[™Î˜›Ü™\‹X›ŞÜÊNÂˆ\ÜÙ\›X]Ú
+İ[\Ë×™\Ú[[Ù[X˜XÚÙ›ÜÊ—Ö×ŸWJœY[™ÎŒLœÜÊNÂˆÛÛœİ[Øš[T[\ÈHİ[\ËœÛXÙJİ[\Ë›\İ[™^ÙŠ	ĞYYXJX^]ÚYN
+IÊJNÂˆ\ÜÙ\›X]Ú
+[Øš[T[\Ë×™\Ú[[Ù[[œ]×ŸWJ™›Û\Ú^™NŒMœÜÊNÂŸJNÂ‚‚\İ
+	Ù\Ú›Ø\™[™›Ú™XİÛÜšÜÜXÙH\ÙHÛÛ˜\İ\ØY™H]]Y^ÚÙ[œÉË\Ş[˜È
 
-test('dashboard shell remains usable at narrow viewport widths', async () => {
-  const styles = await read('frontend/src/styles.css');
-  assert.match(styles, /body:has\(\.dashboard-shell\)[^{]*\{[^}]*min-width:320px/s);
-  assert.match(styles, /\.dashboard-shell\s*\{[^}]*min-width:0/s);
-  assert.match(styles, /@media\s*\(max-width:\s*580px\)/);
-  assert.match(styles, /\.dash-modal\s*\{[^}]*box-sizing:border-box/s);
-  assert.match(styles, /\.dash-modal-backdrop\s*\{[^}]*padding:12px/s);
-  const mobileRules = styles.slice(styles.lastIndexOf('@media(max-width:580px)'));
-  assert.match(mobileRules, /\.dash-modal input[^}]*font-size:16px/s);
-});
+HOˆÂˆÛÛœİ\Ú›Ø\™İ[\ÈH]ØZ]™XY
+	Ùœ›Û[™ÜÜ˜ËÜİ[\Ë˜ÜÜÉÊNÂˆÛÛœİÛÜšÜÜXÙTİ[\ÈH]ØZ]™XY
+	Ùœ›Û[™ÜÜ˜ËØÛÛ\Û™[ËÜ›Ú™Xİ]ÛÜšÜÜXÙK˜ÜÜÉÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™İ[\Ë×™\Ú›Ø\™\Ú[™\Ú]Ù[ÛÛYKXÛÜOœØÛÛÜˆÍ˜Í™ÎKÊNÂˆ\ÜÙ\›X]Ú
+\Ú›Ø\™İ[\Ë×™\Ú›Ø\™\Ú[™\Ú[ØØ[ZKX˜YÙWØÛÛÜˆÍÍÍL×KÊNÂˆ\ÜÙ\›X]Ú
+ÛÜšÜÜXÙTİ[\Ë×˜\\Ú[œËXœ™XYÜ[X–×ŸWJ˜ÛÛÜˆÍŒ™‹ÊNÂˆ\ÜÙ\›X]Ú
+ÛÜšÜÜXÙTİ[\Ë×˜\\Ú[œËY^YXœ›İÖ×ŸWJ˜ÛÛÜˆÍNKÊNÂŸJNÂ
