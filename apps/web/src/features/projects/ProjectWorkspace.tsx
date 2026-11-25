@@ -295,8 +295,7 @@ export default function ProjectWorkspace({
     }
   };
 
-  const handleAddMilestone = (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleAddMilestone = () => {
     if (!milestoneTitle.trim() || !project) return;
     const milestone: ResearchMilestone = {
       id: makeId(),
@@ -411,10 +410,10 @@ export default function ProjectWorkspace({
                 </select>
               </label>
               <div className="milestone-summary"><strong>{completedMilestones}/{milestones.length}</strong><span>milestones complete</span></div>
-              <form className="project-inline-form" onSubmit={handleAddMilestone}>
+              <form className="project-inline-form" onSubmit={(event) => event.preventDefault()}>
                 <label className="project-field"><span>New milestone</span><input value={milestoneTitle} onChange={(event) => setMilestoneTitle(event.target.value)} placeholder="e.g. Finalize protocol" /></label>
                 <label className="project-field"><span>Due date</span><input type="date" value={milestoneDueDate} onChange={(event) => setMilestoneDueDate(event.target.value)} /></label>
-                <Button type="submit" size="sm" disabled={!milestoneTitle.trim()}><Plus size={15} /> Add milestone</Button>
+                <Button type="button" size="sm" disabled={!milestoneTitle.trim()} onClick={handleAddMilestone}><Plus size={15} /> Add milestone</Button>
               </form>
               {milestones.length === 0 ? (
                 <p className="project-muted-copy">Add milestones to make the next steps visible.</p>
