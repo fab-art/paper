@@ -186,3 +186,33 @@ body:has(.project-workspace),body:has(.project-loading){min-width:320px;overflow
 .project-workspace .pw-brand>i,.project-workspace .pw-heading p,.project-workspace .pw-summary-line,.project-workspace .pw-tip>p{color:#6c6f78}
 .project-workspace .pw-breadcrumb,.project-workspace .pw-footer,.project-workspace .pw-status,.project-workspace .pw-tabs button:not(.selected),.project-workspace .pw-tabs button span,.project-workspace .pw-panel-title small,.project-workspace .pw-empty-small,.project-workspace .pw-stat-grid span{color:#62666f}
 .project-workspace .pw-eyebrow,.project-workspace .pw-panel-title>div>span{color:#68658e}
+
+/* Lumen scorecard palette: warm paper surfaces, deep teal actions, calm status colors */
+:root{--pw-bg:#f3f1e9;--pw-panel:#fffefa;--pw-border:#dedbd1;--pw-muted:#5d6b6d;--pw-text:#172d31;--pw-accent:#125b69}
+.pw-topbar{background:#fffefaed;border-color:var(--pw-border)}
+.pw-back,.pw-writing{border-color:var(--pw-border);color:#385054}
+.pw-back:hover,.pw-writing:hover{border-color:#7ca8a9;background:#eef5f2;color:#125b69}
+.pw-brand-mark{background:#125b69}
+.pw-brand i{color:#657477;border-color:#dedbd1}
+.pw-breadcrumb{color:#657477}
+.pw-breadcrumb span{color:#125b69}
+.pw-eyebrow,.pw-panel-title>div>span{color:#125b69}
+.pw-project-name{color:#172d31}
+.pw-status{color:#657477}
+.pw-tabs button.selected{color:#125b69}
+.pw-tabs button.selected:after{background:#125b69}
+.pw-tabs button span{background:#e8eee9;color:#476568}
+.pw-panel,.pw-summary-card,.pw-tip,.pw-note-list{border-color:var(--pw-border);background:#fffefa;box-shadow:0 2px 10px #1b30300a}
+.pw-text-action,.pw-library-footer button{color:#125b69}
+.pw-field :is(input,textarea),.pw-source-form :is(input,textarea){border-color:#d7d9cf;background:#fffefa;color:#172d31}
+.pw-field :is(input,textarea):focus,.pw-source-form :is(input,textarea):focus{border-color:#125b69;box-shadow:0 0 0 3px #125b6918}
+.pw-open-studio,.pw-primary{background:#125b69;border-color:#125b69}
+.pw-open-studio:hover,.pw-primary:hover{background:#0d4b57}
+.pw-secondary{border-color:#d7d9cf;background:#fffefa;color:#385054}
+.pw-summary-card{background:linear-gradient(145deg,#fffefa,#f4f6ef 85%)}
+.pw-stat-grid div{border-color:#e5e3da;background:#f8f8f1}
+.pw-stat-grid strong{color:#172d31}
+.pw-tip button{color:#125b69}
+.pw-milestone input{accent-color:#125b69}
+.pw-source-tag.semantic{background:#e7f0ed;color:#125b69}
+@media(prefers-reduced-motion:reduce){.pw-back,.pw-writing{transition:none}}
