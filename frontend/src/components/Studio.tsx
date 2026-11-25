@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
-import { listProjects, loadProject, saveProject } from "../lib/db";
+import { listProjects, loadProject, saveProject, listResearchEntities } from "../lib/db";
+import type { ResearchEntity } from "../lib/research-blueprint";
+import { buildGroundedWritingContext } from "../lib/writing-grounding";
 import { projectFingerprint, shouldSaveProjectSnapshot } from "../lib/project-save-guard.mjs";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
@@ -67,6 +69,8 @@ function papersToBibtex(papers: Paper[]) {
 
 export default function Studio({ projectId, onBack, onSelectProject }: { projectId: string; onBack?: () => void; onSelectProject?: (projectId: string) => void }) {
   const [project, setProject] = useState<Project>(initialProject);
+  const [researchEntities, setResearchEntities] = useState<ResearchEntity[]>([]);
+  const [writingProposal, setWritingProposal] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
   const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots" | "python">("workspace");
@@ -125,6 +129,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     return task;
   };
   const records = useMemo(() => Object.fromEntries(project.agentRecords.map(r => [r.id, r])), [project.agentRecords]);
+  const groundedWritingContext = useMemo(() => buildGroundedWritingContext(researchEntities), [researchEntities]);
 
   useEffect(() => {
     let live = true;
@@ -315,14 +320,24 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       const sections = project.outline;
       if (!sections.length) throw new Error("Generate or add an outline first.");
       for (const section of sections) {
-        const body = await ask(writingPrompt({ ...project, latex }, section), true);
+        const body = await ask(writingPrompt({ ...project, latex }, section, groundedWritingContext.promptContext), true);
         latex = insertSection(latex, section.title, body);
-        patch({ latex });
       }
-      setAgent("writing", "done", `Drafted ${sections.length} sections sequentially.`);
-      setNotice("Section drafting complete. Review every claim and citation.");
+      setWritingProposal(latex);
+      setAgent("writing", "done", "Prepared " + sections.length + " section proposals. No manuscript text was changed.");
+      setNotice("Draft proposal ready. Inspect evidence markers and compare it with the current manuscript before accepting.");
     } catch (e) { setAgent("writing", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
+  };
+  const acceptWritingProposal = () => {
+    if (!writingProposal) return;
+    patch({ latex: writingProposal });
+    setWritingProposal(null);
+    setNotice("Writing proposal accepted by the researcher and saved to the local manuscript.");
+  };
+  const rejectWritingProposal = () => {
+    setWritingProposal(null);
+    setNotice("Writing proposal rejected. The existing manuscript was left unchanged.");
   };
   const runRefine = async () => {
     setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
@@ -478,9 +493,11 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
                 {!project.papers.length&&<div className="empty-state">Searches are grounded in Semantic Scholar metadata. Run the agent to retrieve candidate papers.</div>}
               </div> : activeAgent==="plots" ? <div className="plot-grid">{project.figures.map((f,i)=><div className="plot-thumb" key={i}>{f.png&&<img src={`data:${f.mime || "image/png"};base64,${f.png}`} alt={f.name}/>}<span>{f.name}</span></div>)}{!project.figures.length&&<div className="empty-state">Import a CSV or JSON dataset, then run the plotting agent.</div>}</div> :
               <div className="empty-state">{activeAgent==="writing"?"Drafts each outline section sequentially into the LaTeX source.":"Checks LaTeX structure, citation keys, and academic tone. Review suggested edits."}</div>}
+              {activeAgent==="writing" && <div className="agent-summary"><strong>Evidence available to the co-pilot</strong><p>{groundedWritingContext.passages.length} source-linked passage(s), {groundedWritingContext.verifiedResults.length} approved/verified analysis result(s). Metadata-only references are not treated as read evidence.</p></div>}
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input aria-label="Plot regeneration instructions" value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button type="button" className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
+            {writingProposal && activeAgent==="writing" && <section className="agent-summary" aria-label="Writing proposal review"><strong>Review proposed manuscript changes</strong><p>Current manuscript remains unchanged until you accept. Check every [EVIDENCE: …] marker and resolve each [SOURCE NEEDED] placeholder.</p><div className="proposal-diff"><div><b>Current manuscript</b><pre>{project.latex.slice(0, 2600)}</pre></div><div><b>Proposed manuscript</b><pre>{writingProposal.slice(0, 2600)}</pre></div></div><p>{(writingProposal.match(/\[SOURCE NEEDED\]/g) || []).length} source-needed marker(s) · {(writingProposal.match(/\[EVIDENCE:/g) || []).length} evidence marker(s)</p><div className="proposal-actions"><button type="button" className="primary-button" onClick={acceptWritingProposal}>Accept proposal</button><button type="button" className="secondary-button" onClick={rejectWritingProposal}>Reject proposal</button></div></section>}
             <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "presentation" : "status"} aria-live={noticeIsError ? "off" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
           </>}
           {tab==="latex"&&<div className="editor-wrap"><div className="editor-toolbar"><span><FileText size={14}/> manuscript.tex</span><span className="muted">LaTeX · UTF-8</span></div><textarea className="latex-editor" aria-label="LaTeX manuscript source" spellCheck={false} value={project.latex} onChange={e=>patch({latex:e.target.value})}/></div>}
