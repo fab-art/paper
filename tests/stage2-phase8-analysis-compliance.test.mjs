@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { recommendStatisticalOptions, createAnalysisRunManifest, getStudyComplianceChecklist } from "../frontend/src/lib/research-analysis.ts";
+import { recommendStatisticalOptions, createAnalysisRunManifest, getStudyComplianceChecklist, approveAnalysisRunManifest } from "../frontend/src/lib/research-analysis.ts";
 
 test("statistical recommendations consider study design and outcome type", () => {
   const result = recommendStatisticalOptions({ studyDesign: "randomized-trial", outcomeType: "continuous", groups: 2, paired: false, sampleSize: 120 });
@@ -91,4 +91,13 @@ test("analysis manifest records execution environment, timestamps, logs and outp
   assert.equal(manifest.execution?.analyzedRows, 42);
   assert.equal(manifest.outputIds[0], "out-1");
   assert.equal(manifest.ownerApproved, false);
+});
+
+test("analysis manifest requires an explicit owner approval transition", () => {
+  const manifest = createAnalysisRunManifest({ datasetId: "d1", datasetFingerprint: "sha256:abc", transformations: [], script: "descriptive-analysis@1", software: {}, parameters: {}, outputIds: [] });
+  assert.equal(manifest.ownerApproved, false);
+  const approved = approveAnalysisRunManifest(manifest, 1234);
+  assert.equal(approved.ownerApproved, true);
+  assert.equal(approved.status, "approved");
+  assert.equal(approved.approvedAt, 1234);
 });
