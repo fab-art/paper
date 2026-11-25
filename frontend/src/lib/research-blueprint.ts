@@ -187,7 +187,9 @@ export function legacyProjectToResearchEntities(project: Project, now = Date.now
   }
 
   for (const [index, paper] of project.papers.entries()) {
-    const key = paper.doi || paper.url || `${paper.title}:${index}`;
+    // Keep duplicate legacy records distinct; deduplication is a researcher-reviewed
+    // workflow decision and must not happen implicitly during migration.
+    const key = `${paper.doi || paper.url || paper.title}:${index}`;
     entities.push({
       id: stableLegacyId(project.id, "source", key),
       projectId: project.id,
