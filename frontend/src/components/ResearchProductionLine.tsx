@@ -4,13 +4,13 @@ import {
   ArrowRight, Bot, CheckCircle2, Circle, Clock3, Pause, Play, Plus,
   RefreshCw, ShieldCheck, Sparkles, Workflow, XCircle
 } from "lucide-react";
-import type { ResearchPaperType } from "../lib/research-blueprint";
+import type { ResearchPaperType, ResearchEntity } from "../lib/research-blueprint";
 import {
   getResearchRoute, getReadyResearchTasks, RESEARCH_AGENTS, summarizeResearchStations,
   type ResearchStationId, type ResearchTask, type ResearchAuditEvent
 } from "../lib/research-production-line";
 import {
-  createResearchTaskRecord, getResearchControl, listResearchAuditEvents, listResearchTasks,
+  createResearchTaskRecord, getResearchControl, listResearchAuditEvents, listResearchEntities, listResearchTasks,
   setResearchAgentsPaused, transitionResearchTaskRecord
 } from "../lib/db";
 import "./research-production-line.css";
@@ -36,6 +36,7 @@ export default function ResearchProductionLine({
   onOpenStudio?: () => void;
 }) {
   const [tasks, setTasks] = useState<ResearchTask[]>([]);
+  const [entities, setEntities] = useState<ResearchEntity[]>([]);
   const [events, setEvents] = useState<ResearchAuditEvent[]>([]);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [inputEntityIdsText, setInputEntityIdsText] = useState("");
@@ -62,10 +63,11 @@ export default function ResearchProductionLine({
   const refresh = async () => {
     setLoading(true);
     try {
-      const [nextTasks, control, nextEvents] = await Promise.all([
-        listResearchTasks(projectId), getResearchControl(projectId), listResearchAuditEvents(projectId)
+      const [nextTasks, control, nextEvents, nextEntities] = await Promise.all([
+        listResearchTasks(projectId), getResearchControl(projectId), listResearchAuditEvents(projectId), listResearchEntities(projectId)
       ]);
       setTasks(nextTasks);
+      setEntities(nextEntities);
       setEvents(nextEvents.slice(0, 12));
       setPaused(control.agentsPaused);
       setError("");
@@ -213,6 +215,18 @@ export default function ResearchProductionLine({
             <p>{task.description || route.find(station => station.id === task.stationId)?.label}</p>
             <small>{route.find(station => station.id === task.stationId)?.label} {task.assignedAgentId ? `· ${RESEARCH_AGENTS.find(agent => agent.id === task.assignedAgentId)?.label ?? "Specialist"}` : "· Researcher-owned"}</small>
             {researchMode === "professional" && <small>Task {task.id} · v{task.version} · {task.runCount} runs · {task.dependencyTaskIds.length} dependencies · {task.inputEntityIds.length} inputs · {task.outputEntityIds.length} outputs</small>}
+            {task.outputEntityIds.length > 0 && <details className="rpl-task-output" open={task.status === "awaiting-owner"}>
+              <summary>Inspect specialist output ({task.outputEntityIds.length})</summary>
+              {task.outputEntityIds.map(entityId => {
+                const entity = entities.find(item => item.id === entityId);
+                const draft = entity?.payload.draftText;
+                return <div className="rpl-output-document" key={entityId}>
+                  <strong>{entity?.title ?? "Research output"}</strong>
+                  <pre>{typeof draft === "string" ? draft : JSON.stringify(entity?.payload ?? {}, null, 2)}</pre>
+                  <small>Provenance: {entity?.provenance.kind ?? "unknown"} · {entity?.provenance.sourceLabel ?? entityId} · Owner review required</small>
+                </div>;
+              })}
+            </details>}
           </div>
           <div className="rpl-task-actions">
             {task.status === "queued" && task.ownerApprovalBeforeRun && !task.ownerApproved && <><Button size="sm" onClick={() => void changeTask(task, "approve")}>Approve to start</Button><Button size="sm" variant="outline" onClick={() => void changeTask(task, "request-changes")}>Request changes</Button></>}
