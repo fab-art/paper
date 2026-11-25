@@ -169,7 +169,7 @@ test("reduced-motion preference suppresses nonessential transitions", async ({ p
 test("empty local library is distinct from a storage failure", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Your research library is ready")).toBeVisible();
-  await expect(page.getByText(/Projects you create or import will appear here/)).toBeVisible();
+  await expect(page.getByText(/This Phase 1 preview is read-only/)).toBeVisible();
   await expect(page.getByText("Local workspace")).toBeVisible();
 });
 
@@ -182,5 +182,6 @@ test("IndexedDB failures are announced without presenting an empty library", asy
   await page.goto("/");
   await expect(page.getByRole("alert").getByText("Local library unavailable")).toBeVisible();
   await expect(page.getByRole("alert")).toContainText("IndexedDB disabled by browser policy");
+  await expect(page.locator(".count-pill")).toHaveText("—");
   await expect(page.getByText("Your research library is ready")).toHaveCount(0);
 });
