@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, CircleHelp, Command, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Search, Settings2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { Button, Card, Sidebar } from "@santi020k/lumen-react";
-import { listProjects } from "../../../frontend/src/lib/db";
+import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
 import { getWorkspaceByPath, getWorkspaceGroups, WORKSPACES } from "./domain/workspaces.mjs";
 
@@ -26,7 +26,7 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    listProjects().then((records) => {
+    listLocalProjects().then((records) => {
       if (!cancelled) setProjects(records);
     }).catch((error: unknown) => {
       if (!cancelled) setStorageError(error instanceof Error ? error.message : "The local research library could not be opened.");
