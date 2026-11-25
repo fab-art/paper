@@ -65,6 +65,22 @@ test('legacy Project records map to a canonical blueprint without losing project
   assert.equal(blueprint.provenance.kind, 'legacy-migration');
 });
 
+test('Research Blueprint retains guided intake context and selected paper type', () => {
+  const project = legacyProject({
+    paperType: 'empirical-study',
+    intendedAudience: 'Clinicians and policy makers',
+    availableMaterials: ['PDFs', 'CSV'],
+    storyArc: ['Context', 'Knowledge gap'],
+    researchMode: 'guided'
+  });
+  const blueprint = projectToResearchBlueprint(project, 1800000000000);
+  assert.equal(blueprint.paperType, 'empirical-study');
+  assert.equal(blueprint.intendedAudience, 'Clinicians and policy makers');
+  assert.deepEqual(blueprint.availableMaterials, ['PDFs', 'CSV']);
+  assert.deepEqual(blueprint.storyArc, ['Context', 'Knowledge gap']);
+  assert.equal(blueprint.researchMode, 'guided');
+});
+
 test('legacy project mapping preserves question, objectives, methods, sources and nested outline entities', () => {
   const entities = legacyProjectToResearchEntities(legacyProject(), 1800000000000);
   assert.deepEqual(entities.map(entity => entity.entityType), [
