@@ -62,15 +62,15 @@ export function normalizeDoi(value) {
     .normalize("NFKC")
     .trim()
     .toLowerCase()
-    .replace(/^https?:\\/\\/(dx\\.)?doi\\.org\\//, "")
-    .replace(/^doi:\\s*/, "");
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//, "")
+    .replace(/^doi:\s*/, "");
 }
 
 export function normalizePaperTitle(value) {
   return String(value ?? "")
     .normalize("NFKC")
     .toLocaleLowerCase()
-    .replace(/[^\\p{L}\\p{N}]/gu, "");
+    .replace(/[^\p{L}\p{N}]/gu, "");
 }
 
 export function isDuplicatePaper(papers, candidate) {
