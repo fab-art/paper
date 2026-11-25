@@ -1,7 +1,9 @@
 name: Research Factory replacement quality gates
 
 on:
-  pull_request:
+  push:
+    branches:
+      - "feat/independent-research-factory-rebuild"
     paths:
       - "apps/web/**"
       - "frontend/src/lib/**"
