@@ -27,7 +27,7 @@ const PAPER_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEditorProps) {
-  const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});
+  const [taskDrafts, setTaskDrafts] = useState<Record<string, { title: string; description: string }>>({});\n  const [milestoneDrafts, setMilestoneDrafts] = useState<Record<string, { title: string; dueDate: string }>>({});
   const [newTaskStation, setNewTaskStation] = useState<ResearchPlanStationId>(plan.stations[0]?.stationId ?? "intake");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -36,7 +36,7 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setTaskDrafts(Object.fromEntries(plan.stations.flatMap(station => station.tasks.map(task => [task.id, { title: task.title, description: task.description }]))));
+    setTaskDrafts(Object.fromEntries(plan.stations.flatMap(station => station.tasks.map(task => [task.id, { title: task.title, description: task.description }]))));\n    setMilestoneDrafts(Object.fromEntries(plan.milestones.map(milestone => [milestone.id, { title: milestone.title, dueDate: milestone.dueDate ?? "" }])));
     if (!plan.stations.some(station => station.stationId === newTaskStation)) setNewTaskStation(plan.stations[0]?.stationId ?? "intake");
   }, [plan]);
 
@@ -142,8 +142,8 @@ export default function ResearchPlanEditor({ plan, onChange }: ResearchPlanEdito
       <div className="rpe-milestone-heading"><div><span className="rpl-eyebrow">PROJECT CHECKPOINTS</span><h4>Milestones and target dates</h4></div><Badge>{completedMilestones}/{plan.milestones.length} complete</Badge></div>
       {plan.milestones.map(milestone => <div className="rpe-milestone" key={milestone.id}>
         <label className="rpe-milestone-done"><input type="checkbox" checked={milestone.completed} onChange={event => updateMilestone(milestone.id, { completed: event.target.checked })}/><span className="sr-only">Mark milestone complete</span></label>
-        <input aria-label="Milestone title" value={milestone.title} onChange={event => updateMilestone(milestone.id, { title: event.target.value })} />
-        <label className="rpe-date"><span>Target date</span><input type="date" value={milestone.dueDate ?? ""} onChange={event => updateMilestone(milestone.id, { dueDate: event.target.value || undefined })}/></label>
+        <input aria-label="Milestone title" value={milestoneDrafts[milestone.id]?.title ?? milestone.title} onChange={event => setMilestoneDrafts(current => ({ ...current, [milestone.id]: { ...(current[milestone.id] ?? { title: milestone.title, dueDate: milestone.dueDate ?? "" }), title: event.target.value } }))} onBlur={() => updateMilestone(milestone.id, { title: milestoneDrafts[milestone.id]?.title ?? milestone.title })} />
+        <label className="rpe-date"><span>Target date</span><input type="date" value={milestoneDrafts[milestone.id]?.dueDate ?? milestone.dueDate ?? ""} onChange={event => setMilestoneDrafts(current => ({ ...current, [milestone.id]: { ...(current[milestone.id] ?? { title: milestone.title, dueDate: milestone.dueDate ?? "" }), dueDate: event.target.value } }))} onBlur={() => updateMilestone(milestone.id, { dueDate: milestoneDrafts[milestone.id]?.dueDate || undefined })}/></label>
       </div>)}
       <form className="rpe-add-milestone" onSubmit={addMilestone}>
         <label>New milestone<input value={newMilestoneTitle} onChange={event => setNewMilestoneTitle(event.target.value)} placeholder="e.g. Submit protocol for review" required/></label>
