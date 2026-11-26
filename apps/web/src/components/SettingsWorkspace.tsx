@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Download, LockKeyhole, Settings2, UserRound } from "lucide-react";
-type User = { id: string; email?: string };
+type User = { id: string; email?: string | null };
 import type { Project } from "../../../../frontend/src/lib/types";
 import { isSupabaseConfigured, supabase } from "../../../../frontend/src/lib/supabase";
 import { listLocalProjects } from "../adapters/legacy-projects";
