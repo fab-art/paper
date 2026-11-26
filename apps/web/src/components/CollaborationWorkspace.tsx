@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Activity, Cloud, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import type { Project } from "../../../../frontend/src/lib/types";
@@ -102,7 +102,7 @@ export default function CollaborationWorkspace() {
 
   useEffect(() => { if (selectedCloudId && user) void refreshDetails(selectedCloudId); }, [selectedCloudId, user?.id]);
 
-  async function sendMagicLink(event: React.FormEvent<HTMLFormElement>) {
+  async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase) return;
     setBusy(true); setError(""); setNotice("");
@@ -174,7 +174,7 @@ export default function CollaborationWorkspace() {
     finally { setBusy(false); }
   }
 
-  async function addMember(event: React.FormEvent<HTMLFormElement>) {
+  async function addMember(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || !selectedCloud || !user || !canManageMembers) return;
     setBusy(true); setError(""); setNotice("");
@@ -213,7 +213,7 @@ export default function CollaborationWorkspace() {
     finally { setBusy(false); }
   }
 
-  async function postComment(event: React.FormEvent<HTMLFormElement>) {
+  async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || !selectedCloud || !user || !canEdit) return;
     setBusy(true); setError("");
