@@ -101,7 +101,10 @@ export default function CollaborationWorkspace() {
   }, [user?.id]);
 
   useEffect(() => { if (selectedCloudId && user) void refreshDetails(selectedCloudId); }, [selectedCloudId, user?.id]);
-  useEffect(() => {\n    const linked = localProjects.find(item => item.cloudProjectId === selectedCloudId);\n    if (linked) setLocalProjectId(linked.id);\n  }, [selectedCloudId, localProjects]);
+  useEffect(() => {
+    const linked = localProjects.find(item => item.cloudProjectId === selectedCloudId);
+    if (linked) setLocalProjectId(linked.id);
+  }, [selectedCloudId, localProjects]);
 
   async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -142,7 +145,8 @@ export default function CollaborationWorkspace() {
   }
 
   async function pushLocalChanges() {
-    if (!supabase || !user || !localProject || !selectedCloud || !canEdit) return;\n    if (localProject.cloudProjectId !== selectedCloud.id) { setError("Select the local project linked to this shared project before pushing changes."); return; }
+    if (!supabase || !user || !localProject || !selectedCloud || !canEdit) return;
+    if (localProject.cloudProjectId !== selectedCloud.id) { setError("Select the local project linked to this shared project before pushing changes."); return; }
     setBusy(true); setError(""); setNotice("");
     try {
       const payload = createSharedProjectPayload(localProject);
