@@ -398,3 +398,6 @@ button { cursor: pointer; }
   .literature-filters { width: 100%; }
   .literature-paper-actions button { margin-left: 0; }
 }
+
+.literature-cross-project { margin: 8px 0 0; color: var(--app-muted); font-size: 10px; line-height: 1.5; }
+.literature-cross-project::before { content: "↗ "; color: var(--app-brand); font-weight: 700; }
