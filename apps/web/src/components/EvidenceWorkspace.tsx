@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Check, ChevronDown, FileSearch, Save, ShieldCheck } from "lucide-react";
 import type { Project, RiskJudgement, RiskOfBiasRecord, StudyExtraction } from "../../../../frontend/src/lib/types";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
+import EvidenceIntelligence from "./EvidenceIntelligence";
 import {
   APPRAISAL_TEMPLATES, createAppraisalRecord, createExtractionRecord,
   evidencePaperKey, summarizeAppraisal, switchAppraisalTemplate, upsertEvidenceRecord, validateEvidenceEntry
@@ -34,6 +35,7 @@ const extractionFields: { key: keyof StudyExtraction; label: string; placeholder
 
 export default function EvidenceWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [panel, setPanel] = useState<"appraisal" | "intelligence">("appraisal");
   const [projectId, setProjectId] = useState("");
   const [paperKey, setPaperKey] = useState("");
   const [extraction, setExtraction] = useState<StudyExtraction>(createExtractionRecord());
@@ -153,8 +155,14 @@ export default function EvidenceWorkspace() {
         <div className="evidence-context-count"><strong>{papers.length}</strong><span>saved studies</span></div>
       </div>
 
+      {selectedProject && <div className="evidence-panel-tabs" role="group" aria-label="Evidence workspace sections">
+        <button type="button" className={panel === "appraisal" ? "is-active" : ""} aria-pressed={panel === "appraisal"} onClick={() => setPanel("appraisal")}>Study extraction & appraisal</button>
+        <button type="button" className={panel === "intelligence" ? "is-active" : ""} aria-pressed={panel === "intelligence"} onClick={() => setPanel("intelligence")}>Evidence intelligence & protocol</button>
+      </div>}
       {!selectedProject ? (
         <div className="evidence-state"><BookOpen size={22} /><strong>No local projects found</strong><span>Create a project and add papers in Projects or Literature Discovery to begin appraisal.</span></div>
+      ) : panel === "intelligence" ? (
+        <EvidenceIntelligence projectId={selectedProject.id} papers={papers} />
       ) : papers.length === 0 ? (
         <div className="evidence-state"><FileSearch size={22} /><strong>This project has no saved papers yet</strong><span>Add papers from Literature Discovery or your project library. Evidence appraisal is linked to saved project sources.</span></div>
       ) : (
