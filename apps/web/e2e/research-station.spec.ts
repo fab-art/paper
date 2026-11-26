@@ -349,3 +349,48 @@ test("Evidence Workspace remains within a narrow mobile viewport", async ({ page
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
 });
+
+
+test("Evidence intelligence links researcher-recorded source passages to claims", async ({ page }) => {
+  await installExistingProjectFixture(page, true);
+  await page.goto("/evidence");
+  await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await page.reload();
+  await page.getByRole("button", { name: "Evidence intelligence & protocol" }).click();
+
+  await page.getByLabel("New research claim").fill("Community-based interventions improve continuity of diabetes care.");
+  await page.getByRole("button", { name: "Add claim" }).click();
+  await expect(page.getByText("Claim saved as awaiting verification. Add source-level evidence before relying on it.")).toBeVisible();
+
+  await page.getByLabel("Claim").selectOption({ label: "Community-based interventions improve continuity of diabetes care." });
+  await page.getByLabel("Source").selectOption({ label: "Community health intervention outcomes" });
+  await page.getByLabel("Exact source passage").fill("Participants receiving community follow-up had higher continuity of care at 12 months.");
+  await page.getByLabel("Page, table, figure or section").fill("Results, page 8, Table 3");
+  await page.getByLabel("How does this passage relate to the claim?").selectOption("supports");
+  await page.getByRole("button", { name: "Record evidence assessment" }).click();
+
+  await expect(page.getByText("Evidence passage and source relationship saved. Its assessment remains visible for researcher review.")).toBeVisible();
+  await expect(page.getByText("Results, page 8, Table 3")).toBeVisible();
+  await expect(page.getByText("supported", { exact: true })).toBeVisible();
+});
+
+test("Evidence intelligence protocol builder saves an owner-review draft", async ({ page }) => {
+  await installExistingProjectFixture(page, true);
+  await page.goto("/evidence");
+  await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await page.reload();
+  await page.getByRole("button", { name: "Evidence intelligence & protocol" }).click();
+  await page.getByRole("button", { name: "Protocol & methods" }).click();
+
+  await page.getByLabel("Research question").fill("Does community follow-up improve continuity of diabetes care?");
+  await page.getByLabel("Study design").fill("Retrospective cohort study");
+  await page.getByLabel("Setting").fill("Primary healthcare facilities in Rwanda");
+  await page.getByLabel("Population").fill("Adults receiving diabetes care");
+  await page.getByLabel("Planned sample size").fill("240");
+  await page.getByLabel("Primary and secondary outcomes").fill("Continuity of care at 12 months");
+  await page.getByLabel("Analysis plan").fill("Estimate adjusted association using multivariable regression.");
+  await page.getByRole("button", { name: "Save protocol draft" }).click();
+
+  await expect(page.getByRole("status")).toContainText("Protocol saved and marked ready for your review. It is not approved or registered.");
+  await expect(page.getByText("Ready for owner review")).toBeVisible();
+});
