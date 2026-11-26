@@ -185,3 +185,100 @@ test("IndexedDB failures are announced without presenting an empty library", asy
   await expect(page.locator(".count-pill")).toHaveText("—");
   await expect(page.getByText("Your research library is ready")).toHaveCount(0);
 });
+
+
+test("Literature Discovery searches, saves to the selected project and exports BibTeX", async ({ page }) => {
+  const requestBodies: unknown[] = [];
+  await installExistingProjectFixture(page);
+  await page.route("**/api/search-papers", async route => {
+    requestBodies.push(route.request().postDataJSON());
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        papers: [{
+          title: "Digital interventions for diabetes adherence",
+          authors: ["Amina Example", "John Researcher"],
+          source: "semantic-scholar",
+          year: 2024,
+          abstract: "A sample abstract for the discovery workflow.",
+          url: "https://www.semanticscholar.org/paper/example",
+          doi: "10.1000/example-doi",
+          venue: "Journal of Digital Health",
+          citationCount: 12,
+          openAccessPdf: "https://example.org/paper.pdf",
+          publicationDate: "2024-02-01"
+        }]
+      })
+    });
+  });
+
+  await page.goto("/literature");
+  await expect(page.getByRole("heading", { name: "Find research worth reading." })).toBeVisible();
+  await page.getByLabel("Search scholarly literature").fill("diabetes adherence in Rwanda");
+  await page.getByRole("button", { name: "Search papers" }).click();
+
+  await expect(page.getByRole("heading", { name: "Digital interventions for diabetes adherence" })).toBeVisible();
+  await expect(page.getByText("Found 1 unique records from Semantic Scholar.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /DOI/ })).toHaveAttribute("href", "https://doi.org/10.1000/example-doi");
+  await expect(page.getByRole("button", { name: "Save to project" })).toBeEnabled();
+  expect(requestBodies).toEqual([{ query: "diabetes adherence in Rwanda", limit: 20 }]);
+
+  await page.getByRole("button", { name: "Save to project" }).click();
+  await expect(page.getByText("Paper saved to the selected project and its BibTeX reference added.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh metadata" })).toBeVisible();
+  await expect(page.locator(".literature-saved-summary strong")).toHaveText("1");
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export BibTeX" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("existing-local-research-project-references.bib");
+});
+
+test("Literature Discovery deduplicates DOI variants and filters open-access results", async ({ page }) => {
+  await installExistingProjectFixture(page);
+  await page.route("**/api/search-papers", route => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      papers: [
+        { title: "A diabetes intervention study", authors: ["A Author"], year: 2024, doi: "10.1000/duplicate", citationCount: 5 },
+        { title: "Different provider title", authors: ["B Author"], year: 2024, doi: "https://doi.org/10.1000/DUPLICATE", abstract: "Additional abstract", openAccessPdf: "https://example.org/open.pdf" },
+        { title: "A closed access study", authors: ["C Author"], year: 2019, doi: "10.1000/closed" }
+      ]
+    })
+  }));
+
+  await page.goto("/literature");
+  await page.getByLabel("Search scholarly literature").fill("diabetes intervention");
+  await page.getByRole("button", { name: "Search papers" }).click();
+  await expect(page.getByText("Found 2 unique records from Semantic Scholar.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A diabetes intervention study" })).toBeVisible();
+  await expect(page.getByText("Additional abstract")).toHaveCount(1);
+  await page.getByLabel("Open access").check();
+  await expect(page.getByRole("heading", { name: "A diabetes intervention study" })).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "A closed access study" })).toHaveCount(0);
+});
+
+test("Literature Discovery explains provider rate limits and stays within mobile viewport", async ({ page }) => {
+  await installExistingProjectFixture(page);
+  await page.route("**/api/search-papers", route => route.fulfill({
+    status: 429,
+    headers: { "Retry-After": "30" },
+    contentType: "application/json",
+    body: JSON.stringify({ detail: "Semantic Scholar is temporarily rate limited.", retryAfterSeconds: 30 })
+  }));
+
+  await page.setViewportSize({ width: 320, height: 850 });
+  await page.goto("/literature");
+  await page.getByLabel("Search scholarly literature").fill("diabetes research");
+  await page.getByRole("button", { name: "Search papers" }).click();
+  await expect(page.getByRole("alert")).toContainText("Retry in about 30 seconds.");
+  await expect(page.getByText("Provider cooldown is active; repeated retries will not bypass it.")).toBeVisible();
+
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth
+  }));
+  expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
+});
