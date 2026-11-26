@@ -25,7 +25,7 @@ The local model remains optional and is loaded only after the user requests it. 
 
 ## Known integration boundary
 
-The writing UI and all project-local editing, autosave, local model and export capabilities are migrated. Search-paper and native LaTeX compilation still rely on the existing API/compute service configuration. When the compute service is not configured, the existing browser plot and print-preview fallbacks remain available where implemented. Deployment of root-level serverless APIs is a separate Vercel routing/infrastructure task and is not silently claimed by this phase.
+The writing UI and all project-local editing, autosave, local model and export capabilities are migrated. Literature search and compute-proxy serverless routes have been migrated under the new Vercel app's `api/` directory. Literature search uses Semantic Scholar and accepts an optional API key. The compute proxy is deployed but native remote plotting/LaTeX compilation requires `PAPERORCHESTRA_ENGINE_URL`, `PAPERORCHESTRA_ENGINE_TOKEN`, `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`; without those settings, the existing browser plot and print-preview fallbacks are used where implemented.
 
 ## Verification
 
