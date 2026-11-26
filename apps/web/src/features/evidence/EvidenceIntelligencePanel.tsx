@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle, BookOpenCheck, CheckCircle2, ClipboardList, FileText, Plus, RefreshCw, ShieldAlert } from "lucide-react";
-import type { Paper, ResearchRelation } from "../../../../../frontend/src/lib/types";
+import type { Paper } from "../../../../../frontend/src/lib/types";
+import type { ResearchRelation } from "../../../../../frontend/src/lib/research-blueprint";
 import type { ResearchEntity } from "../../../../../frontend/src/lib/research-blueprint";
 import {
   assessClaimEvidence,
@@ -66,7 +67,7 @@ export default function EvidenceIntelligencePanel({ projectId, papers }: { proje
 
   const sources = useMemo(() => {
     const existing = entities.filter(entity => entity.entityType === "source");
-    const sourceKeys = new Set(existing.map(entity => paperKey(entity.payload as Paper)));
+    const sourceKeys = new Set(existing.map(entity => paperKey(entity.payload as unknown as Paper)));
     const imported = papers.filter(paper => !sourceKeys.has(paperKey(paper))).map((paper) => {
       const now = Date.now();
       return {
