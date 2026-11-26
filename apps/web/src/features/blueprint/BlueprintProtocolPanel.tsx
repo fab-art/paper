@@ -10,11 +10,11 @@ import type {
   ResearchEntity,
   ResearchPaperType
 } from "../../../../../frontend/src/lib/research-blueprint";
+import type { Project } from "../../../../../frontend/src/lib/types";
 import {
   listResearchEntities,
   loadResearchBlueprint,
   recordOwnerResearchDecision,
-  saveResearchBlueprint,
   saveResearchEntity
 } from "../../../../../frontend/src/lib/db";
 import { protocolDraftToEntity, protocolEntityToDraft } from "./blueprintProtocolModel.mjs";
@@ -41,8 +41,9 @@ function parseLines(value: string) {
   return value.split("\n").map(item => item.trim()).filter(Boolean);
 }
 
-export default function BlueprintProtocolPanel({ projectId }: { projectId: string }) {
-  const [blueprint, setBlueprint] = useState<ResearchBlueprint | null>(null);
+export default function BlueprintProtocolPanel({ project, onPatchProject, onSaveProject }: { project: Project; onPatchProject: (changes: Partial<Project>) => void; onSaveProject: () => Promise<void> }) {
+  const projectId = project.id;
+  const [blueprintVersion, setBlueprintVersion] = useState(0);
   const [protocol, setProtocol] = useState<ResearchProtocolDraft | null>(null);
   const [protocolEntity, setProtocolEntity] = useState<ResearchEntity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,7 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
           projectId,
           researchQuestion: savedBlueprint.researchQuestion
         });
-        setBlueprint(savedBlueprint);
+        setBlueprintVersion(savedBlueprint.version);
         setProtocol(savedProtocol);
         setProtocolEntity(savedEntity);
       })
@@ -83,7 +84,17 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
   }, [projectId]);
 
   const updateBlueprint = (changes: Partial<ResearchBlueprint>) => {
-    setBlueprint(current => current ? { ...current, ...changes } : current);
+    const projectChanges: Partial<Project> = {};
+    if (changes.title !== undefined) projectChanges.name = changes.title;
+    if (changes.description !== undefined) projectChanges.notes = changes.description;
+    if (changes.researchQuestion !== undefined) projectChanges.researchQuestion = changes.researchQuestion;
+    if (changes.objectives !== undefined) projectChanges.objectives = changes.objectives;
+    if (changes.paperType !== undefined) projectChanges.paperType = changes.paperType;
+    if (changes.intendedAudience !== undefined) projectChanges.intendedAudience = changes.intendedAudience;
+    if (changes.availableMaterials !== undefined) projectChanges.availableMaterials = changes.availableMaterials;
+    if (changes.storyArc !== undefined) projectChanges.storyArc = changes.storyArc;
+    if (changes.researchMode !== undefined) projectChanges.researchMode = changes.researchMode;
+    onPatchProject(projectChanges);
     setNotice("");
   };
 
@@ -102,9 +113,10 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
     setError("");
     setNotice("");
     try {
-      const saved = await saveResearchBlueprint({ ...blueprint, updatedAt: Date.now() }, blueprint.version);
+      await onSaveProject();
+      const saved = await loadResearchBlueprint(projectId);
       if (!saved) throw new Error("The Research Blueprint could not be saved.");
-      setBlueprint(saved);
+      setBlueprintVersion(saved.version);
       setNotice("Research Blueprint saved locally.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The Research Blueprint could not be saved.");
@@ -177,7 +189,7 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
 
   if (loading) return <div className="blueprint-state" role="status">Loading your Research Blueprint…</div>;
   if (error && !blueprint) return <div className="blueprint-state blueprint-error" role="alert"><AlertCircle size={17} />{error}</div>;
-  if (!blueprint || !protocol || !readiness) return null;
+  if (!protocol || !readiness) return null;
 
   return (
     <section className="blueprint-panel" aria-label="Research Blueprint and protocol">
@@ -187,7 +199,7 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
           <h2>Define the research before the work begins</h2>
           <p>Keep the research question, intended contribution and working plan connected to this project.</p>
         </div>
-        <span className="blueprint-version">Blueprint v{blueprint.version}</span>
+        <span className="blueprint-version">Blueprint v{blueprintVersion}</span>
       </div>
 
       {error && <div className="blueprint-alert" role="alert"><AlertCircle size={16} />{error}</div>}
@@ -196,37 +208,37 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
       <div className="blueprint-form-grid">
         <label className="blueprint-field blueprint-field-wide">
           <span>Research title</span>
-          <input value={blueprint.title} maxLength={180} onChange={event => updateBlueprint({ title: event.target.value })} />
+          <input value={project.name} maxLength={180} onChange={event => updateBlueprint({ title: event.target.value })} />
         </label>
         <label className="blueprint-field blueprint-field-wide">
           <span>Problem or observation</span>
-          <textarea rows={3} value={blueprint.description} onChange={event => updateBlueprint({ description: event.target.value })} placeholder="Describe the problem, observation or knowledge gap that motivates this work." />
+          <textarea rows={3} value={project.notes ?? ""} onChange={event => updateBlueprint({ description: event.target.value })} placeholder="Describe the problem, observation or knowledge gap that motivates this work." />
         </label>
         <label className="blueprint-field blueprint-field-wide">
           <span>Research question</span>
-          <textarea rows={3} value={blueprint.researchQuestion} onChange={event => updateBlueprint({ researchQuestion: event.target.value })} placeholder="What specific question should the research answer?" />
+          <textarea rows={3} value={project.researchQuestion ?? ""} onChange={event => updateBlueprint({ researchQuestion: event.target.value })} placeholder="What specific question should the research answer?" />
         </label>
         <label className="blueprint-field">
           <span>Research output</span>
-          <select value={blueprint.paperType} onChange={event => updateBlueprint({ paperType: event.target.value as ResearchPaperType })}>
+          <select value={project.paperType ?? "unspecified"} onChange={event => updateBlueprint({ paperType: event.target.value as ResearchPaperType })}>
             {PAPER_TYPES.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <label className="blueprint-field">
           <span>Intended audience</span>
-          <input value={blueprint.intendedAudience} onChange={event => updateBlueprint({ intendedAudience: event.target.value })} placeholder="Who will use or benefit from the findings?" />
+          <input value={project.intendedAudience ?? ""} onChange={event => updateBlueprint({ intendedAudience: event.target.value })} placeholder="Who will use or benefit from the findings?" />
         </label>
         <label className="blueprint-field">
           <span>Objectives (one per line)</span>
-          <textarea rows={4} value={lines(blueprint.objectives)} onChange={event => updateBlueprint({ objectives: parseLines(event.target.value) })} placeholder="Describe the outcomes this project should achieve." />
+          <textarea rows={4} value={lines(project.objectives)} onChange={event => updateBlueprint({ objectives: parseLines(event.target.value) })} placeholder="Describe the outcomes this project should achieve." />
         </label>
         <label className="blueprint-field">
           <span>Available materials (one per line)</span>
-          <textarea rows={4} value={lines(blueprint.availableMaterials)} onChange={event => updateBlueprint({ availableMaterials: parseLines(event.target.value) })} placeholder="Datasets, protocols, documents, equipment or other materials." />
+          <textarea rows={4} value={lines(project.availableMaterials)} onChange={event => updateBlueprint({ availableMaterials: parseLines(event.target.value) })} placeholder="Datasets, protocols, documents, equipment or other materials." />
         </label>
         <label className="blueprint-field blueprint-field-wide">
           <span>Research story arc (one step per line)</span>
-          <textarea rows={4} value={lines(blueprint.storyArc)} onChange={event => updateBlueprint({ storyArc: parseLines(event.target.value) })} placeholder="Context, knowledge gap, question, contribution and intended impact." />
+          <textarea rows={4} value={lines(project.storyArc)} onChange={event => updateBlueprint({ storyArc: parseLines(event.target.value) })} placeholder="Context, knowledge gap, question, contribution and intended impact." />
         </label>
       </div>
       <div className="blueprint-actions">
