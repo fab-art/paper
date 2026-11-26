@@ -94,7 +94,7 @@ export default function ProductionLineWorkspace() {
     if (!plan) return;
     try {
       const patch = status === "completed" ? { status, completionConfirmedBy: "local-researcher" } : { status };
-      await persist(updateProductionTask(plan, task.id, patch, { now: Date.now(), blueprintApproved: project?.researchBlueprint?.approvalStatus === "approved" }));
+      await persist(updateProductionTask(plan, task.id, patch, { now: Date.now(), blueprintApproved: blueprintApproved }));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The task could not be updated.");
     }
@@ -134,7 +134,7 @@ export default function ProductionLineWorkspace() {
               <div className="production-task-action">
                 {task.status === "completed" ? <span className="task-done"><CheckCircle2 size={17}/> Done</span> :
                   task.status === "skipped" ? <span className="task-done">Skipped</span> :
-                  task.status === "in-progress" ? <Button size="sm" onClick={() => void changeStatus(task, "completed")} disabled={saving || (task.stage === "blueprint" && project?.researchBlueprint?.approvalStatus !== "approved")}>{task.stage === "blueprint" && project?.researchBlueprint?.approvalStatus !== "approved" ? "Approve blueprint first" : "Confirm complete"}</Button> :
+                  task.status === "in-progress" ? <Button size="sm" onClick={() => void changeStatus(task, "completed")} disabled={saving || (task.stage === "blueprint" && !blueprintApproved)}>{task.stage === "blueprint" && !blueprintApproved ? "Approve blueprint first" : "Confirm complete"}</Button> :
                   <Button size="sm" variant="secondary" onClick={() => void changeStatus(task, "in-progress")} disabled={saving || !readiness.ready}>{readiness.ready ? "Start task" : "Blocked"}</Button>}
               </div>
             </Card>;
