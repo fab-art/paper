@@ -141,7 +141,7 @@ export function createProductionTask({ id = makeId("task"), title, description =
   return {
     id, title: String(title).trim(), description: String(description),
     stage, dependsOn: [...new Set(dependsOn)], dueDate: dueDate || null,
-    status: "planned", requiresApproval: Boolean(requiresApproval),
+    status: "planned", version: 1, requiresApproval: Boolean(requiresApproval),
     completionConfirmedBy: null, completedAt: null, createdAt: now, updatedAt: now
   };
 }
@@ -196,7 +196,7 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now(), bl
     throw new Error("Researcher confirmation is required to complete a task.");
   }
   const updated = {
-    ...current, ...patch, status: nextStatus, updatedAt: now,
+    ...current, ...patch, status: nextStatus, version: (current.version ?? 1) + 1, updatedAt: now,
     ...(nextStatus === "completed" ? { completedAt: now } : nextStatus === "planned" ? { completedAt: null, completionConfirmedBy: null } : {})
   };
   return {
