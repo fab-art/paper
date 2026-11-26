@@ -46,6 +46,43 @@ export function createResearchBlueprint(project, { now = Date.now() } = {}) {
   };
 }
 
+export function normalizeResearchBlueprint(project, existingBlueprint, { now = Date.now() } = {}) {
+  const defaults = createResearchBlueprint(project, { now });
+  if (!existingBlueprint) return defaults;
+  return {
+    ...defaults,
+    ...existingBlueprint,
+    id: project.id,
+    projectId: project.id,
+    schemaVersion: existingBlueprint.schemaVersion ?? BLUEPRINT_SCHEMA_VERSION,
+    version: existingBlueprint.version ?? 1,
+    framework: existingBlueprint.framework ?? "PICO",
+    population: existingBlueprint.population ?? "",
+    intervention: existingBlueprint.intervention ?? "",
+    comparator: existingBlueprint.comparator ?? "",
+    outcomes: existingBlueprint.outcomes ?? "",
+    timeframe: existingBlueprint.timeframe ?? "",
+    methodology: existingBlueprint.methodology ?? project.methodology ?? "",
+    studyDesign: existingBlueprint.studyDesign ?? "",
+    setting: existingBlueprint.setting ?? "",
+    inclusionCriteria: existingBlueprint.inclusionCriteria ?? "",
+    exclusionCriteria: existingBlueprint.exclusionCriteria ?? "",
+    searchSources: [...(existingBlueprint.searchSources ?? [])],
+    analysisPlan: existingBlueprint.analysisPlan ?? "",
+    ethicsConsiderations: existingBlueprint.ethicsConsiderations ?? "",
+    feasibilityNotes: existingBlueprint.feasibilityNotes ?? "",
+    objectives: [...(existingBlueprint.objectives ?? defaults.objectives)],
+    availableMaterials: [...(existingBlueprint.availableMaterials ?? defaults.availableMaterials)],
+    storyArc: [...(existingBlueprint.storyArc ?? defaults.storyArc)],
+    approvalStatus: existingBlueprint.approvalStatus ?? "draft",
+    approvedAt: existingBlueprint.approvedAt ?? null,
+    approvedBy: existingBlueprint.approvedBy ?? null,
+    provenance: existingBlueprint.provenance ?? defaults.provenance,
+    createdAt: existingBlueprint.createdAt ?? defaults.createdAt,
+    updatedAt: existingBlueprint.updatedAt ?? defaults.updatedAt
+  };
+}
+
 export function updateResearchBlueprint(blueprint, patch, { now = Date.now() } = {}) {
   if (!blueprint) throw new Error("A research blueprint is required.");
   const changed = Object.entries(patch).some(([key, value]) => JSON.stringify(blueprint[key]) !== JSON.stringify(value));
