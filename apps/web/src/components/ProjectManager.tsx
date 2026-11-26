@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Archive, ArrowLeft, Download, FilePlus2, FolderKanban, Plus, RotateCcw, Save, Trash2, UploadCloud, X } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
-import type { Project, ProjectAttachment, ProjectNote, ResearchMilestone } from "../../../../frontend/src/lib/types";
+import type { Paper, Project, ProjectAttachment, ProjectNote, ResearchMilestone } from "../../../../frontend/src/lib/types";
 import {
   archiveLocalProject, createLocalProject, deleteProjectAttachment, deleteProjectNote,
   listLocalProjects, listProjectAttachments, listProjectNotes, permanentlyDeleteLocalProject,
