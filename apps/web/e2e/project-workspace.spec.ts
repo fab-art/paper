@@ -93,3 +93,39 @@ test("archives, restores and permanently deletes projects as separate actions", 
   await page.getByRole("button", { name: "Delete permanently" }).click();
   await expect(page.getByText("No archived projects")).toBeVisible();
 });
+
+
+test("edits a Research Blueprint and requires explicit owner approval for a complete protocol", async ({ page }) => {
+  await createProject(page, "Blueprint and protocol integration project");
+  await page.getByRole("tab", { name: /Blueprint & protocol/ }).click();
+
+  await page.getByLabel("Research title").fill("Treatment response predictors");
+  await page.getByLabel("Problem or observation").fill("Treatment response varies across patients.");
+  await page.getByLabel("Research question").fill("Which factors predict HbA1c response?");
+  await page.getByLabel("Intended audience").fill("Rwandan clinical researchers");
+  await page.getByLabel("Objectives (one per line)").fill("Estimate response\nIdentify predictors");
+  await page.getByRole("button", { name: "Save blueprint" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Research Blueprint saved locally." })).toBeVisible();
+
+  await page.getByLabel("Study design").fill("Retrospective cohort study");
+  await page.getByLabel("Study setting").fill("Kigali, Rwanda");
+  await page.getByLabel("Target population").fill("Adults with type 2 diabetes");
+  await page.getByLabel("Sample size").fill("250");
+  await page.getByLabel("Outcomes (one per line)").fill("HbA1c change");
+  await page.getByLabel("Analysis plan").fill("Multivariable regression");
+  await expect(page.getByText("100% complete")).toBeVisible();
+
+  await page.getByRole("button", { name: "Save protocol draft" }).click();
+  await page.getByRole("button", { name: "Submit for owner review" }).click();
+  await expect(page.getByText(/submitted for your review/i)).toBeVisible();
+
+  page.on("dialog", dialog => dialog.accept());
+  await page.getByRole("button", { name: "Approve as project owner" }).click();
+  await expect(page.getByText(/owner approval has been recorded/i)).toBeVisible();
+
+  await page.reload();
+  await page.getByRole("tab", { name: /Blueprint & protocol/ }).click();
+  await expect(page.getByLabel("Research title")).toHaveValue("Treatment response predictors");
+  await expect(page.getByLabel("Research question").first()).toHaveValue("Which factors predict HbA1c response?");
+  await expect(page.getByText("approved", { exact: true })).toBeVisible();
+});
