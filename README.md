@@ -103,6 +103,11 @@ The local engine binds only to `127.0.0.1:8765`. It creates `%USERPROFILE%\\Pape
 See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python scripts run with the permissions of the signed-in Windows account; the workspace is not a security sandbox. Only execute code you trust. Never forward port 8765 to the internet.
 
 
+
+## Phase 3 — Literature Discovery
+
+The independent Research Factory now includes a Semantic Scholar discovery workspace with project-linked local search history, metadata inspection, DOI/title duplicate handling, project-library saving and BibTeX export. It reuses the existing /api/search-papers provider proxy, cache and rate-limit cooldown, and writes to the existing IndexedDB project records through revision safeguards. Search results remain discovery leads and bibliographic metadata must be checked against publisher records. See [Phase 3 architecture and safeguards](docs/phase3-literature-discovery.md).
+
 ## Phase 7 — Optional cloud collaboration
 
 PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
