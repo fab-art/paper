@@ -24,5 +24,5 @@ export function createProjectDraft(input: { id: string; name: string; now?: numb
 export function validateProjectDraft(project: { name?: string }): string;
 export function filterProjects<T extends { name?: string; researchQuestion?: string; objectives?: string[] }>(projects: T[], query: string): T[];
 export function getProjectCollection<T extends { updatedAt?: number; archivedAt?: number }>(projects: T[]): { active: T[]; archived: T[] };
-export function toggleMilestone<T extends { milestones?: Array<{ id: string; completed: boolean; [key: string]: unknown }> }>(project: T, milestoneId: string, completed: boolean): T;
+export function toggleMilestone<T extends { milestones?: Array<{ id: string; title: string; dueDate?: string; completed: boolean }> }>(project: T, milestoneId: string, completed: boolean): T;
 export function projectRoute(projectId: string): string;
