@@ -132,3 +132,65 @@ test("edits a Research Blueprint and requires explicit owner approval for a comp
   await expect(page.getByLabel("Project name")).toHaveValue("Treatment response predictors");
   await expect(page.getByPlaceholder("What do you want this research to answer?")).toHaveValue("Which factors predict HbA1c response?");
 });
+
+
+test("discovers literature, saves it locally and remembers project search history", async ({ page }) => {
+  await page.route("**/api/search-papers", async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        papers: [{
+          title: "Precision medicine in diabetes",
+          authors: ["A. Researcher", "B. Clinician"],
+          year: 2025,
+          doi: "10.1000/phase4.1",
+          venue: "Journal of Clinical Research",
+          abstract: "A study of precision approaches to diabetes care.",
+          url: "https://example.org/precision-diabetes",
+          openAccessPdf: "https://example.org/precision-diabetes.pdf",
+          citationCount: 12
+        }]
+      })
+    });
+  });
+
+  await createProject(page, "Literature discovery integration project");
+  await page.getByRole("tab", { name: /Research library/ }).click();
+  await page.getByRole("searchbox", { name: "Search academic literature" }).fill("precision medicine diabetes");
+  await page.getByRole("button", { name: "Search papers" }).click();
+  await expect(page.getByRole("heading", { name: "Precision medicine in diabetes" })).toBeVisible();
+  await expect(page.getByText("12 citations")).toBeVisible();
+
+  await page.getByRole("button", { name: /Save Precision medicine in diabetes/ }).click();
+  await expect(page.getByText("Paper saved to this project's research library.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Already saved in library: Precision medicine in diabetes/ })).toBeDisabled();
+
+  await expect(page.getByText("precision medicine diabetes", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: /Research library/ }).click();
+  await expect(page.getByText("precision medicine diabetes", { exact: true })).toBeVisible();
+  await expect(page.getByText("Precision medicine in diabetes")).toBeVisible();
+  await expect(page.getByText("10.1000/phase4.1")).toBeVisible();
+});
+
+test("shows a rate-limit cooldown without issuing repeated literature searches", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/api/search-papers", async route => {
+    requests += 1;
+    await route.fulfill({
+      status: 429,
+      headers: { "Retry-After": "8" },
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "Semantic Scholar rate limit reached.", retryAfterSeconds: 8 })
+    });
+  });
+
+  await createProject(page, "Literature rate limit project");
+  await page.getByRole("tab", { name: /Research library/ }).click();
+  await page.getByRole("searchbox", { name: "Search academic literature" }).fill("diabetes treatment");
+  await page.getByRole("button", { name: "Search papers" }).click();
+  await expect(page.getByRole("alert")).toContainText("Retry in 8 seconds");
+  await expect(page.getByRole("button", { name: "Search papers" })).toBeDisabled();
+  expect(requests).toBe(1);
+});
