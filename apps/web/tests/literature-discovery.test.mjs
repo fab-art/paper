@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { appendMissingBibtex, deduplicatePapers, normalizeDoi, normalizePaperTitle, paperToBibtex, safeExternalUrl, samePaper } from "../src/domain/literature-discovery.mjs";
+import { appendMissingBibtex, deduplicatePapers, findPaperProjectMatches, normalizeDoi, normalizePaperTitle, paperToBibtex, safeExternalUrl, samePaper } from "../src/domain/literature-discovery.mjs";
 
 test("normalizes DOI URLs, prefixes, case and trailing punctuation", () => {
   assert.equal(normalizeDoi("https://dx.doi.org/10.1000/ABC."), "10.1000/abc");
@@ -53,4 +53,19 @@ test("appends BibTeX only for references not already represented by title or DOI
   ]);
   assert.equal((result.match(/@article\{/g) ?? []).length, 2);
   assert.match(result, /A New Study/);
+});
+
+
+test("finds matching papers across other active and archived local projects", () => {
+  const paper = { title: "A diabetes study", doi: "10.1000/shared" };
+  const projects = [
+    { id: "current", name: "Current", papers: [paper] },
+    { id: "other", name: "Other project", papers: [{ title: "Different title", doi: "10.1000/SHARED" }] },
+    { id: "archived", name: "Archived project", archivedAt: 123, papers: [{ title: "A diabetes study" }] },
+    { id: "empty", name: "Empty project", papers: [] }
+  ];
+  assert.deepEqual(
+    findPaperProjectMatches(paper, projects, "current").map(project => project.id),
+    ["other", "archived"]
+  );
 });
