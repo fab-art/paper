@@ -4,6 +4,7 @@ import { Button, Card, Sidebar } from "@santi020k/lumen-react";
 import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
 import { getWorkspaceByPath, getWorkspaceGroups, WORKSPACES } from "./domain/workspaces.mjs";
+import ProjectManager from "./components/ProjectManager";
 
 const iconByWorkspace: Record<string, typeof Activity> = {
   station: Activity, projects: FolderKanban, blueprint: Workflow, production: Boxes,
@@ -60,7 +61,10 @@ export default function App() {
   }, []);
 
   const groups = useMemo(() => getWorkspaceGroups(), []);
-  const activeWorkspace = getWorkspaceByPath(activePath) ?? WORKSPACES[0];
+  const projectRouteMatch = activePath.match(/^\\/projects\\/([^/]+)\\/?$/);
+  const projectRouteId = projectRouteMatch ? decodeURIComponent(projectRouteMatch[1]) : undefined;
+  const isProjectRoute = activePath === "/projects" || Boolean(projectRouteId);
+  const activeWorkspace = getWorkspaceByPath(activePath) ?? (isProjectRoute ? WORKSPACES.find(item => item.id === "projects")! : WORKSPACES[0]);
   const normalizedQuery = query.trim().toLowerCase();
   const filteredProjects = projects.filter((project) => (project.name ?? "").toLowerCase().includes(normalizedQuery));
 
@@ -140,7 +144,9 @@ export default function App() {
             </div>
           </div>
 
-          {selectedProject ? (
+          {isProjectRoute ? (
+            <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
+          ) : selectedProject ? (
             <Card className="project-detail-card">
               <div className="detail-topline"><span className="eyebrow">LOCAL PROJECT RECORD</span><span className="record-id">ID · {String(selectedProject.id ?? "unknown").slice(0, 8)}</span></div>
               <h2>{selectedProject.name || "Untitled project"}</h2>
