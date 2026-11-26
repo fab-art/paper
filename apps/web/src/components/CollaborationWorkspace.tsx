@@ -264,6 +264,7 @@ export default function CollaborationWorkspace() {
       {localProject?.cloudProjectId && <p className="manage-muted">This local project is linked to cloud project {localProject.cloudProjectId} (revision {localProject.cloudRevision ?? "unknown"}).</p>}
     </div>
     <div className="manage-panel">
+      {loading && <p className="manage-muted" role="status">Loading shared projects…</p>}
       <div className="manage-panel-heading"><div><h3>Shared projects</h3><p>{sharedProjects.length} project(s) available to your account.</p></div><button className="manage-button secondary" type="button" onClick={() => void refreshShared()} disabled={busy}><RefreshCw size={14}/> Refresh</button></div>
       <label className="manage-project-select">Select shared project<select value={selectedCloudId} onChange={event => setSelectedCloudId(event.target.value)}><option value="">Choose a shared project</option>{sharedProjects.map(item => <option key={item.id} value={item.id}>{item.name} · r{item.revision}</option>)}</select></label>
       {selectedCloud && <>
