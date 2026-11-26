@@ -13,3 +13,5 @@ export function summarizeAppraisal(record: RiskOfBiasRecord | undefined): {
   total: number; assessed: number; remaining: number; completed: boolean; high: number; concerns: number;
 };
 export function validateEvidenceEntry(extraction: Partial<StudyExtraction>, appraisal: RiskOfBiasRecord): string[];
+
+export function switchAppraisalTemplate(current: RiskOfBiasRecord, paper: Partial<Paper>, tool: string): RiskOfBiasRecord;
