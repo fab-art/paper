@@ -47,7 +47,8 @@ export default function ProductionLineWorkspace() {
     setNotice("");
   }, [projectId, project?.updatedAt]);
 
-  const progress = useMemo(() => plan ? getProductionProgress(plan) : { total: 0, completed: 0, blocked: 0, remaining: 0, percent: 0 }, [plan]);
+  const blueprintApproved = project?.researchBlueprint?.approvalStatus === "approved";
+  const progress = useMemo(() => plan ? getProductionProgress(plan, { blueprintApproved }) : { total: 0, completed: 0, blocked: 0, remaining: 0, percent: 0 }, [plan, blueprintApproved]);
 
   async function persist(next: ProductionLine) {
     if (!project) return;
@@ -109,14 +110,14 @@ export default function ProductionLineWorkspace() {
         <div className="production-section-heading"><div><p className="eyebrow">RESEARCH WORKFLOW</p><h3>Milestones and deliverables</h3></div><span>{progress.total} tasks</span></div>
         <div className="production-task-list">
           {plan.tasks.map((task, index) => {
-            const readiness = getTaskReadiness(plan, task.id);
+            const readiness = getTaskReadiness(plan, task.id, { blueprintApproved });
             const dependencies = task.dependsOn.map(id => plan.tasks.find(item => item.id === id)?.title).filter(Boolean);
             return <Card className={"production-task " + (task.status === "completed" ? "is-complete" : "")} key={task.id}>
               <div className="production-task-number">{String(index + 1).padStart(2, "0")}</div>
               <div className="production-task-main">
                 <div className="production-task-top"><span className="production-stage">{stages.find(stage => stage.value === task.stage)?.label}</span><span className={"production-status status-" + task.status}>{statusLabel(task.status)}</span></div>
                 <h4>{task.title}</h4><p>{task.description}</p>
-                {dependencies.length > 0 && <div className={"production-dependency " + (readiness.ready ? "is-ready" : "")}><ArrowRight size={13}/>{readiness.ready ? "Dependencies complete" : "Waiting for: " + dependencies.join(", ")}</div>}
+                {dependencies.length > 0 && <div className={"production-dependency " + (readiness.ready ? "is-ready" : "")}><ArrowRight size={13}/>{readiness.ready ? "Dependencies complete" : readiness.blockedBy.includes("research-blueprint-approval") ? "Waiting for researcher approval of the blueprint" : "Waiting for: " + dependencies.join(", ")}</div>}
                 {task.dueDate && <div className="production-due">Due {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(task.dueDate + "T00:00:00"))}</div>}
               </div>
               <div className="production-task-action">
