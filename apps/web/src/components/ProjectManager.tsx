@@ -187,7 +187,7 @@ export default function ProjectManager({ projectId, onNavigate }: {
           <Button variant="ghost" onClick={() => onNavigate("/projects")}><ArrowLeft size={15} /> All projects</Button>
           <div className="project-manager-actions">
             <Button variant="secondary" onClick={archiveProject} disabled={saving}><Archive size={15} /> Archive</Button>
-            <Button variant="primary" onClick={() => void persist(project)} disabled={saving}><Save size={15} /> {saving ? "Saving…" : "Save changes"}</Button>
+            <Button variant="default" onClick={() => void persist(project)} disabled={saving}><Save size={15} /> {saving ? "Saving…" : "Save changes"}</Button>
           </div>
         </div>
         <Card className="project-editor-card">
@@ -237,7 +237,7 @@ export default function ProjectManager({ projectId, onNavigate }: {
         <form className="project-create-form" onSubmit={createProject}>
           <label><span>Start a project</span><input name="name" maxLength={200} required placeholder="e.g. Diabetes medication adherence in Rwanda" /></label>
           <label><span>Research question (optional)</span><input name="question" placeholder="What do you want to investigate?" /></label>
-          <Button type="submit" variant="primary" disabled={saving}><Plus size={15} /> Create project</Button>
+          <Button type="submit" variant="default" disabled={saving}><Plus size={15} /> Create project</Button>
         </form>
       </Card>
       <div className="section-heading project-list-heading">
