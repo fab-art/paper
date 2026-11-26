@@ -85,7 +85,6 @@ export interface Project {
   availableMaterials?: string[];
   storyArc?: string[];
   researchMode?: "guided" | "professional";
-  researchBlueprint?: import("./research-blueprint").ResearchBlueprint;
   productionLine?: import("./research-blueprint").ProductionLine;
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
