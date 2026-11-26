@@ -164,7 +164,8 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now(), bl
   }
   if (nextStatus === "completed" && current.stage === "blueprint" && !blueprintApproved) {
     throw new Error("Researcher approval of the Research Blueprint is required before this task can be completed.");
-  }\n  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
+  }
+  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
     throw new Error("Researcher confirmation is required to complete a task.");
   }
   const updated = {
