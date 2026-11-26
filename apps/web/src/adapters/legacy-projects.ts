@@ -1,4 +1,4 @@
-import { listProjects, saveProject, deleteProjectAndData } from "../../../../frontend/src/lib/db";
+import { listProjects, saveProject, deleteProjectAndData, restoreProject } from "../../../../frontend/src/lib/db";
 import type { Project } from "../../../../frontend/src/lib/types";
 
 /**
@@ -25,9 +25,7 @@ export async function archiveLocalProject(project: Project): Promise<Project | u
 }
 
 export async function restoreLocalProject(project: Project): Promise<Project | undefined> {
-  const restored = { ...project };
-  delete restored.archivedAt;
-  return saveProject(restored);
+  return restoreProject(project);
 }
 
 export async function permanentlyDeleteLocalProject(project: Project): Promise<void> {
