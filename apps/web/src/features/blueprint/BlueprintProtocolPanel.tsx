@@ -103,6 +103,7 @@ export default function BlueprintProtocolPanel({ projectId }: { projectId: strin
     setNotice("");
     try {
       const saved = await saveResearchBlueprint({ ...blueprint, updatedAt: Date.now() }, blueprint.version);
+      if (!saved) throw new Error("The Research Blueprint could not be saved.");
       setBlueprint(saved);
       setNotice("Research Blueprint saved locally.");
     } catch (cause) {
