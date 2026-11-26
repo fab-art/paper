@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Database, FileSpreadsheet, Info, LoaderCircle, Search, X } from "lucide-react";
 import type { ProjectAttachment } from "../../../../frontend/src/lib/types";
 import { profileDataset, summarizeDataset } from "../domain/dataset-analysis.mjs";
+import { MAX_DATASET_CELLS } from "../../../../frontend/src/lib/phase6-regressions.mjs";
 import "./data-methods-lab.css";
 
 type Dataset = { headers: string[]; rows: string[][]; totalRows: number; truncated: boolean };
