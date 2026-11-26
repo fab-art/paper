@@ -252,12 +252,12 @@ test("profiles a locally uploaded CSV and filters variable metadata", async ({ p
   await expect(page.getByRole("heading", { name: "Understand your research data." })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Rows" })).toContainText("3");
   await expect(page.getByRole("status").filter({ hasText: "Variables" })).toContainText("5");
-  await expect(page.getByRole("row", { name: /hba1c Numeric/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Variable profile table" }).getByRole("row", { name: /hba1c Numeric/ })).toBeVisible();
   await expect(page.getByText("Baseline, patient")).toBeVisible();
 
   await page.getByLabel("Filter variables").fill("hba1c");
   await expect(page.getByRole("row", { name: /hba1c/ })).toBeVisible();
-  await expect(page.getByRole("row", { name: /patient_id/ })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Variable profile table" }).getByRole("row", { name: /patient_id/ })).toHaveCount(0);
 
   await page.reload();
   await page.getByRole("tab", { name: /Data & methods/ }).click();
