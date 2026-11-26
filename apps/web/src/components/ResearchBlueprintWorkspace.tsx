@@ -4,7 +4,7 @@ import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
-import { approveResearchBlueprint, createResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
+import { approveResearchBlueprint, createResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
 
 const paperTypes = [
   ["unspecified", "Choose a research type"], ["empirical-study", "Empirical study"], ["systematic-review", "Systematic review"],
@@ -43,7 +43,7 @@ export default function ResearchBlueprintWorkspace() {
 
   const issues = useMemo(() => blueprint ? validateResearchBlueprint(blueprint) : [], [blueprint]);
   const update = (field: keyof ResearchBlueprint, value: unknown) => {
-    setBlueprint(current => current ? { ...current, [field]: value, updatedAt: Date.now() } : current);
+    setBlueprint(current => current ? updateResearchBlueprint(current, { [field]: value } as Partial<ResearchBlueprint>) : current);
     setNotice("");
   };
 
