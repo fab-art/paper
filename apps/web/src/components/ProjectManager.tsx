@@ -134,7 +134,7 @@ export default function ProjectManager({ projectId, onNavigate }: {
     if (!project || !paperTitle.trim()) return;
     const paper: Paper = {
       title: paperTitle.trim(),
-      authors: paperAuthors.split(/[,;]\\s*/).map(value => value.trim()).filter(Boolean),
+      authors: paperAuthors.split(/[,;]\s*/).map(value => value.trim()).filter(Boolean),
       doi: paperDoi.trim() || undefined,
       year: paperYear ? Number(paperYear) : undefined,
       source: "manual"
