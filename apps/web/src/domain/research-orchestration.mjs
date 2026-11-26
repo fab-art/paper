@@ -56,6 +56,17 @@ export function createResearchBlueprint(project, { now = Date.now() } = {}) {
   };
 }
 
+export function updateResearchBlueprint(blueprint, patch, { now = Date.now() } = {}) {
+  if (!blueprint) throw new Error("A research blueprint is required.");
+  const changed = Object.entries(patch).some(([key, value]) => JSON.stringify(blueprint[key]) !== JSON.stringify(value));
+  return {
+    ...blueprint,
+    ...patch,
+    ...(changed && blueprint.approvalStatus === "approved" ? { approvalStatus: "draft", approvedAt: null, approvedBy: null } : {}),
+    updatedAt: now
+  };
+}
+
 export function validateResearchBlueprint(blueprint) {
   const issues = [];
   if (!String(blueprint?.title ?? "").trim()) issues.push({ code: "title-required", message: "Add a research title." });
