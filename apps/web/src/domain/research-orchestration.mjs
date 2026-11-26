@@ -6,18 +6,8 @@ const makeId = (prefix) => `${prefix}-${globalThis.crypto?.randomUUID?.() ?? Mat
 
 export function createResearchBlueprint(project, { now = Date.now() } = {}) {
   if (!project?.id) throw new Error("A project is required to create a research blueprint.");
-  if (project.researchBlueprint) {
-    const existing = project.researchBlueprint;
-    return {
-      ...existing,
-      objectives: [...(existing.objectives ?? [])],
-      availableMaterials: [...(existing.availableMaterials ?? [])],
-      version: existing.version ?? 1,
-      schemaVersion: existing.schemaVersion ?? BLUEPRINT_SCHEMA_VERSION
-    };
-  }
   return {
-    id: `blueprint:${project.id}`,
+    id: project.id,
     projectId: project.id,
     schemaVersion: BLUEPRINT_SCHEMA_VERSION,
     version: 1,
