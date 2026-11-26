@@ -61,6 +61,8 @@ test("proposal is created as unapproved and records provenance", () => {
     output: { summary: "Prepare a study matrix.", steps: ["Review eligible records"], evidenceRefs: ["paper-1"], deliverables: [{ title: "Study matrix", content: "Draft matrix", evidenceRefs: ["paper-1"] }], limitations: ["Metadata requires verification."] }
   });
   assert.equal(proposal.status, "proposed");
+  assert.equal(proposal.blueprintVersion, 3);
+  assert.equal(proposal.projectRevision, 4);
   assert.equal(proposal.approvedBy, null);
   assert.equal(proposal.auditTrail[0].event, "proposed");
 });
@@ -86,7 +88,7 @@ test("approved deliverables can be applied once without completing the productio
     output: { summary: "Prepare a matrix.", steps: ["Review"], evidenceRefs: ["paper-1"], deliverables: [{ title: "Matrix", content: "Draft", evidenceRefs: ["paper-1"] }] }
   });
   const approved = decideResearchAgentProposal(proposed, "approve", { actor: "researcher-1", now: 70 });
-  const result = applyApprovedResearchProposal(task, approved, { expectedTaskVersion: 2, actor: "researcher-1", now: 90 });
+  const result = applyApprovedResearchProposal(task, approved, { expectedTaskVersion: 2, expectedBlueprintVersion: 3, blueprintApproved: true, actor: "researcher-1", now: 90 });
   assert.equal(result.task.version, 3);
   assert.equal(result.task.proposedDeliverables.length, 1);
   assert.equal(result.task.status, "in-progress");
@@ -102,4 +104,20 @@ test("proposal cannot be applied to a different task", () => {
   });
   const approved = decideResearchAgentProposal(proposed, "approve", { actor: "researcher-1" });
   assert.throws(() => applyApprovedResearchProposal({ ...task, id: "other" }, approved, { expectedTaskVersion: 2, actor: "researcher-1" }), /different task/i);
+});
+
+
+test("proposal application is blocked when blueprint approval or version becomes stale", () => {
+  const brief = createResearchTaskBrief({ project, task, plan, blueprint, contextSources });
+  const proposed = createResearchAgentProposal({
+    brief,
+    output: { summary: "Prepare a matrix.", steps: ["Review"], deliverables: [{ title: "Matrix", content: "Draft" }] }
+  });
+  const approved = decideResearchAgentProposal(proposed, "approve", { actor: "researcher-1" });
+  assert.throws(() => applyApprovedResearchProposal(task, approved, {
+    expectedTaskVersion: 2, expectedBlueprintVersion: 3, blueprintApproved: false, actor: "researcher-1"
+  }), /approval was withdrawn/i);
+  assert.throws(() => applyApprovedResearchProposal(task, approved, {
+    expectedTaskVersion: 2, expectedBlueprintVersion: 4, blueprintApproved: true, actor: "researcher-1"
+  }), /blueprint changed/i);
 });
