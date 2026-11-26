@@ -246,7 +246,7 @@ test("profiles a locally uploaded CSV and filters variable metadata", async ({ p
       'P3,,6.9,2025-03-10,"Missing age"\\n'
     )
   });
-  await expect(page.getByText("diabetes-study.csv")).toBeVisible();
+  await expect(page.getByRole("tabpanel", { name: /Files/ }).getByText("diabetes-study.csv")).toBeVisible();
 
   await page.getByRole("tab", { name: /Data & methods/ }).click();
   await expect(page.getByRole("heading", { name: "Understand your research data." })).toBeVisible();
