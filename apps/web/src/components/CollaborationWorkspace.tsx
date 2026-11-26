@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Activity, Cloud, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
-type User = { id: string; email?: string };
+type User = { id: string; email?: string | null };
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { Json, Tables } from "../../../../frontend/src/lib/database.types";
 import { isSupabaseConfigured, supabase } from "../../../../frontend/src/lib/supabase";
