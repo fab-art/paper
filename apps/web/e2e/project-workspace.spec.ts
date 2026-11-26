@@ -128,4 +128,7 @@ test("edits a Research Blueprint and requires explicit owner approval for a comp
   await expect(page.getByLabel("Research title")).toHaveValue("Treatment response predictors");
   await expect(page.getByLabel("Research question").first()).toHaveValue("Which factors predict HbA1c response?");
   await expect(page.getByText("approved", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Overview" }).click();
+  await expect(page.getByLabel("Project name")).toHaveValue("Treatment response predictors");
+  await expect(page.getByLabel("Research question")).toHaveValue("Which factors predict HbA1c response?");
 });
