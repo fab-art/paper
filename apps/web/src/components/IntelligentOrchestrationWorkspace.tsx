@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, ClipboardCopy, Cpu, FileCheck2, LoaderCircle, Play, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
-import type { Project } from "../../../../frontend/src/lib/types";
+import type { Project, ProjectAttachment } from "../../../../frontend/src/lib/types";
 import type { ProductionLine, ProductionTask, ResearchAgentProposal } from "../../../../frontend/src/lib/research-blueprint";
 import { complete, loadLocalModel, MODEL_OPTIONS } from "../../../../frontend/src/lib/llm";
-import { listLocalProjects, updateLocalProject, loadResearchBlueprint } from "../adapters/legacy-projects";
+import { listLocalProjects, listProjectAttachments, updateLocalProject, loadResearchBlueprint } from "../adapters/legacy-projects";
 import {
   applyApprovedResearchProposal, buildResearchAgentPrompt, createResearchAgentProposal,
   createResearchTaskBrief, decideResearchAgentProposal
@@ -22,6 +22,7 @@ export default function IntelligentOrchestrationWorkspace() {
   const [projectId, setProjectId] = useState("");
   const [plan, setPlan] = useState<ProductionLine | null>(null);
   const [blueprint, setBlueprint] = useState<ResearchBlueprint | null>(null);
+  const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
   const [taskId, setTaskId] = useState("");
   const [proposal, setProposal] = useState<ResearchAgentProposal | null>(null);
   const [modelId, setModelId] = useState<string>(MODEL_OPTIONS[0].id);
@@ -59,6 +60,7 @@ export default function IntelligentOrchestrationWorkspace() {
     setError("");
     setNotice("");
     setBlueprint(null);
+    setAttachments([]);
     if (!project) return () => { active = false; };
     loadResearchBlueprint(project.id).then(value => {
       if (active) setBlueprint(value ?? null);
@@ -102,7 +104,7 @@ export default function IntelligentOrchestrationWorkspace() {
 
   function makeBrief() {
     if (!project || !plan || !task) throw new Error("Select a started production task first.");
-    const contextSources = (project.papers ?? []).map((paper, index) => ({
+    const papers = (project.papers ?? []).map((paper, index) => ({
       id: `paper:${paper.doi || paper.url || index}`,
       kind: "paper",
       label: paper.title || `Imported paper ${index + 1}`,
@@ -110,7 +112,31 @@ export default function IntelligentOrchestrationWorkspace() {
       excerpt: paper.abstract ?? "",
       version: 1
     }));
-    return createResearchTaskBrief({ project, task, plan, blueprint, contextSources });
+    const extractedEvidence = Object.entries(project.systematicReview?.extraction ?? {}).map(([paperKey, extraction]) => ({
+      id: `extraction:${paperKey}`,
+      kind: "study-extraction",
+      label: `Study extraction · ${paperKey}`,
+      sourceLocator: paperKey,
+      excerpt: JSON.stringify(extraction),
+      version: 1
+    }));
+    const datasetMetadata = attachments.map(file => ({
+      id: `dataset:${file.id}`,
+      kind: "dataset-metadata",
+      label: file.name,
+      sourceLocator: file.id,
+      excerpt: `File type: ${file.mimeType}; size: ${file.size} bytes; description: ${file.description || "No description supplied"}. Raw dataset rows are not included in this AI context.`,
+      version: 1
+    }));
+    const manuscript = project.latex?.trim() ? [{
+      id: "manuscript:latex",
+      kind: "manuscript-draft",
+      label: "Current LaTeX manuscript",
+      sourceLocator: null,
+      excerpt: project.latex.slice(0, 5000),
+      version: 1
+    }] : [];
+    return createResearchTaskBrief({ project, task, plan, blueprint, contextSources: [...papers, ...extractedEvidence, ...datasetMetadata, ...manuscript] });
   }
 
   async function loadModel() {
@@ -224,7 +250,7 @@ export default function IntelligentOrchestrationWorkspace() {
 
       {task && <Card className="orchestration-run-card">
         <div className="orchestration-section-heading"><div><p className="eyebrow">AI TASK PREPARATION</p><h3>Generate a research proposal</h3></div><Sparkles size={18}/></div>
-        <p className="orchestration-helper">The prompt includes the approved research question and metadata/abstracts from papers already saved in this project. The model cannot change project decisions or mark the task complete.</p>
+        <p className="orchestration-helper">The prompt can include saved paper abstracts, extracted study characteristics, dataset file metadata (never raw rows), and a bounded manuscript excerpt. All source IDs are retained for proposal validation. The model cannot change project decisions or mark the task complete.</p>
         <Button onClick={() => void generateProposal()} disabled={!modelReady || !readiness?.ready || generating || saving}>{generating ? <><LoaderCircle size={14} className="spin"/> Generating proposal…</> : <><Play size={14}/> Generate with local model</>}</Button>
         {rawOutput && !proposal && <pre className="orchestration-raw-output" aria-label="Raw model response">{rawOutput}</pre>}
       </Card>}
