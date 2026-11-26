@@ -63,6 +63,8 @@ export interface ResearchAgentProposal {
   projectId: string;
   taskId: string;
   taskVersion: number;
+  projectRevision: number;
+  blueprintVersion: number | null;
   briefId: string;
   stage: ProductionStage;
   status: "proposed" | "approved" | "rejected" | "applied";
