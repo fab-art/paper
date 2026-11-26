@@ -179,7 +179,11 @@ export default function App() {
             <ScientificAuditWorkspace />
           ) : activeWorkspace.id === "publication" ? (
             <PublicationWorkspace />
-          ) : activeWorkspace.id === "collaboration" ? (\n            <CollaborationWorkspace />\n          ) : activeWorkspace.id === "settings" ? (\n            <SettingsWorkspace theme={theme} onThemeChange={setTheme} />\n          ) : isProjectRoute ? (
+          ) : activeWorkspace.id === "collaboration" ? (
+            <CollaborationWorkspace />
+          ) : activeWorkspace.id === "settings" ? (
+            <SettingsWorkspace theme={theme} onThemeChange={setTheme} />
+          ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
             <Card className="project-detail-card">
