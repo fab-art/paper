@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, Circle, Clock3, Plus, Workflow } from "lucide
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ProductionLine, ProductionStage, ProductionTask } from "../../../../frontend/src/lib/research-blueprint";
-import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
+import { listLocalProjects, updateLocalProject, loadResearchBlueprint } from "../adapters/legacy-projects";
 import { addProductionTask, createProductionPlan, createProductionTask, getProductionProgress, getTaskReadiness, updateProductionTask } from "../domain/research-orchestration.mjs";
 
 const stages: { value: ProductionStage; label: string }[] = [
@@ -26,6 +26,7 @@ export default function ProductionLineWorkspace() {
   const [taskStage, setTaskStage] = useState<ProductionStage>("literature");
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskDependency, setTaskDependency] = useState("");
+  const [blueprintApproved, setBlueprintApproved] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -47,7 +48,17 @@ export default function ProductionLineWorkspace() {
     setNotice("");
   }, [projectId, project?.updatedAt]);
 
-  const blueprintApproved = project?.researchBlueprint?.approvalStatus === "approved";
+  useEffect(() => {
+    let active = true;
+    setBlueprintApproved(false);
+    if (!project) return () => { active = false; };
+    loadResearchBlueprint(project.id).then(blueprint => {
+      if (active) setBlueprintApproved(blueprint?.approvalStatus === "approved");
+    }).catch(reason => {
+      if (active) setError(reason instanceof Error ? reason.message : "The research blueprint approval status could not be checked.");
+    });
+    return () => { active = false; };
+  }, [projectId]);
   const progress = useMemo(() => plan ? getProductionProgress(plan, { blueprintApproved }) : { total: 0, completed: 0, blocked: 0, remaining: 0, percent: 0 }, [plan, blueprintApproved]);
 
   async function persist(next: ProductionLine) {
