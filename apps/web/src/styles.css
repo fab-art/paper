@@ -238,3 +238,69 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .project-card, .nav-item { transition-duration: 0.01ms !important; }
 }
+
+
+/* Phase 2 — project workspace */
+.project-manager { display: flex; flex-direction: column; gap: 20px; }
+.project-manager-toolbar, .project-manager-actions, .project-manager-filters, .collection-switch,
+.project-section .section-heading, .inline-add-form, .note-actions, .attachment-row, .danger-zone {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.project-create-card, .project-editor-card { padding: 22px; }
+.project-create-form { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 14px; align-items: end; }
+.project-create-form label, .project-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; color: var(--app-ink); font-size: 11px; font-weight: 600; }
+.project-create-form input, .project-field input, .project-field textarea, .project-field select,
+.note-editor input, .note-editor textarea, .inline-add-form input, .project-manager-filters > input {
+  width: 100%; min-width: 0; border: 1px solid var(--app-line); border-radius: 9px; padding: 10px 12px;
+  background: var(--app-surface); color: var(--app-ink); font: inherit; font-size: 12px;
+}
+.project-create-form input:focus, .project-field input:focus, .project-field textarea:focus,
+.project-field select:focus, .note-editor input:focus, .note-editor textarea:focus,
+.inline-add-form input:focus, .project-manager-filters > input:focus { outline: 2px solid var(--focus-color); outline-offset: 2px; }
+.project-editor-card { display: flex; flex-direction: column; gap: 17px; }
+.project-field textarea, .note-editor textarea { resize: vertical; line-height: 1.55; }
+.project-section { border-top: 1px solid var(--app-line); padding-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+.project-section .section-heading { margin: 0; }
+.project-section .section-heading h2 { font-size: 17px; }
+.project-section .section-heading .eyebrow { margin: 0 0 5px; }
+.milestone-row { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid var(--app-line); border-radius: 9px; color: var(--app-ink); font-size: 12px; }
+.milestone-row input { width: 16px; height: 16px; accent-color: var(--app-brand); }
+.milestone-row small { margin-left: auto; color: var(--app-muted); }
+.milestone-row .is-complete { text-decoration: line-through; color: var(--app-muted); }
+.inline-add-form { justify-content: flex-start; }
+.inline-add-form input { max-width: 420px; }
+.note-editor { display: flex; flex-direction: column; gap: 9px; padding: 14px; border: 1px solid var(--app-line); border-radius: 12px; background: var(--app-canvas); }
+.project-note { padding: 13px 0; border-bottom: 1px solid var(--app-line); }
+.project-note > div:first-child { display: flex; justify-content: space-between; gap: 10px; color: var(--app-ink); font-size: 12px; }
+.project-note small, .attachment-row small { color: var(--app-muted); font-size: 10px; }
+.project-note p { color: var(--app-muted); font-size: 12px; white-space: pre-wrap; line-height: 1.6; }
+.note-actions { justify-content: flex-end; }
+.attachment-row { justify-content: flex-start; padding: 10px 0; border-bottom: 1px solid var(--app-line); color: var(--app-ink); font-size: 11px; }
+.attachment-row span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.attachment-row small { white-space: nowrap; }
+.danger-zone { margin-top: 8px; padding: 16px; border: 1px solid #d9a9a2; border-radius: 12px; }
+.danger-zone strong { color: #9a5148; font-size: 12px; }
+.danger-zone p { margin: 5px 0 0; color: var(--app-muted); font-size: 11px; line-height: 1.5; }
+.inline-notice, .inline-error { margin: 0; padding: 10px 12px; border-radius: 9px; font-size: 11px; }
+.inline-notice { background: #e7f2eb; color: #315e48; }
+.inline-error { background: #f8e9e6; color: #8f3e35; }
+.project-list-heading { align-items: flex-end; }
+.project-manager-filters { flex-wrap: wrap; justify-content: flex-end; }
+.project-manager-filters > input { width: min(280px, 100%); }
+.collection-switch { padding: 3px; border: 1px solid var(--app-line); border-radius: 9px; background: var(--app-surface); }
+.collection-switch button { border: 0; border-radius: 7px; padding: 8px 10px; background: transparent; color: var(--app-muted); font-size: 10px; }
+.collection-switch button[aria-pressed="true"] { background: var(--app-brand-soft); color: var(--app-ink); font-weight: 700; }
+@media (max-width: 760px) {
+  .project-create-form { grid-template-columns: 1fr; }
+  .project-manager-toolbar, .project-manager-actions, .project-list-heading { align-items: stretch; flex-direction: column; }
+  .project-manager-actions { flex-direction: row; }
+  .project-manager-filters { justify-content: stretch; flex-direction: column; }
+  .project-manager-filters > input { width: 100%; }
+  .danger-zone { align-items: flex-start; flex-direction: column; }
+  .attachment-row { flex-wrap: wrap; }
+}
+.factory-app[data-theme="dark"] .inline-notice { background: #203d30; color: #c4e4d1; }
+.factory-app[data-theme="dark"] .inline-error { background: #482c2a; color: #f1c0b8; }
+.factory-app[data-theme="dark"] .danger-zone { border-color: #80514a; }
+.factory-app[data-theme="dark"] .danger-zone strong { color: #f0b5ad; }
+.factory-app[data-theme="dark"] .note-editor { background: #151f1a; }
