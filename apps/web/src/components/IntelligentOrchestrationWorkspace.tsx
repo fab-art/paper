@@ -67,6 +67,11 @@ export default function IntelligentOrchestrationWorkspace() {
     }).catch(reason => {
       if (active) setError(reason instanceof Error ? reason.message : "The approved research blueprint could not be checked.");
     });
+    listProjectAttachments(project.id).then(records => {
+      if (active) setAttachments(records);
+    }).catch(reason => {
+      if (active) setError(reason instanceof Error ? reason.message : "Project dataset metadata could not be loaded.");
+    });
     return () => { active = false; };
   }, [projectId]);
 
