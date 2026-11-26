@@ -24,3 +24,10 @@ test("workspace groups preserve every workspace exactly once", () => {
   assert.equal(grouped.length, WORKSPACES.length);
   assert.deepEqual(new Set(grouped.map((item) => item.id)), new Set(WORKSPACES.map((item) => item.id)));
 });
+
+
+test("systematic reviews is enabled as the next migrated research workspace", () => {
+  const workspace = getWorkspaceByPath("/systematic-reviews");
+  assert.equal(workspace.id, "systematic-review");
+  assert.equal(workspace.status, "active");
+});
