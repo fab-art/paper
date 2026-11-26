@@ -65,7 +65,6 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const [stream, setStream] = useState("");
   const [pdf, setPdf] = useState<string>();
   const [feedback, setFeedback] = useState("");
-  const [plotData, setPlotData] = useState("");
   const [notice, setNotice] = useState("Ready for this research project.");
   const noticeIsError = /could not|failed|error|another tab|not saved|permanently deleted/i.test(notice);
   const undefinedCitations = useMemo(() => findUndefinedCitationKeys(project.latex, project.bibtex), [project.latex, project.bibtex]);
