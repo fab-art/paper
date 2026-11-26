@@ -101,6 +101,7 @@ export default function CollaborationWorkspace() {
   }, [user?.id]);
 
   useEffect(() => { if (selectedCloudId && user) void refreshDetails(selectedCloudId); }, [selectedCloudId, user?.id]);
+  useEffect(() => {\n    const linked = localProjects.find(item => item.cloudProjectId === selectedCloudId);\n    if (linked) setLocalProjectId(linked.id);\n  }, [selectedCloudId, localProjects]);
 
   async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -141,7 +142,7 @@ export default function CollaborationWorkspace() {
   }
 
   async function pushLocalChanges() {
-    if (!supabase || !user || !localProject || !selectedCloud || !canEdit) return;
+    if (!supabase || !user || !localProject || !selectedCloud || !canEdit) return;\n    if (localProject.cloudProjectId !== selectedCloud.id) { setError("Select the local project linked to this shared project before pushing changes."); return; }
     setBusy(true); setError(""); setNotice("");
     try {
       const payload = createSharedProjectPayload(localProject);
@@ -263,7 +264,7 @@ export default function CollaborationWorkspace() {
       <label className="manage-project-select">Select shared project<select value={selectedCloudId} onChange={event => setSelectedCloudId(event.target.value)}><option value="">Choose a shared project</option>{sharedProjects.map(item => <option key={item.id} value={item.id}>{item.name} · r{item.revision}</option>)}</select></label>
       {selectedCloud && <>
         <div className="manage-project-meta"><span>Owner {selectedCloud.owner_id === user.id ? "(you)" : profileNames[selectedCloud.owner_id] ?? selectedCloud.owner_id}</span><span>Revision {selectedCloud.revision}</span><span>Your role: {myRole ?? "member"}</span></div>
-        <div className="manage-inline-form"><label>Local project for sync<select value={localProjectId} onChange={event => setLocalProjectId(event.target.value)}><option value="">Select local project</option>{localProjects.map(item => <option key={item.id} value={item.id}>{item.name || "Untitled project"}</option>)}</select></label><div className="manage-actions"><button type="button" className="manage-button secondary" onClick={() => void pullCloudChanges()} disabled={busy || !localProject}>Pull cloud version</button><button type="button" className="manage-button" onClick={() => void pushLocalChanges()} disabled={busy || !localProject || !canEdit}>Push local changes</button></div></div>
+        <div className="manage-inline-form"><label>Local project for sync<select value={localProjectId} onChange={event => setLocalProjectId(event.target.value)}><option value="">Select local project</option>{localProjects.map(item => <option key={item.id} value={item.id}>{item.name || "Untitled project"}</option>)}</select></label><div className="manage-actions"><button type="button" className="manage-button secondary" onClick={() => void pullCloudChanges()} disabled={busy || !localProject}>Pull cloud version</button><button type="button" className="manage-button" onClick={() => void pushLocalChanges()} disabled={busy || !localProject || !canEdit || localProject.cloudProjectId !== selectedCloud.id}>Push local changes</button></div></div>
       </>}
     </div>
     {selectedCloud && <>
