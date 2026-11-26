@@ -1,0 +1,70 @@
+.plan-workspace{display:flex;flex-direction:column;gap:20px;min-width:0}
+.plan-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:2px}
+.plan-toolbar h2{font-size:clamp(22px,2.5vw,30px);letter-spacing:-.8px;margin:5px 0 7px;color:#1e292b}
+.plan-toolbar p:not(.eyebrow){font-size:12px;line-height:1.65;color:#626d70;margin:0;max-width:680px}
+.plan-project-select{display:flex;flex-direction:column;gap:6px;min-width:230px;color:#586960;font-size:11px}
+.plan-project-select select,.plan-field input,.plan-field select,.plan-field textarea{width:100%;min-width:0;border:1px solid #dfe2da;border-radius:8px;background:#fffefa;color:#1e292b;padding:10px 11px;font:12px var(--font-sans);outline:none}
+.plan-field textarea{resize:vertical;line-height:1.55}
+.plan-field input:focus,.plan-field select:focus,.plan-field textarea:focus,.plan-project-select select:focus{border-color:#277e79;box-shadow:0 0 0 3px #277e791c}
+.blueprint-form{display:flex;flex-direction:column;gap:15px}
+.plan-section{padding:20px;min-width:0}
+.plan-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.plan-section-heading>div{display:flex;align-items:center;gap:13px;min-width:0}
+.plan-section-heading h3,.production-section-heading h3{font-size:15px;letter-spacing:-.25px;margin:0;color:#1e292b}
+.plan-section-heading p{font-size:11px;color:#626d70;margin:5px 0 0;line-height:1.5}
+.plan-step{width:31px;height:31px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;background:#e1efeb;color:#176b68;font:11px var(--font-mono)}
+.plan-state,.production-status{display:inline-flex;align-items:center;border-radius:30px;padding:5px 9px;background:#f0f0e9;color:#626d70;font:10px var(--font-mono);white-space:nowrap}
+.plan-state.approved,.status-completed{background:#e1efeb;color:#176b68}
+.plan-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:14px}
+.plan-fields:first-of-type{margin-top:0}
+.plan-field{display:flex;flex-direction:column;gap:7px;min-width:0;color:#344447;font-size:11px;font-weight:600}
+.plan-field small{font-weight:400;color:#78827f;margin-left:5px}
+.plan-field.full{grid-column:1/-1}
+.blueprint-validation{padding:15px 17px;border:1px solid #e2e4dc;border-radius:11px;background:#f8f8f3;color:#485955;font-size:11px}
+.blueprint-validation>div{display:flex;align-items:center;gap:9px}
+.blueprint-validation svg{color:#176b68}
+.blueprint-validation ul{margin:10px 0 0 26px;padding:0;color:#697572;line-height:1.8}
+.plan-actions{display:flex;justify-content:flex-end;align-items:center;gap:9px;flex-wrap:wrap}
+.plan-actions>span{margin-right:auto;color:#697572;font-size:10px;line-height:1.5;max-width:480px}
+.plan-message{margin:0;font-size:11px;padding:10px 12px;border-radius:8px}
+.plan-message.error{background:#fff0ed;color:#963f36}
+.plan-message.success{background:#e9f3ed;color:#236347}
+.plan-empty{padding:35px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;color:#176b68}
+.plan-empty h2{font-size:18px;color:#1e292b;margin:4px 0 0}
+.plan-empty p{font-size:12px;color:#626d70;margin:0;line-height:1.6}
+.production-overview{padding:21px}
+.production-overview-top{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.production-overview h3{font-size:17px;margin:5px 0;color:#1e292b}
+.production-overview p{font-size:11px;line-height:1.6;color:#626d70;margin:0;max-width:760px}
+.production-percent{font-size:33px;letter-spacing:-1.5px;color:#176b68;font-weight:600;white-space:nowrap}
+.production-percent small{font-size:14px;margin-left:2px}
+.production-progress-track{height:7px;background:#e8ebe4;border-radius:20px;overflow:hidden;margin:18px 0 12px}
+.production-progress-track span{display:block;height:100%;background:#277e79;border-radius:20px;transition:width .18s ease}
+.production-metrics{display:flex;gap:18px;flex-wrap:wrap;color:#626d70;font-size:10px}
+.production-metrics span{display:inline-flex;align-items:center;gap:6px}
+.production-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:6px 0 13px}
+.production-section-heading .eyebrow{margin:0 0 5px}
+.production-section-heading>span{font-size:10px;color:#697572}
+.production-task-list{display:flex;flex-direction:column;gap:9px}
+.production-task{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:13px;align-items:start;padding:15px;min-width:0}
+.production-task-number{width:30px;height:30px;border-radius:9px;background:#f0f1eb;color:#697572;display:grid;place-items:center;font:10px var(--font-mono)}
+.production-task.is-complete .production-task-number{background:#e1efeb;color:#176b68}
+.production-task-main{min-width:0}
+.production-task-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.production-stage{font:9px var(--font-mono);letter-spacing:.5px;text-transform:uppercase;color:#697572}
+.production-status.status-in-progress{background:#fff3df;color:#8b642b}
+.production-status.status-skipped{background:#f0f0e9;color:#697572}
+.production-task h4{font-size:13px;color:#1e292b;margin:8px 0 4px}
+.production-task p{font-size:11px;line-height:1.55;color:#626d70;margin:0}
+.production-dependency{display:flex;align-items:center;gap:5px;margin-top:9px;color:#91652d;font-size:10px;line-height:1.45}
+.production-dependency.is-ready{color:#287451}
+.production-due{font-size:10px;color:#697572;margin-top:8px}
+.production-task-action{align-self:center}
+.task-done{display:inline-flex;align-items:center;gap:6px;color:#287451;font-size:10px;white-space:nowrap}
+.production-add{padding:19px}
+.production-add .production-section-heading{margin-top:0}
+.production-add-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;align-items:end}
+.production-add-form>button{justify-self:start}
+.production-footnote{font-size:10px;line-height:1.6;color:#697572;margin:0;padding:0 2px}
+@media(max-width:760px){.plan-toolbar{align-items:stretch;flex-direction:column}.plan-project-select{min-width:0;width:100%}.plan-fields{grid-template-columns:minmax(0,1fr)}.plan-field.full{grid-column:auto}.plan-section{padding:15px}.plan-section-heading{align-items:flex-start}.plan-actions{align-items:stretch;flex-direction:column}.plan-actions>span{max-width:none;margin:0 0 4px}.production-task{grid-template-columns:30px minmax(0,1fr);gap:10px}.production-task-action{grid-column:2;justify-self:start}.production-add-form{grid-template-columns:minmax(0,1fr)}.production-overview-top{align-items:flex-start}.production-metrics{gap:9px 14px}}
+@media(prefers-reduced-motion:reduce){.production-progress-track span{transition:none}}
