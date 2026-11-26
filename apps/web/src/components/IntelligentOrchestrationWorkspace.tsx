@@ -25,6 +25,7 @@ export default function IntelligentOrchestrationWorkspace() {
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
   const [taskId, setTaskId] = useState("");
   const [proposal, setProposal] = useState<ResearchAgentProposal | null>(null);
+  const [researcherIdentity, setResearcherIdentity] = useState("");
   const [modelId, setModelId] = useState<string>(MODEL_OPTIONS[0].id);
   const [modelReady, setModelReady] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
@@ -190,7 +191,7 @@ export default function IntelligentOrchestrationWorkspace() {
   async function decide(decision: "approve" | "reject") {
     if (!task || !plan || !proposal) return;
     try {
-      const nextProposal = decideResearchAgentProposal(proposal, decision, { actor: "local-researcher" });
+      const nextProposal = decideResearchAgentProposal(proposal, decision, { actor: researcherIdentity.trim() });
       const updatedTask = { ...task, orchestrationProposals: (task.orchestrationProposals ?? []).map(item => item.id === proposal.id ? nextProposal : item) };
       const nextPlan = { ...plan, version: plan.version + 1, tasks: plan.tasks.map(item => item.id === task.id ? updatedTask : item), updatedAt: Date.now() };
       await persistPlan(nextPlan);
@@ -204,7 +205,7 @@ export default function IntelligentOrchestrationWorkspace() {
   async function applyProposal() {
     if (!task || !plan || !proposal) return;
     try {
-      const result = applyApprovedResearchProposal(task, proposal, { expectedTaskVersion: proposal.taskVersion, actor: "local-researcher" });
+      const result = applyApprovedResearchProposal(task, proposal, { expectedTaskVersion: proposal.taskVersion, actor: researcherIdentity.trim() });
       const updatedTask = {
         ...result.task,
         orchestrationProposals: (task.orchestrationProposals ?? []).map(item => item.id === proposal.id ? result.proposal : item)
@@ -265,9 +266,10 @@ export default function IntelligentOrchestrationWorkspace() {
         <ol className="orchestration-steps">{proposal.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         <div className="orchestration-deliverables"><strong>Proposed deliverables</strong>{proposal.deliverables.map((item, index) => <article key={index}><h4>{item.title}</h4><p>{item.content}</p>{item.evidenceRefs.length > 0 && <small>Evidence references: {item.evidenceRefs.join(", ")}</small>}</article>)}</div>
         {proposal.limitations.length > 0 && <div className="orchestration-limitations"><strong>Limitations to review</strong><ul>{proposal.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
+        {(proposal.status === "proposed" || proposal.status === "approved") && <label className="plan-field orchestration-reviewer"><span>Researcher name or ID <small>Required for the decision audit</small></span><input value={researcherIdentity} onChange={event => setResearcherIdentity(event.target.value)} placeholder="Enter your researcher identity" maxLength={120}/></label>}
         <div className="orchestration-audit"><strong>Decision history</strong>{proposal.auditTrail.map((event, index) => <p key={index}><span>{event.event}</span> · {event.actor} · {new Date(event.at).toLocaleString()}</p>)}</div>
-        {proposal.status === "proposed" && <div className="orchestration-actions"><span>Approval is explicit. Review all claims and sources before accepting.</span><Button variant="secondary" onClick={() => void decide("reject")} disabled={saving}><X size={14}/> Reject</Button><Button onClick={() => void decide("approve")} disabled={saving}><ShieldCheck size={14}/> Approve proposal</Button></div>}
-        {proposal.status === "approved" && <div className="orchestration-actions"><span>Approval does not mark the task complete.</span><Button onClick={() => void applyProposal()} disabled={saving}><FileCheck2 size={14}/> Apply approved deliverables</Button></div>}
+        {proposal.status === "proposed" && <div className="orchestration-actions"><span>Approval is explicit. Review all claims and sources before accepting.</span><Button variant="secondary" onClick={() => void decide("reject")} disabled={saving || !researcherIdentity.trim()}><X size={14}/> Reject</Button><Button onClick={() => void decide("approve")} disabled={saving || !researcherIdentity.trim()}><ShieldCheck size={14}/> Approve proposal</Button></div>}
+        {proposal.status === "approved" && <div className="orchestration-actions"><span>Approval does not mark the task complete.</span><Button onClick={() => void applyProposal()} disabled={saving || !researcherIdentity.trim()}><FileCheck2 size={14}/> Apply approved deliverables</Button></div>}
         {proposal.status === "applied" && <p className="orchestration-applied"><Check size={15}/> Applied to the task. Confirm completion separately in Production Line.</p>}
       </Card>}
 
