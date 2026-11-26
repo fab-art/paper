@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   APPRAISAL_TEMPLATES, createAppraisalRecord, createExtractionRecord,
-  evidencePaperKey, summarizeAppraisal, upsertEvidenceRecord, validateEvidenceEntry
+  evidencePaperKey, summarizeAppraisal, switchAppraisalTemplate, upsertEvidenceRecord, validateEvidenceEntry
 } from "../src/domain/evidence-appraisal.mjs";
 
 test("uses normalized DOI as a stable evidence record key and falls back to Unicode title", () => {
@@ -54,4 +54,17 @@ test("requires a reasoned rationale for assessed domains and at least one extrac
   assert.deepEqual(validateEvidenceEntry(extraction, appraisal), ["Add a rationale for each assessed domain."]);
   appraisal.domains[0].rationale = "Allocation was concealed according to the methods section.";
   assert.deepEqual(validateEvidenceEntry(extraction, appraisal), []);
+});
+
+
+test("switching appraisal templates preserves earlier domain judgments and rationales", () => {
+  const original = createAppraisalRecord({ title: "Trial" }, "RoB 2 (randomized trials)");
+  original.domains[0].judgement = "low";
+  original.domains[0].rationale = "Allocation was concealed.";
+  const robins = switchAppraisalTemplate(original, { title: "Trial" }, "ROBINS-I (non-randomized interventions)");
+  assert.equal(robins.tool, "ROBINS-I (non-randomized interventions)");
+  assert.equal(robins.domains.length, 7);
+  const restored = switchAppraisalTemplate(robins, { title: "Trial" }, "RoB 2 (randomized trials)");
+  assert.equal(restored.domains[0].judgement, "low");
+  assert.equal(restored.domains[0].rationale, "Allocation was concealed.");
 });
