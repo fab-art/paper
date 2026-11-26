@@ -27,6 +27,17 @@ export const APPRAISAL_TEMPLATES = Object.freeze({
     ["outcome", "Outcomes measured validly and reliably", "Check outcome definitions, instruments and measurement consistency."],
     ["analysis", "Appropriate statistical analysis", "Check whether methods match design, data structure and assumptions."]
   ],
+  "QUADAS-2 (diagnostic accuracy)": [
+    ["patient-selection", "Patient selection", "Consider inappropriate exclusions, case-control sampling and avoidable selection bias."],
+    ["index-test", "Index test", "Consider prespecification, interpretation without knowledge of the reference standard and consistent conduct."],
+    ["reference-standard", "Reference standard", "Consider whether the reference standard correctly classifies the target condition and was interpreted appropriately."],
+    ["flow-timing", "Flow and timing", "Consider whether all participants received the reference standard, timing, and exclusions from analysis."]
+  ],
+  "Newcastle-Ottawa Scale prompts": [
+    ["selection", "Selection of study groups", "Consider representativeness, selection, exposure ascertainment and demonstration that the outcome was absent at baseline where applicable."],
+    ["comparability", "Comparability of groups", "Identify the most important confounders and whether study design or analysis addressed them."],
+    ["outcome-exposure", "Outcome or exposure ascertainment", "Consider outcome/exposure measurement, follow-up adequacy or non-response depending on cohort or case-control design."]
+  ],
   "CASP qualitative prompts": [
     ["aims", "Clear statement of research aims", "Consider whether the purpose and research question are explicit."],
     ["methodology", "Qualitative methodology appropriate", "Consider fit between the research question and qualitative approach."],
