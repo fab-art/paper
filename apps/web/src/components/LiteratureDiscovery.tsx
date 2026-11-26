@@ -191,7 +191,7 @@ export default function LiteratureDiscovery() {
                   {doi && <a href={doi} target="_blank" rel="noreferrer">DOI <ExternalLink size={12} /></a>}
                   {paperUrl && <a href={paperUrl} target="_blank" rel="noreferrer">Publisher / source <ExternalLink size={12} /></a>}
                   {pdfUrl && <a href={pdfUrl} target="_blank" rel="noreferrer">Open-access PDF <ExternalLink size={12} /></a>}
-                  <Button size="sm" variant={saved ? "secondary" : "default"} disabled={!selectedProject || savingId === key || saved} onClick={() => void savePaper(paper)}>{savingId === key ? "Saving…" : saved ? "Saved" : "Save to project"}</Button>
+                  <Button size="sm" variant={saved ? "secondary" : "default"} disabled={!selectedProject || Boolean(savingId)} onClick={() => void savePaper(paper)}>{savingId === key ? "Saving…" : saved ? "Refresh metadata" : "Save to project"}</Button>
                 </div>
               </Card>;
             })}
