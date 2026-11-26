@@ -2,6 +2,7 @@ import type { Project } from "../../../../frontend/src/lib/types";
 import type { ResearchBlueprint, ProductionLine, ProductionTask } from "../../../../frontend/src/lib/research-blueprint";
 
 export function createResearchBlueprint(project: Project, options?: { now?: number }): ResearchBlueprint;
+export function normalizeResearchBlueprint(project: Project, existingBlueprint?: Partial<ResearchBlueprint> | null, options?: { now?: number }): ResearchBlueprint;
 export function updateResearchBlueprint(blueprint: ResearchBlueprint, patch: Partial<ResearchBlueprint>, options?: { now?: number }): ResearchBlueprint;
 export function validateResearchBlueprint(blueprint: ResearchBlueprint): Array<{ code: string; message: string }>;
 export function approveResearchBlueprint(blueprint: ResearchBlueprint, options: { now?: number; approvedBy: string }): ResearchBlueprint;
