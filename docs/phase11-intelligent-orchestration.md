@@ -12,7 +12,7 @@ Connect the Phase 10 Production Line to existing research workspaces through ver
 - Validate model output before it becomes a proposal. Evidence references must point to source identifiers supplied to the brief.
 - Store AI output as an unapproved proposal with provenance and an append-only decision trail.
 - Require an identified researcher to approve or reject a proposal.
-- Apply approved deliverables to the task with optimistic task-version checks. Applying a proposal does not complete the task.
+- Apply approved deliverables to the task with optimistic task-version and approved-blueprint-version checks. Task versions advance whenever task state changes. A blueprint edit or withdrawn approval invalidates downstream proposals. Applying a proposal does not complete the task.
 - Reject stale proposals, cross-task application, unknown evidence identifiers and repeated application.
 
 ## Scientific authority and privacy
@@ -20,7 +20,7 @@ Connect the Phase 10 Production Line to existing research workspaces through ver
 - AI may prepare suggestions and draft deliverables; it cannot approve a blueprint, make screening or risk-of-bias judgments, decide ethics, alter evidence records, or mark tasks complete.
 - The canonical local IndexedDB project remains the source of truth. No project content is uploaded to Supabase automatically.
 - Context passed to the model is explicit and scoped to the task. Retrieved documents and project text are untrusted data, not instructions.
-- Every proposal records its task and brief versions, source identifiers, decision actor, timestamps and application event.
+- Every proposal records its task, project and blueprint versions, source identifiers, researcher decision actor, timestamps and application event. A named researcher identity is required for approval, rejection and application.
 - Citations and generated scientific content remain subject to researcher and publisher-source verification.
 
 ## Contract
@@ -33,7 +33,7 @@ The domain service exports:
 - `decideResearchAgentProposal`
 - `applyApprovedResearchProposal`
 
-The model adapter is deliberately separated from the proposal lifecycle. A browser-local WebLLM runtime can consume the returned system/user prompt; provider execution must not receive server secrets or upload private project data.
+The model adapter is deliberately separated from the proposal lifecycle. The workspace runs the existing browser-local WebLLM runtime and never sends project context to a remote model provider. The task context may include saved paper abstracts, study-extraction records, dataset file metadata (not raw rows), and a bounded manuscript excerpt. Retrieved text remains untrusted data.
 
 ## Verification
 
