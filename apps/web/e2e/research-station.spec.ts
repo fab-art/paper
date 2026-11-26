@@ -312,6 +312,8 @@ test("Evidence Workspace extracts, appraises and persists study-level records", 
   await installExistingProjectFixture(page, true);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/evidence");
+  await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await page.reload();
   await expect(page.getByRole("heading", { name: "Evidence Workspace", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Community health intervention outcomes" })).toBeVisible();
 
