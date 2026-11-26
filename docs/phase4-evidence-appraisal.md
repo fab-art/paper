@@ -20,6 +20,8 @@ The initial prompt sets cover:
 - RoB 2 domains for randomized trials.
 - ROBINS-I domains for non-randomized intervention studies.
 - JBI analytical cross-sectional appraisal prompts.
+- QUADAS-2 diagnostic-accuracy prompts.
+- Newcastle–Ottawa Scale prompts for observational studies.
 - CASP qualitative appraisal prompts.
 
 These are structured prompts only. They are not a complete implementation of each official instrument, do not calculate an official overall judgment, and do not replace the official manuals, signaling questions or decision rules. Users must choose the tool that fits the design, consult the authoritative guidance and make the judgments themselves. A judgment without a written rationale cannot be saved.
