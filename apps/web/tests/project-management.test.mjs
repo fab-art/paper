@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createProjectDraft, filterProjects, getProjectCollection, validateProjectDraft,
-  toggleMilestone, projectRoute
+  toggleMilestone, projectRoute, isDuplicatePaper
 } from "../src/domain/project-management.mjs";
 
 test("new project draft starts with safe, complete defaults", () => {
@@ -53,4 +53,11 @@ test("milestones are completed by stable id without mutating input", () => {
 
 test("project routes encode identifiers and preserve direct navigation", () => {
   assert.equal(projectRoute("p 1"), "/projects/p%201");
+});
+
+test("literature duplicate detection normalizes DOI URLs and title punctuation", () => {
+  const existing = [{ title: "A Study of Diabetes!", doi: "10.1234/example" }];
+  assert.equal(isDuplicatePaper(existing, { title: "a study of diabetes", doi: "https://doi.org/10.9999/other" }), true);
+  assert.equal(isDuplicatePaper(existing, { title: "Different study", doi: "https://dx.doi.org/10.1234/example" }), true);
+  assert.equal(isDuplicatePaper(existing, { title: "Different study", doi: "10.9999/other" }), false);
 });
