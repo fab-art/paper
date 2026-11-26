@@ -231,3 +231,36 @@ test("links exact source passages to claims and surfaces conflicting evidence af
   await expect(page.getByText("No statistically significant difference was observed in the primary outcome.")).toBeVisible();
   await expect(page.getByText(/Contradictory evidence is present/)).toBeVisible();
 });
+
+
+test("profiles a locally uploaded CSV and filters variable metadata", async ({ page }) => {
+  await createProject(page, "Data methods integration project");
+  await page.getByRole("tab", { name: /Files/ }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "diabetes-study.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      'patient_id,age,hba1c,visit_date,notes\\n' +
+      'P1,45,8.1,2025-01-10,"Baseline, patient"\\n' +
+      'P2,50,7.2,2025-02-10,"Follow-up"\\n' +
+      'P3,,6.9,2025-03-10,"Missing age"\\n'
+    )
+  });
+  await expect(page.getByText("diabetes-study.csv")).toBeVisible();
+
+  await page.getByRole("tab", { name: /Data & methods/ }).click();
+  await expect(page.getByRole("heading", { name: "Understand your research data." })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Rows" })).toContainText("3");
+  await expect(page.getByRole("status").filter({ hasText: "Variables" })).toContainText("5");
+  await expect(page.getByRole("row", { name: /hba1c Numeric/ })).toBeVisible();
+  await expect(page.getByText("Baseline, patient")).toBeVisible();
+
+  await page.getByLabel("Filter variables").fill("hba1c");
+  await expect(page.getByRole("row", { name: /hba1c/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /patient_id/ })).toHaveCount(0);
+
+  await page.reload();
+  await page.getByRole("tab", { name: /Data & methods/ }).click();
+  await expect(page.getByRole("heading", { name: "Variable profile" })).toBeVisible();
+  await expect(page.getByRole("row", { name: /hba1c Numeric/ })).toBeVisible();
+});
