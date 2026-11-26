@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, ClipboardCopy, Cpu, FileCheck2, LoaderCircle, Play, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project, ProjectAttachment } from "../../../../frontend/src/lib/types";
-import type { ProductionLine, ProductionTask, ResearchAgentProposal } from "../../../../frontend/src/lib/research-blueprint";
+import type { ProductionLine, ResearchAgentProposal, ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
 import { complete, loadLocalModel, MODEL_OPTIONS } from "../../../../frontend/src/lib/llm";
 import { listLocalProjects, listProjectAttachments, updateLocalProject, loadResearchBlueprint } from "../adapters/legacy-projects";
 import {
