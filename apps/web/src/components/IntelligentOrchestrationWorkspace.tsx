@@ -3,7 +3,7 @@ import { Check, ClipboardCopy, Cpu, FileCheck2, LoaderCircle, Play, ShieldCheck,
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project, ProjectAttachment } from "../../../../frontend/src/lib/types";
 import type { ProductionLine, ResearchAgentProposal, ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
-import { complete, loadLocalModel, MODEL_OPTIONS } from "../../../../frontend/src/lib/llm";
+import { completeWithSystem, loadLocalModel, MODEL_OPTIONS } from "../../../../frontend/src/lib/llm";
 import { listLocalProjects, listProjectAttachments, updateLocalProject, loadResearchBlueprint } from "../adapters/legacy-projects";
 import {
   applyApprovedResearchProposal, buildResearchAgentPrompt, createResearchAgentProposal,
@@ -173,7 +173,7 @@ export default function IntelligentOrchestrationWorkspace() {
       if (!modelReady) throw new Error("Load a local model before generating a proposal.");
       const brief = makeBrief();
       const prompt = buildResearchAgentPrompt(brief);
-      const raw = await complete(`SYSTEM INSTRUCTIONS\n${prompt.system}\n\nTASK DATA\n${prompt.user}`, token => {
+      const raw = await completeWithSystem(prompt.system, prompt.user, token => {
         setRawOutput(current => current + token);
       });
       setRawOutput(raw);
