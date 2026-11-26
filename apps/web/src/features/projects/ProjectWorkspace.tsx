@@ -152,6 +152,12 @@ export default function ProjectWorkspace({
     setProject((current) => current ? { ...current, ...changes } : current);
   };
 
+  const saveBlueprintProject = async () => {
+    const latest = projectRef.current;
+    if (!latest) throw new Error("The project is not ready to save.");
+    await persistProject(latest);
+  };
+
   const handleBack = async () => {
     const latest = projectRef.current;
     try {
@@ -383,7 +389,7 @@ export default function ProjectWorkspace({
         </TabsList>
 
         <TabsPanel value="blueprint">
-          <BlueprintProtocolPanel projectId={projectId} />
+          <BlueprintProtocolPanel project={project} onPatchProject={patchProject} onSaveProject={saveBlueprintProject} />
         </TabsPanel>
         <TabsPanel value="overview">
           <div className="project-overview-grid">
