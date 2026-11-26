@@ -15,7 +15,7 @@ async function createProject(page, name = "Phase 2 integration project") {
 test("creates, edits and reloads a project with notes, sources and milestones", async ({ page }) => {
   await createProject(page);
 
-  await page.getByLabel("Research question").fill("What predicts long-term treatment response?");
+  await page.getByPlaceholder("What do you want this research to answer?").fill("What predicts long-term treatment response?");
   await page.getByLabel("Objectives (one per line)").fill("Estimate response\nIdentify predictors");
   await page.getByLabel("Methodology").fill("Retrospective cohort study");
   await page.getByLabel("New milestone").fill("Approve protocol");
@@ -46,7 +46,7 @@ test("creates, edits and reloads a project with notes, sources and milestones", 
   await page.waitForTimeout(800);
   await page.reload();
   await expect(page.getByLabel("Project name")).toHaveValue("Phase 2 integration project");
-  await expect(page.getByLabel("Research question")).toHaveValue("What predicts long-term treatment response?");
+  await expect(page.getByPlaceholder("What do you want this research to answer?")).toHaveValue("What predicts long-term treatment response?");
   await expect(page.getByText("Approve protocol")).toBeVisible();
   await page.getByRole("tab", { name: /Research library/ }).click();
   await expect(page.getByText("Precision medicine in diabetes")).toBeVisible();
@@ -101,7 +101,7 @@ test("edits a Research Blueprint and requires explicit owner approval for a comp
 
   await page.getByLabel("Research title").fill("Treatment response predictors");
   await page.getByLabel("Problem or observation").fill("Treatment response varies across patients.");
-  await page.getByLabel("Research question").fill("Which factors predict HbA1c response?");
+  await page.getByPlaceholder("What specific question should the research answer?").fill("Which factors predict HbA1c response?");
   await page.getByLabel("Intended audience").fill("Rwandan clinical researchers");
   await page.getByLabel("Objectives (one per line)").fill("Estimate response\nIdentify predictors");
   await page.getByRole("button", { name: "Save blueprint" }).click();
@@ -126,9 +126,9 @@ test("edits a Research Blueprint and requires explicit owner approval for a comp
   await page.reload();
   await page.getByRole("tab", { name: /Blueprint & protocol/ }).click();
   await expect(page.getByLabel("Research title")).toHaveValue("Treatment response predictors");
-  await expect(page.getByLabel("Research question").first()).toHaveValue("Which factors predict HbA1c response?");
+  await expect(page.getByPlaceholder("What specific question should the research answer?")).toHaveValue("Which factors predict HbA1c response?");
   await expect(page.getByText("approved", { exact: true })).toBeVisible();
   await page.getByRole("tab", { name: "Overview" }).click();
   await expect(page.getByLabel("Project name")).toHaveValue("Treatment response predictors");
-  await expect(page.getByLabel("Research question")).toHaveValue("Which factors predict HbA1c response?");
+  await expect(page.getByPlaceholder("What do you want this research to answer?")).toHaveValue("Which factors predict HbA1c response?");
 });
