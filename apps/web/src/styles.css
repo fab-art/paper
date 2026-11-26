@@ -442,7 +442,7 @@ button { cursor: pointer; }
 .evidence-field input, .evidence-field textarea { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-canvas); color: var(--app-ink); font: 10px/1.5 var(--font-sans); resize: vertical; }
 .evidence-field input { min-height: 35px; }
 .evidence-field textarea { min-height: 56px; }
-.evidence-field input::placeholder, .evidence-field textarea::placeholder { color: #929b99; }
+.evidence-field input::placeholder, .evidence-field textarea::placeholder { color: var(--app-muted); opacity: 1; }
 .evidence-field-wide { grid-column: 1 / -1; }
 .evidence-appraisal-toolbar { display: grid; grid-template-columns: minmax(190px, auto) minmax(80px,1fr) auto; align-items: end; gap: 12px; }
 .evidence-appraisal-toolbar select { min-width: 0; width: 100%; }
