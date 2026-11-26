@@ -14,6 +14,7 @@ import {
 } from "./projectRepository";
 import { isDuplicatePaper } from "./projectModel.mjs";
 import BlueprintProtocolPanel from "../blueprint/BlueprintProtocolPanel";
+import LiteratureDiscoveryPanel from "../literature/LiteratureDiscoveryPanel";
 import "./project-workspace.css";
 
 type SaveState = "saved" | "saving" | "error";
@@ -252,6 +253,33 @@ export default function ProjectWorkspace({
     }
   };
 
+  const handleSaveDiscoveredPaper = async (paper: Paper): Promise<boolean> => {
+    const previous = projectRef.current;
+    if (!previous) throw new Error("The project is not ready.");
+    if (isDuplicatePaper(previous.papers ?? [], paper)) return false;
+    const next = { ...previous, papers: [...(previous.papers ?? []), paper] };
+    projectRef.current = next;
+    setProject(next);
+    try {
+      const updated = await persistProject(next);
+      if (updated) {
+        projectRef.current = updated;
+        setProject(updated);
+      }
+      return true;
+    } catch (cause) {
+      if (projectRef.current === next) {
+        projectRef.current = previous;
+        setProject(previous);
+      }
+      throw cause;
+    }
+  };
+
+  const openPaperLibrary = () => {
+    document.getElementById("project-paper-library")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const handleUploadFiles = async (files: FileList | null) => {
     if (!files) return;
     const skipped: string[] = [];
@@ -449,7 +477,13 @@ export default function ProjectWorkspace({
         </TabsPanel>
 
         <TabsPanel value="library">
-          <Card className="project-workspace-card">
+          <LiteratureDiscoveryPanel
+            projectId={projectId}
+            papers={project.papers ?? []}
+            onSavePaper={handleSaveDiscoveredPaper}
+            onOpenLibrary={openPaperLibrary}
+          />
+          <Card id="project-paper-library" className="project-workspace-card">
             <div className="project-card-heading"><div><span className="project-card-kicker">SOURCE RECORDS</span><h2>Research library</h2></div><FolderOpen size={18} /></div>
             <form className="project-form-grid" onSubmit={handleAddPaper}>
               <label className="project-field"><span>Paper title</span><input value={paperTitle} onChange={(event) => setPaperTitle(event.target.value)} required /></label>
