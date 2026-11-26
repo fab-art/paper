@@ -108,7 +108,6 @@ export default function BlueprintProtocolPanel({ project, onPatchProject, onSave
   };
 
   const saveBlueprint = async () => {
-    if (!blueprint) return;
     setSaving(true);
     setError("");
     setNotice("");
@@ -188,7 +187,7 @@ export default function BlueprintProtocolPanel({ project, onPatchProject, onSave
   };
 
   if (loading) return <div className="blueprint-state" role="status">Loading your Research Blueprint…</div>;
-  if (error && !blueprint) return <div className="blueprint-state blueprint-error" role="alert"><AlertCircle size={17} />{error}</div>;
+  if (error) return <div className="blueprint-state blueprint-error" role="alert"><AlertCircle size={17} />{error}</div>;
   if (!protocol || !readiness) return null;
 
   return (
