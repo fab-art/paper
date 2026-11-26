@@ -93,6 +93,43 @@ async function installExistingProjectFixture(page, withPaper = false) {
   });
 }
 
+
+async function addEvidencePaperFixture(page) {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("paperorchestra-studio", 6);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction("projects", "readwrite");
+        const store = transaction.objectStore("projects");
+        const getProject = store.get("fixture-project-001");
+        getProject.onsuccess = () => {
+          const project = getProject.result;
+          if (!project) {
+            reject(new Error("The IndexedDB evidence fixture project was not created."));
+            database.close();
+            return;
+          }
+          store.put({
+            ...project,
+            papers: [{
+              title: "Community health intervention outcomes",
+              authors: ["Amina Researcher", "John Analyst"],
+              year: 2023,
+              doi: "10.1000/evidence-fixture",
+              venue: "Journal of Public Health",
+              source: "manual"
+            }]
+          });
+        };
+        transaction.oncomplete = () => { database.close(); resolve(); };
+        transaction.onerror = () => { database.close(); reject(transaction.error); };
+      };
+    });
+  });
+}
+
 test("Research Station reads an existing IndexedDB project without writes", async ({ page }) => {
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
@@ -326,6 +363,7 @@ test("Evidence Workspace extracts, appraises and persists study-level records", 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/evidence");
   await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await addEvidencePaperFixture(page);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Evidence Workspace", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Community health intervention outcomes" })).toBeVisible();
@@ -368,6 +406,7 @@ test("Evidence intelligence links researcher-recorded source passages to claims"
   await installExistingProjectFixture(page, true);
   await page.goto("/evidence");
   await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await addEvidencePaperFixture(page);
   await page.reload();
   await page.getByRole("button", { name: "Evidence intelligence & protocol" }).click();
 
@@ -375,11 +414,12 @@ test("Evidence intelligence links researcher-recorded source passages to claims"
   await page.getByRole("button", { name: "Add claim" }).click();
   await expect(page.getByText("Claim saved as awaiting verification. Add source-level evidence before relying on it.")).toBeVisible();
 
-  await page.getByLabel("Claim").selectOption({ label: "Community-based interventions improve continuity of diabetes care." });
-  await page.getByLabel("Source").selectOption({ label: "Community health intervention outcomes" });
-  await page.getByLabel("Exact source passage").fill("Participants receiving community follow-up had higher continuity of care at 12 months.");
-  await page.getByLabel("Page, table, figure or section").fill("Results, page 8, Table 3");
-  await page.getByLabel("How does this passage relate to the claim?").selectOption("supports");
+  const sourceEvidenceForm = page.locator(".re-grid .re-panel").nth(1);
+  await sourceEvidenceForm.getByLabel("Claim").selectOption({ label: "Community-based interventions improve continuity of diabetes care." });
+  await sourceEvidenceForm.getByLabel("Source").selectOption({ label: "Community health intervention outcomes" });
+  await sourceEvidenceForm.getByLabel("Exact source passage").fill("Participants receiving community follow-up had higher continuity of care at 12 months.");
+  await sourceEvidenceForm.getByLabel("Page, table, figure or section").fill("Results, page 8, Table 3");
+  await sourceEvidenceForm.getByLabel("How does this passage relate to the claim?").selectOption("supports");
   await page.getByRole("button", { name: "Record evidence assessment" }).click();
 
   await expect(page.getByText("Evidence passage and source relationship saved. Its assessment remains visible for researcher review.")).toBeVisible();
@@ -391,6 +431,7 @@ test("Evidence intelligence protocol builder saves an owner-review draft", async
   await installExistingProjectFixture(page, true);
   await page.goto("/evidence");
   await page.waitForFunction(() => (window as Window & { __factoryFixtureReady?: boolean }).__factoryFixtureReady === true);
+  await addEvidencePaperFixture(page);
   await page.reload();
   await page.getByRole("button", { name: "Evidence intelligence & protocol" }).click();
   await page.getByRole("button", { name: "Protocol & methods" }).click();
