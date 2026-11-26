@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Archive, ArrowLeft, Check, Download, FilePlus2, FolderKanban, Plus, RotateCcw, Save, Trash2, UploadCloud, X } from "lucide-react";
+import { Archive, ArrowLeft, Download, FilePlus2, FolderKanban, Plus, RotateCcw, Save, Trash2, UploadCloud, X } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project, ProjectAttachment, ProjectNote, ResearchMilestone } from "../../../../frontend/src/lib/types";
 import {
@@ -34,24 +34,6 @@ export default function ProjectManager({ projectId, onNavigate }: {
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  async function refresh() {
-    const rows = await listLocalProjects();
-    setProjects(rows);
-    if (projectId) {
-      const current = rows.find(row => row.id === projectId) ?? null;
-      setProject(current);
-      if (current) {
-        const [nextNotes, nextFiles] = await Promise.all([
-          listProjectNotes(current.id), listProjectAttachments(current.id)
-        ]);
-        setNotes(nextNotes);
-        setAttachments(nextFiles);
-      }
-    } else {
-      setProject(null);
-    }
-  }
 
   useEffect(() => {
     let alive = true;
@@ -242,7 +224,7 @@ export default function ProjectManager({ projectId, onNavigate }: {
           </div>
           {notice && <p className="inline-notice" role="status">{notice}</p>}
           {error && <p className="inline-error" role="alert">{error}</p>}
-          <div className="danger-zone"><div><strong>Permanent deletion</strong><p>Deletes this project and its related local research records. This cannot be undone.</p></div><Button variant="danger" onClick={deleteProject} disabled={saving}><Trash2 size={14} /> Delete project</Button></div>
+          <div className="danger-zone"><div><strong>Permanent deletion</strong><p>Deletes this project and its related local research records. This cannot be undone.</p></div><Button variant="secondary" onClick={deleteProject} disabled={saving}><Trash2 size={14} /> Delete project</Button></div>
         </Card>
       </div>
     );
