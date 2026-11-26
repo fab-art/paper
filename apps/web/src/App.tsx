@@ -15,6 +15,9 @@ import IntelligentOrchestrationWorkspace from "./components/IntelligentOrchestra
 import SystematicReviewsWorkspace from "./components/SystematicReviewsWorkspace";
 import ScientificAuditWorkspace from "./components/ScientificAuditWorkspace";
 import PublicationWorkspace from "./components/PublicationWorkspace";
+import CollaborationWorkspace from "./components/CollaborationWorkspace";
+import SettingsWorkspace from "./components/SettingsWorkspace";
+import "./components/manage-workspaces.css";
 import "./components/publish-workspaces.css";
 import "./components/plan-orchestrate.css";
 
@@ -152,7 +155,7 @@ export default function App() {
               <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
               <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
-              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "orchestration" ? "Prepare local AI-assisted research proposals with evidence checks, researcher approval and an auditable history." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "systematic-review" ? "Manage reproducible protocols, PRISMA screening, study extraction and risk-of-bias assessments." : activeWorkspace.id === "quality" ? "Review research integrity, protocol alignment, evidence traceability, methods and ethics with a documented researcher sign-off." : activeWorkspace.id === "publication" ? "Prepare journal metadata, authorship, declarations, cover letters and submission readiness." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
+              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "orchestration" ? "Prepare local AI-assisted research proposals with evidence checks, researcher approval and an auditable history." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "systematic-review" ? "Manage reproducible protocols, PRISMA screening, study extraction and risk-of-bias assessments." : activeWorkspace.id === "quality" ? "Review research integrity, protocol alignment, evidence traceability, methods and ethics with a documented researcher sign-off." : activeWorkspace.id === "publication" ? "Prepare journal metadata, authorship, declarations, cover letters and submission readiness." : activeWorkspace.id === "collaboration" ? "Share selected projects securely, manage roles, discuss research and track cloud versions." : activeWorkspace.id === "settings" ? "Manage your account, appearance, local backups and privacy preferences." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
@@ -176,7 +179,7 @@ export default function App() {
             <ScientificAuditWorkspace />
           ) : activeWorkspace.id === "publication" ? (
             <PublicationWorkspace />
-          ) : isProjectRoute ? (
+          ) : activeWorkspace.id === "collaboration" ? (\n            <CollaborationWorkspace />\n          ) : activeWorkspace.id === "settings" ? (\n            <SettingsWorkspace theme={theme} onThemeChange={setTheme} />\n          ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
             <Card className="project-detail-card">
