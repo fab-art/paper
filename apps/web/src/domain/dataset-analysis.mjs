@@ -17,8 +17,8 @@ export function profileColumn(name, values, total = values.length) {
     missing: Math.max(0, total - present.length),
     unique: new Set(present).size,
     ...(numeric ? {
-      min: String(Math.min(...numbers)),
-      max: String(Math.max(...numbers)),
+      min: String(numbers.reduce((value, item) => Math.min(value, item), Number.POSITIVE_INFINITY)),
+      max: String(numbers.reduce((value, item) => Math.max(value, item), Number.NEGATIVE_INFINITY)),
       mean: (numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2),
       median: median(numbers).toFixed(2)
     } : {})
