@@ -98,7 +98,7 @@ export function approveResearchBlueprint(blueprint, { now = Date.now(), approved
 }
 
 const DEFAULT_STEPS = [
-  { key: "protocol", stage: "blueprint", title: "Finalize research protocol", description: "Confirm the question, objectives, design, eligibility criteria, ethics and analysis plan.", dependsOn: [] },
+  { key: "protocol", stage: "blueprint", title: "Approve research blueprint", description: "Complete and formally approve the question, objectives, design, eligibility criteria, ethics and analysis plan.", dependsOn: [] },
   { key: "literature", stage: "literature", title: "Discover and curate literature", description: "Run documented searches and curate relevant sources.", dependsOn: ["protocol"] },
   { key: "screening", stage: "evidence", title: "Screen and appraise evidence", description: "Record screening decisions, extraction and researcher-led appraisal.", dependsOn: ["literature"] },
   { key: "analysis", stage: "analysis", title: "Inspect and analyze datasets", description: "Profile data, document methods and review analytical outputs.", dependsOn: ["screening"] },
@@ -152,7 +152,7 @@ export function addProductionTask(plan, task, { now = Date.now() } = {}) {
   return { ...plan, version: (plan.version ?? 0) + 1, tasks: [...plan.tasks, { ...task, dependsOn: [...task.dependsOn] }], updatedAt: now };
 }
 
-export function updateProductionTask(plan, taskId, patch, { now = Date.now() } = {}) {
+export function updateProductionTask(plan, taskId, patch, { now = Date.now(), blueprintApproved = false } = {}) {
   const current = plan?.tasks?.find(item => item.id === taskId);
   if (!current) throw new Error("Production task not found.");
   const nextStatus = patch.status ?? current.status;
@@ -161,7 +161,7 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now() } =
     const readiness = getTaskReadiness(plan, taskId);
     if (!readiness.ready) throw new Error(`Task is blocked by incomplete dependencies: ${readiness.blockedBy.join(", ")}`);
   }
-  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
+  if (nextStatus === "completed" && current.stage === "blueprint" && !blueprintApproved) {\n    throw new Error("Researcher approval of the Research Blueprint is required before this task can be completed.");\n  }\n  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
     throw new Error("Researcher confirmation is required to complete a task.");
   }
   const updated = {
