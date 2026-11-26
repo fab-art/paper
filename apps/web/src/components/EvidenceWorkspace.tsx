@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Check, ChevronDown, FileSearch, Save, ShieldCheck } from "lucide-react";
-import type { Paper, Project, RiskJudgement, RiskOfBiasRecord, StudyExtraction } from "../../../../frontend/src/lib/types";
+import type { Project, RiskJudgement, RiskOfBiasRecord, StudyExtraction } from "../../../../frontend/src/lib/types";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
 import {
   APPRAISAL_TEMPLATES, createAppraisalRecord, createExtractionRecord,
