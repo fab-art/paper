@@ -39,3 +39,11 @@ test("scientific audit and publication workspaces are enabled under Publish", ()
   assert.equal(getWorkspaceByPath("/quality").group, "Publish");
   assert.equal(getWorkspaceByPath("/publication").group, "Publish");
 });
+
+
+test("collaboration and settings are enabled under Manage", () => {
+  assert.equal(getWorkspaceByPath("/collaboration").status, "active");
+  assert.equal(getWorkspaceByPath("/settings").status, "active");
+  assert.equal(getWorkspaceByPath("/collaboration").group, "Manage");
+  assert.equal(getWorkspaceByPath("/settings").group, "Manage");
+});
