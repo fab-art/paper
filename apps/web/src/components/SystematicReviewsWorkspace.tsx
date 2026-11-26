@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, LoaderCircle } from "lucide-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
@@ -11,6 +11,8 @@ export default function SystematicReviewsWorkspace() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const latestProject = useRef<Project | null>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     let active = true;
@@ -18,7 +20,9 @@ export default function SystematicReviewsWorkspace() {
       if (!active) return;
       const available = rows.filter(project => !project.archivedAt);
       setProjects(available);
-      setProjectId(available.find(project => (project.papers ?? []).length > 0)?.id ?? available[0]?.id ?? "");
+      const initial = available.find(project => (project.papers ?? []).length > 0) ?? available[0] ?? null;
+      latestProject.current = initial;
+      setProjectId(initial?.id ?? "");
     }).catch(reason => {
       if (active) setError(reason instanceof Error ? reason.message : "The local research library could not be opened.");
     }).finally(() => { if (active) setLoading(false); });
@@ -26,22 +30,27 @@ export default function SystematicReviewsWorkspace() {
   }, []);
 
   const project = useMemo(() => projects.find(item => item.id === projectId) ?? null, [projects, projectId]);
+  useEffect(() => { latestProject.current = project; }, [project]);
 
-  async function updateProject(changes: Partial<Project>) {
-    if (!project) return;
-    setSaving(true);
-    setError("");
-    setNotice("");
-    try {
-      const saved = await updateLocalProject({ ...project, ...changes });
-      if (!saved) throw new Error("The project changed elsewhere or could not be saved. Reload it before continuing.");
-      setProjects(current => current.map(item => item.id === saved.id ? saved : item));
-      setNotice("Systematic review changes saved locally.");
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Systematic review changes could not be saved.");
-    } finally {
-      setSaving(false);
-    }
+  function updateProject(changes: Partial<Project>) {
+    saveQueue.current = saveQueue.current.then(async () => {
+      const current = latestProject.current;
+      if (!current) return;
+      setSaving(true);
+      setError("");
+      setNotice("");
+      try {
+        const saved = await updateLocalProject({ ...current, ...changes });
+        if (!saved) throw new Error("The project changed elsewhere or could not be saved. Reload it before continuing.");
+        latestProject.current = saved;
+        setProjects(rows => rows.map(item => item.id === saved.id ? saved : item));
+        setNotice("Systematic review changes saved locally.");
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "Systematic review changes could not be saved.");
+      } finally {
+        setSaving(false);
+      }
+    });
   }
 
   if (loading) return <section className="plan-section"><p>Opening your local research library…</p></section>;
