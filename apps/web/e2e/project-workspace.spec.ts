@@ -214,14 +214,14 @@ test("links exact source passages to claims and surfaces conflicting evidence af
   await page.getByLabel("Page, table or section").fill("p. 8, Table 2");
   await page.getByLabel("Your judgement").selectOption("supports");
   await page.getByRole("button", { name: "Save evidence passage" }).click();
-  await expect(page.getByText("Supported", { exact: true })).toBeVisible();
+  await expect(page.getByText("Supported", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("p. 8, Table 2")).toBeVisible();
 
   await page.getByLabel("Exact source passage").fill("No statistically significant difference was observed in the primary outcome.");
   await page.getByLabel("Page, table or section").fill("p. 9, Results");
   await page.getByLabel("Your judgement").selectOption("contradicts");
   await page.getByRole("button", { name: "Save evidence passage" }).click();
-  await expect(page.getByText("Conflicting evidence", { exact: true })).toBeVisible();
+  await expect(page.getByText("Conflicting evidence", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/Contradictory evidence is present/)).toBeVisible();
 
   await page.reload();
