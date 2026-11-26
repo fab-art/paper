@@ -57,6 +57,7 @@ export type ResearchEntityType =
   | "research-question"
   | "objective"
   | "methodology"
+  | "research-protocol"
   | "source"
   | "outline-section"
   | "systematic-review"
