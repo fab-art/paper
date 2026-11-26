@@ -7,6 +7,7 @@ import { getWorkspaceByPath, getWorkspaceGroups, WORKSPACES } from "./domain/wor
 import ProjectManager from "./components/ProjectManager";
 import LiteratureDiscovery from "./components/LiteratureDiscovery";
 import EvidenceWorkspace from "./components/EvidenceWorkspace";
+import DataAnalysisWorkspace from "./components/DataAnalysisWorkspace";
 
 const iconByWorkspace: Record<string, typeof Activity> = {
   station: Activity, projects: FolderKanban, blueprint: Workflow, production: Boxes,
@@ -142,7 +143,7 @@ export default function App() {
               <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
               <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
-              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
+              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
