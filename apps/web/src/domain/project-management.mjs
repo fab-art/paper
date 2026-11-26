@@ -59,3 +59,15 @@ export function toggleMilestone(project, milestoneId, completed) {
 export function projectRoute(projectId) {
   return `/projects/${encodeURIComponent(projectId)}`;
 }
+
+export function isDuplicatePaper(existingPapers, candidate) {
+  const normalizeTitle = value => String(value ?? "").normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+  const normalizeDoi = value => String(value ?? "").toLocaleLowerCase().trim()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:\s*/, "");
+  const candidateDoi = normalizeDoi(candidate?.doi);
+  const candidateTitle = normalizeTitle(candidate?.title);
+  return existingPapers.some(paper =>
+    (candidateDoi && normalizeDoi(paper?.doi) === candidateDoi) ||
+    (candidateTitle && normalizeTitle(paper?.title) === candidateTitle)
+  );
+}
