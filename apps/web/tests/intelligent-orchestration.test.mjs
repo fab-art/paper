@@ -94,7 +94,7 @@ test("approved deliverables can be applied once without completing the productio
   assert.equal(result.task.status, "in-progress");
   assert.equal(result.proposal.status, "applied");
   assert.equal(result.proposal.auditTrail.at(-1).event, "applied");
-  assert.throws(() => applyApprovedResearchProposal(result.task, approved, { expectedTaskVersion: 2, actor: "researcher-1" }), /changed|already been applied/i);
+  assert.throws(() => applyApprovedResearchProposal(result.task, approved, { expectedTaskVersion: 2, expectedBlueprintVersion: 3, blueprintApproved: true, actor: "researcher-1" }), /changed|already been applied/i);
 });
 
 test("proposal cannot be applied to a different task", () => {
