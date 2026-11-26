@@ -171,3 +171,15 @@ test("normalizes older canonical blueprint records without losing saved research
   assert.equal(normalized.approvalStatus, "draft");
   assert.equal(normalized.version, 4);
 });
+
+
+test("production task versions advance whenever task state changes", () => {
+  const plan = createProductionPlan(project, { now: 1 });
+  const first = plan.tasks[0];
+  assert.equal(first.version, 1);
+  const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
+  assert.equal(started.tasks[0].version, 2);
+  const approved = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
+  assert.equal(approved.tasks[0].version, 3);
+  assert.equal(plan.tasks[0].version, 1);
+});
