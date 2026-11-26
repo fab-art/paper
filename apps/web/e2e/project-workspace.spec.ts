@@ -194,3 +194,40 @@ test("shows a rate-limit cooldown without issuing repeated literature searches",
   await expect(page.getByRole("button", { name: "Search papers" })).toBeDisabled();
   expect(requests).toBe(1);
 });
+
+
+test("links exact source passages to claims and surfaces conflicting evidence after reload", async ({ page }) => {
+  await createProject(page, "Evidence intelligence integration project");
+  await page.getByRole("tab", { name: /Research library/ }).click();
+  await page.getByLabel("Paper title").fill("Precision medicine in diabetes");
+  await page.getByLabel("Authors (comma separated)").fill("A. Researcher");
+  await page.getByLabel("DOI").fill("10.1000/evidence.1");
+  await page.getByRole("button", { name: "Add source" }).click();
+
+  await page.getByRole("tab", { name: /Evidence intelligence/ }).click();
+  await page.getByLabel("New claim or statement").fill("Precision medicine improves diabetes treatment response.");
+  await page.getByRole("button", { name: "Add claim" }).click();
+  await expect(page.getByText(/awaiting verification/i)).toBeVisible();
+
+  await page.getByLabel("Source record").selectOption({ label: "Precision medicine in diabetes" });
+  await page.getByLabel("Exact source passage").fill("The intervention group demonstrated a greater reduction in HbA1c than standard care.");
+  await page.getByLabel("Page, table or section").fill("p. 8, Table 2");
+  await page.getByLabel("Your judgement").selectOption("supports");
+  await page.getByRole("button", { name: "Save evidence passage" }).click();
+  await expect(page.getByText("Supported", { exact: true })).toBeVisible();
+  await expect(page.getByText("p. 8, Table 2")).toBeVisible();
+
+  await page.getByLabel("Exact source passage").fill("No statistically significant difference was observed in the primary outcome.");
+  await page.getByLabel("Page, table or section").fill("p. 9, Results");
+  await page.getByLabel("Your judgement").selectOption("contradicts");
+  await page.getByRole("button", { name: "Save evidence passage" }).click();
+  await expect(page.getByText("Conflicting evidence", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Contradictory evidence is present/)).toBeVisible();
+
+  await page.reload();
+  await page.getByRole("tab", { name: /Evidence intelligence/ }).click();
+  await expect(page.getByText("Precision medicine improves diabetes treatment response.")).toBeVisible();
+  await expect(page.getByText("The intervention group demonstrated a greater reduction in HbA1c than standard care.")).toBeVisible();
+  await expect(page.getByText("No statistically significant difference was observed in the primary outcome.")).toBeVisible();
+  await expect(page.getByText(/Contradictory evidence is present/)).toBeVisible();
+});
