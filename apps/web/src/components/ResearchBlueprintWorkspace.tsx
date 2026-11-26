@@ -4,7 +4,7 @@ import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
 import { listLocalProjects, updateLocalProject, loadResearchBlueprint, saveResearchBlueprint } from "../adapters/legacy-projects";
-import { approveResearchBlueprint, createResearchBlueprint, normalizeResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
+import { approveResearchBlueprint, normalizeResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
 
 const paperTypes = [
   ["unspecified", "Choose a research type"], ["empirical-study", "Empirical study"], ["systematic-review", "Systematic review"],
