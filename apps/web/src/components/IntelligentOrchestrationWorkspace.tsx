@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ClipboardCopy, Cpu, FileCheck2, LoaderCircle, Play, RefreshCw, ShieldCheck, Sparkles, X } from "lucide-react";
+import { Check, ClipboardCopy, Cpu, FileCheck2, LoaderCircle, Play, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ProductionLine, ProductionTask, ResearchAgentProposal } from "../../../../frontend/src/lib/research-blueprint";
