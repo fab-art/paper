@@ -52,5 +52,5 @@ export function decideResearchAgentProposal(
 export function applyApprovedResearchProposal(
   task: ProductionTask,
   proposal: ResearchAgentProposal,
-  options: { expectedTaskVersion: number; actor: string; now?: number }
+  options: { expectedTaskVersion: number; expectedBlueprintVersion?: number | null; blueprintApproved?: boolean; actor: string; now?: number }
 ): { task: ProductionTask; proposal: ResearchAgentProposal };
