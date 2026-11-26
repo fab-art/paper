@@ -16,7 +16,7 @@ test("creates, edits and reloads a project with notes, sources and milestones", 
   await createProject(page);
 
   await page.getByPlaceholder("What do you want this research to answer?").fill("What predicts long-term treatment response?");
-  await page.getByLabel("Objectives (one per line)").fill("Estimate response\nIdentify predictors");
+  await page.getByPlaceholder("Describe the outcomes this project should achieve", { exact: true }).fill("Estimate response\nIdentify predictors");
   await page.getByLabel("Methodology").fill("Retrospective cohort study");
   await page.getByLabel("New milestone").fill("Approve protocol");
   await page.getByLabel("Due date").fill("2026-12-15");
@@ -103,7 +103,7 @@ test("edits a Research Blueprint and requires explicit owner approval for a comp
   await page.getByLabel("Problem or observation").fill("Treatment response varies across patients.");
   await page.getByPlaceholder("What specific question should the research answer?").fill("Which factors predict HbA1c response?");
   await page.getByLabel("Intended audience").fill("Rwandan clinical researchers");
-  await page.getByLabel("Objectives (one per line)").fill("Estimate response\nIdentify predictors");
+  await page.getByPlaceholder("Describe the outcomes this project should achieve.", { exact: true }).fill("Estimate response\nIdentify predictors");
   await page.getByRole("button", { name: "Save blueprint" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Research Blueprint saved locally." })).toBeVisible();
 
