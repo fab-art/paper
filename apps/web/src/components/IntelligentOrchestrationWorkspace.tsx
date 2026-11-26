@@ -21,7 +21,7 @@ export default function IntelligentOrchestrationWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
   const [plan, setPlan] = useState<ProductionLine | null>(null);
-  const [blueprint, setBlueprint] = useState<Awaited<ReturnType<typeof loadResearchBlueprint>>>(null);
+  const [blueprint, setBlueprint] = useState<ResearchBlueprint | null>(null);
   const [taskId, setTaskId] = useState("");
   const [proposal, setProposal] = useState<ResearchAgentProposal | null>(null);
   const [modelId, setModelId] = useState<string>(MODEL_OPTIONS[0].id);
@@ -61,7 +61,7 @@ export default function IntelligentOrchestrationWorkspace() {
     setBlueprint(null);
     if (!project) return () => { active = false; };
     loadResearchBlueprint(project.id).then(value => {
-      if (active) setBlueprint(value);
+      if (active) setBlueprint(value ?? null);
     }).catch(reason => {
       if (active) setError(reason instanceof Error ? reason.message : "The approved research blueprint could not be checked.");
     });
