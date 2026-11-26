@@ -16,6 +16,7 @@ import { isDuplicatePaper } from "./projectModel.mjs";
 import BlueprintProtocolPanel from "../blueprint/BlueprintProtocolPanel";
 import LiteratureDiscoveryPanel from "../literature/LiteratureDiscoveryPanel";
 import EvidenceIntelligencePanel from "../evidence/EvidenceIntelligencePanel";
+import DataMethodsLab from "../data/DataMethodsLab";
 import "./project-workspace.css";
 
 type SaveState = "saved" | "saving" | "error";
@@ -413,6 +414,7 @@ export default function ProjectWorkspace({
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="blueprint">Blueprint & protocol</TabsTrigger>
           <TabsTrigger value="evidence">Evidence intelligence</TabsTrigger>
+          <TabsTrigger value="data">Data & methods</TabsTrigger>
           <TabsTrigger value="library">Research library ({project.papers?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="notes">Notes ({notes.length})</TabsTrigger>
           <TabsTrigger value="files">Files ({attachments.length})</TabsTrigger>
@@ -478,6 +480,9 @@ export default function ProjectWorkspace({
           </div>
         </TabsPanel>
 
+        <TabsPanel value="data">
+          <DataMethodsLab attachments={attachments} />
+        </TabsPanel>
         <TabsPanel value="evidence">
           <EvidenceIntelligencePanel projectId={projectId} papers={project.papers ?? []} />
         </TabsPanel>
