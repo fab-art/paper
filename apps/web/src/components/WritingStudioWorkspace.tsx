@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { FileText, FolderOpen, Sparkles } from "lucide-react";
+import { FileText, FolderOpen } from "lucide-react";
 import { listLocalProjects } from "../adapters/legacy-projects";
 import type { Project } from "../../../../frontend/src/lib/types";
 import Studio from "./Studio";
 
 export default function WritingStudioWorkspace({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -15,7 +14,6 @@ export default function WritingStudioWorkspace({ onNavigate }: { onNavigate: (pa
     listLocalProjects().then(records => {
       if (!active) return;
       const available = records.filter(project => !project.archivedAt);
-      setProjects(available);
       setProjectId(available[0]?.id ?? "");
     }).catch(reason => {
       if (active) setError(reason instanceof Error ? reason.message : "Your local project library could not be opened.");
