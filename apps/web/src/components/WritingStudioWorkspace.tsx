@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { FileText, FolderOpen } from "lucide-react";
 import { listLocalProjects } from "../adapters/legacy-projects";
-import type { Project } from "../../../../frontend/src/lib/types";
 import Studio from "./Studio";
 
 export default function WritingStudioWorkspace({ onNavigate }: { onNavigate: (path: string) => void }) {
