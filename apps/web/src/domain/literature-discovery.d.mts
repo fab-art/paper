@@ -7,3 +7,5 @@ export function deduplicatePapers(papers: Paper[]): Paper[];
 export function safeExternalUrl(value: string | undefined | null): string;
 export function paperToBibtex(paper: Paper, index?: number): string;
 export function appendMissingBibtex(existingBibtex: string, papers: Paper[]): string;
+
+export function findPaperProjectMatches(paper: Partial<Paper>, projects: Project[], excludeProjectId?: string): Project[];
