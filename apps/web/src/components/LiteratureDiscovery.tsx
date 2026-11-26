@@ -5,7 +5,7 @@ import type { Paper, Project, ProjectSearchHistory } from "../../../../frontend/
 import { searchPapers, ApiRequestError } from "../../../../frontend/src/lib/api";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
 import { listProjectSearchHistory, recordProjectSearch } from "../../../../frontend/src/lib/db";
-import { appendMissingBibtex, deduplicatePapers, safeExternalUrl, samePaper } from "../domain/literature-discovery.mjs";
+import { appendMissingBibtex, deduplicatePapers, findPaperProjectMatches, safeExternalUrl, samePaper } from "../domain/literature-discovery.mjs";
 
 const createId = () => globalThis.crypto?.randomUUID?.() ?? ("search-" + Date.now() + "-" + Math.random().toString(36).slice(2));
 const paperYear = (paper: Paper) => Number(paper.year ?? 0);
@@ -37,7 +37,8 @@ export default function LiteratureDiscovery() {
   const [yearTo, setYearTo] = useState("");
   const [sortBy, setSortBy] = useState<"relevance" | "citations" | "newest">("relevance");
 
-  const selectedProject = projects.find(project => project.id === projectId) ?? null;
+  const activeProjects = projects.filter(project => !project.archivedAt);
+  const selectedProject = activeProjects.find(project => project.id === projectId) ?? null;
   const savedPapers = selectedProject?.papers ?? [];
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function LiteratureDiscovery() {
     listLocalProjects().then(rows => {
       if (!alive) return;
       const active = rows.filter(project => !project.archivedAt);
-      setProjects(active);
+      setProjects(rows);
       setProjectId(active[0]?.id ?? "");
     }).catch(reason => {
       if (alive) setError(reason instanceof Error ? reason.message : "Your local project library could not be opened.");
@@ -141,7 +142,7 @@ export default function LiteratureDiscovery() {
           <Button type="submit" disabled={searching || query.trim().length < 3}>{searching ? "Searching…" : "Search papers"}</Button>
         </form>
         <div className="literature-context-row">
-          <label className="literature-project-select"><span>Save results to</span><select value={projectId} onChange={event => setProjectId(event.target.value)}><option value="">Search without a project</option>{projects.map(project => <option key={project.id} value={project.id}>{project.name || "Untitled project"}</option>)}</select></label>
+          <label className="literature-project-select"><span>Save results to</span><select value={projectId} onChange={event => setProjectId(event.target.value)}><option value="">Search without a project</option>{activeProjects.map(project => <option key={project.id} value={project.id}>{project.name || "Untitled project"}</option>)}</select></label>
           <span className="literature-source-note"><ShieldCheck size={14} /> Results attributed to Semantic Scholar</span>
         </div>
         {error && <div className="literature-feedback is-error" role="alert">{error}{retryAfter > 0 && <span>Provider cooldown is active; repeated retries will not bypass it.</span>}</div>}
@@ -177,6 +178,7 @@ export default function LiteratureDiscovery() {
           <div className="literature-paper-list">
             {visibleResults.map((paper, index) => {
               const saved = savedPapers.some(item => samePaper(item, paper));
+              const otherProjectMatches = findPaperProjectMatches(paper, projects, selectedProject?.id);
               const doiPath = paper.doi ? encodeURI(paper.doi).replace(/#/g, "%23").replace(/\?/g, "%3F") : "";
               const doi = doiPath ? safeExternalUrl("https://doi.org/" + doiPath) : "";
               const paperUrl = safeExternalUrl(paper.url);
@@ -186,6 +188,7 @@ export default function LiteratureDiscovery() {
                 <div className="literature-paper-top"><span className="literature-provider">SEMANTIC SCHOLAR</span><span className="literature-paper-year">{paper.year ?? "Year unavailable"}</span></div>
                 <h3>{paper.title || "Untitled paper"}</h3>
                 <p className="literature-authors">{paper.authors?.join(", ") || "Author metadata unavailable"}</p>
+                {otherProjectMatches.length > 0 && <p className="literature-cross-project">Also saved in {otherProjectMatches.map(project => (project.name || "Untitled project") + (project.archivedAt ? " (archived)" : "")).join(", ")}</p>}
                 <div className="literature-paper-meta">{paper.venue && <span>{paper.venue}</span>}{typeof paper.citationCount === "number" && <span>{paper.citationCount.toLocaleString()} citations</span>}{paper.publicationDate && <span>{paper.publicationDate}</span>}</div>
                 {paper.abstract && <details className="literature-abstract"><summary>Read abstract</summary><p>{paper.abstract}</p></details>}
                 <div className="literature-paper-actions">
