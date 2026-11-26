@@ -23,8 +23,10 @@ Migrate the existing Semantic Scholar discovery capability into the independent 
 ## Metadata, deduplication and citation rules
 - DOI normalization handles DOI URLs, \`doi:\` prefixes, case and trailing punctuation.
 - Title normalization uses Unicode NFKC and Unicode letters/numbers, so non-Latin titles are not discarded.
-- A paper is treated as the same record when normalized DOI matches or normalized title matches.
+- A paper is treated as the same record when normalized DOI matches (when both records have DOIs) or normalized title matches (when at least one record lacks a DOI).
+- Search results are compared against saved papers across all local projects, including archived projects, so existing sources are visible before saving to another project.
 - Duplicate results are collapsed while missing metadata and additional author names are retained; existing owner-entered source labels take precedence.
+- Two records with different non-empty DOIs are not merged solely because their titles match.
 - External links are accepted only when their URL protocol is HTTP or HTTPS.
 - BibTeX entries contain only supplied metadata. Missing fields are omitted; no author, venue, year, DOI or publication details are invented.
 - Existing BibTeX title/DOI entries are checked before appending references.
