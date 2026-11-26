@@ -34,7 +34,7 @@ async function installExistingProjectFixture(page, withPaper = false) {
       researchAuditEvents: { keyPath: "id", indexes: ["projectId", "taskId", "actor", "createdAt"] }
     };
 
-    const request = indexedDB.open("paperorchestra-studio", 6);
+    const request = indexedDB.open("paperorchestra-studio");
     request.onupgradeneeded = () => {
       const database = request.result;
       for (const [name, definition] of Object.entries(definitions)) {
@@ -97,7 +97,7 @@ async function installExistingProjectFixture(page, withPaper = false) {
 async function addEvidencePaperFixture(page) {
   await page.evaluate(async () => {
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open("paperorchestra-studio", 6);
+      const request = indexedDB.open("paperorchestra-studio");
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const database = request.result;
