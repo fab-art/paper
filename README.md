@@ -111,7 +111,7 @@ The independent Research Factory now includes a Semantic Scholar discovery works
 
 ## Phase 4 — Evidence Extraction and Appraisal
 
-The Evidence Workspace now combines the migrated claim-to-source evidence trail and protocol/methods builder with project-linked study-characteristic extraction, provenance notes, and researcher-led risk-of-bias appraisal prompts for randomized trials, non-randomized interventions, analytical cross-sectional studies and qualitative research. Records are stored in the existing local systematic-review data model; no automatic quality score or risk judgment is generated. See [Phase 4 scope and safeguards](docs/phase4-evidence-appraisal.md).
+The Evidence Workspace now combines the migrated claim-to-source evidence trail and protocol/methods builder with project-linked study-characteristic extraction, provenance notes, and researcher-led risk-of-bias appraisal prompts for randomized trials, non-randomized interventions, diagnostic-accuracy studies, observational studies, analytical cross-sectional studies and qualitative research. Records are stored in the existing local systematic-review data model; no automatic quality score or risk judgment is generated. See [Phase 4 scope and safeguards](docs/phase4-evidence-appraisal.md).
 
 ## Phase 7 — Optional cloud collaboration
 
