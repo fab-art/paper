@@ -108,6 +108,8 @@ export interface Project {
   storyArc?: string[];
   researchMode?: "guided" | "professional";
   productionLine?: import("./research-blueprint").ProductionLine;
+  cloudProjectId?: string;
+  cloudRevision?: number;
 }
 export interface ProjectNote { id: string; projectId: string; title: string; content: string; tags: string[]; createdAt: number; updatedAt: number }
 export interface ProjectAttachment { id: string; projectId: string; name: string; mimeType: string; size: number; blob: Blob; description: string; createdAt: number }
