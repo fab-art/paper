@@ -4,7 +4,7 @@ import type { Paper, Project, RiskJudgement, RiskOfBiasRecord, StudyExtraction }
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
 import {
   APPRAISAL_TEMPLATES, createAppraisalRecord, createExtractionRecord,
-  evidencePaperKey, summarizeAppraisal, upsertEvidenceRecord, validateEvidenceEntry
+  evidencePaperKey, summarizeAppraisal, switchAppraisalTemplate, upsertEvidenceRecord, validateEvidenceEntry
 } from "../domain/evidence-appraisal.mjs";
 
 const judgementOptions: { value: RiskJudgement; label: string }[] = [
@@ -97,7 +97,7 @@ export default function EvidenceWorkspace() {
   }
 
   function changeTool(tool: string) {
-    setAppraisal(createAppraisalRecord(selectedPaper ?? { title: "" }, tool));
+    setAppraisal(current => switchAppraisalTemplate(current, selectedPaper ?? { title: "" }, tool));
   }
 
   async function saveEvidence() {
