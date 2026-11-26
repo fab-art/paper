@@ -11,7 +11,7 @@ export interface ResearchMilestone { id: string; title: string; dueDate?: string
 export type ReviewType = "systematic" | "scoping" | "rapid" | "other";
 export type ScreeningDecision = "pending" | "include" | "exclude" | "maybe";
 export type FullTextDecision = "pending" | "include" | "exclude";
-export type RiskJudgement = "low" | "some-concerns" | "high" | "unclear";
+export type RiskJudgement = "low" | "some-concerns" | "high" | "unclear" | "moderate" | "serious" | "critical" | "not-assessed" | "not-applicable";
 export interface SystematicReviewProtocol {
   reviewType: ReviewType;
   population: string;
@@ -51,12 +51,17 @@ export interface StudyExtraction {
   effectEstimate: string;
   limitations: string;
   funding: string;
+  sourceLocation?: string;
+  supportingQuote?: string;
 }
 export interface RiskOfBiasDomain {
   id: string;
   name: string;
   judgement: RiskJudgement;
   rationale: string;
+  guidance?: string;
+  evidenceQuote?: string;
+  sourceLocation?: string;
 }
 export interface RiskOfBiasRecord {
   tool: string;
