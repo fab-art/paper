@@ -75,11 +75,31 @@ export interface SystematicReviewData {
   riskOfBias: Record<string, RiskOfBiasRecord>;
 }
 
+export type ScientificAuditFindingStatus = "not-reviewed" | "verified" | "needs-attention" | "not-applicable";
+export interface ScientificAuditFinding {
+  id: string; category: string; title: string; description: string; severity: "high" | "medium" | "low" | "info";
+  source: string; status: ScientificAuditFindingStatus; reviewer: string; note: string; reviewedAt: number | null;
+}
+export interface ScientificAuditRecord {
+  id: string; projectId: string; version: number; createdAt: number; updatedAt: number;
+  findings: ScientificAuditFinding[];
+  history: Array<{ id: string; action: string; actor: string; at: number; detail?: string; findingId?: string }>;
+  signoff: { reviewer: string; signedAt: number; findingsReviewed: number; findingsNeedingAttention: number } | null;
+}
+export interface PublicationAuthor { id: string; name: string; affiliation: string; orcid: string; corresponding: boolean }
+export type PublicationStatus = "draft" | "ready" | "submitted" | "revision" | "accepted" | "published";
+export interface PublicationPlan {
+  id: string; projectId: string; version: number; status: PublicationStatus; targetJournal: string; articleType: string;
+  title: string; abstract: string; keywords: string[]; authors: PublicationAuthor[];
+  ethicsDeclaration: string; fundingDeclaration: string; conflictOfInterest: string; dataAvailability: string;
+  authorContributions: string; coverLetter: string; createdAt: number; updatedAt: number; submittedAt: number | null;
+  history: Array<{ action: string; actor: string; at: number }>;
+}
 export interface Project {
   id: string; name: string; notes: string; latex: string; bibtex: string; template: string;
   outline: OutlineSection[]; papers: Paper[]; figures: FigureAsset[]; logs: string; templateFiles?: Record<string, string>;
   agentRecords: AgentRecord[]; updatedAt: number; revision?: number;
-  researchQuestion?: string; objectives?: string[]; methodology?: string; status?: ProjectStatus; milestones?: ResearchMilestone[]; archivedAt?: number; submissionChecks?: Record<string, boolean>; systematicReview?: SystematicReviewData;
+  researchQuestion?: string; objectives?: string[]; methodology?: string; status?: ProjectStatus; milestones?: ResearchMilestone[]; archivedAt?: number; submissionChecks?: Record<string, boolean>; systematicReview?: SystematicReviewData;\n  scientificAudit?: ScientificAuditRecord;\n  publicationPlan?: PublicationPlan;
   paperType?: import("./research-blueprint").ResearchPaperType;
   intendedAudience?: string;
   availableMaterials?: string[];
