@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createResearchBlueprint, validateResearchBlueprint, approveResearchBlueprint,
+  createResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint, approveResearchBlueprint,
   createProductionPlan, createProductionTask, addProductionTask,
   updateProductionTask, getProductionProgress, getTaskReadiness
 } from "../src/domain/research-orchestration.mjs";
@@ -108,4 +108,19 @@ test("production progress reports completed, blocked and remaining tasks", () =>
   assert.equal(progress.completed, 1);
   assert.ok(progress.percent > 0);
   assert.ok(progress.remaining >= 1);
+});
+
+test("editing an approved blueprint invalidates its approval and requires a fresh review", () => {
+  const approved = {
+    ...createResearchBlueprint(project, { now: 1 }),
+    researchQuestion: "What improves diabetes control?", objectives: ["Assess control"],
+    methodology: "Prospective cohort", inclusionCriteria: "Adults", exclusionCriteria: "Children",
+    analysisPlan: "Regression", approvalStatus: "approved", approvedAt: 10, approvedBy: "researcher-1"
+  };
+  const edited = updateResearchBlueprint(approved, { researchQuestion: "What improves outcomes in diabetes care?" }, { now: 20 });
+  assert.equal(edited.approvalStatus, "draft");
+  assert.equal(edited.approvedAt, null);
+  assert.equal(edited.approvedBy, null);
+  assert.equal(edited.updatedAt, 20);
+  assert.equal(approved.approvalStatus, "approved");
 });
