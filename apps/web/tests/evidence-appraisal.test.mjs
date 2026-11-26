@@ -19,6 +19,8 @@ test("creates framework-specific appraisal domains without pre-judging a study",
   assert.ok(record.domains.every(domain => domain.judgement === "not-assessed" && domain.rationale === ""));
   assert.equal(APPRAISAL_TEMPLATES["ROBINS-I (non-randomized interventions)"].length, 7);
   assert.equal(createAppraisalRecord({ title: "Survey" }, "JBI analytical cross-sectional").domains.length, 8);
+  assert.equal(createAppraisalRecord({ title: "Diagnostic study" }, "QUADAS-2 (diagnostic accuracy)").domains.length, 4);
+  assert.equal(createAppraisalRecord({ title: "Cohort" }, "Newcastle-Ottawa Scale prompts").domains.length, 3);
 });
 
 test("preserves protocol, screening and unrelated paper records when updating one paper", () => {
