@@ -4,8 +4,8 @@ const STAGE_WORKSPACES = Object.freeze({
   evidence: "/evidence",
   analysis: "/data",
   writing: "/writing",
-  verification: "/quality",
-  publication: "/publication"
+  verification: "/evidence",
+  publication: "/writing"
 });
 
 const ALLOWED_PROPOSAL_STATUSES = new Set(["proposed", "approved", "rejected", "applied"]);
