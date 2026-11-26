@@ -48,6 +48,19 @@ async function installExistingProjectFixture(page, withPaper = false) {
       const existingCheck = database.transaction("projects", "readonly").objectStore("projects").get("fixture-project-001");
       existingCheck.onsuccess = () => {
         if (existingCheck.result) {
+          if (includePaper && !(existingCheck.result.papers ?? []).length) {
+            const updateExisting = database.transaction("projects", "readwrite");
+            updateExisting.objectStore("projects").put({
+              ...existingCheck.result,
+              papers: [{ title: "Community health intervention outcomes", authors: ["Amina Researcher", "John Analyst"], year: 2023, doi: "10.1000/evidence-fixture", venue: "Journal of Public Health", source: "manual" }]
+            });
+            updateExisting.oncomplete = () => {
+              testWindow.__factoryFixtureReady = true;
+              database.close();
+            };
+            updateExisting.onerror = () => { throw updateExisting.error; };
+            return;
+          }
           testWindow.__factoryFixtureReady = true;
           database.close();
           return;
