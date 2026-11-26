@@ -113,6 +113,11 @@ The independent Research Factory now includes a Semantic Scholar discovery works
 
 The Evidence Workspace now combines the migrated claim-to-source evidence trail and protocol/methods builder with project-linked study-characteristic extraction, provenance notes, and researcher-led risk-of-bias appraisal prompts for randomized trials, non-randomized interventions, diagnostic-accuracy studies, observational studies, analytical cross-sectional studies and qualitative research. Records are stored in the existing local systematic-review data model; no automatic quality score or risk judgment is generated. See [Phase 4 scope and safeguards](docs/phase4-evidence-appraisal.md).
 
+
+## Phase 5 — Data & Methods
+
+The independent Research Factory now includes a dedicated local-first Data & Methods station. It reads CSV/TSV attachments from existing project records, parses them in a bounded Web Worker, profiles variable types and descriptive summaries, and reports missing cells, duplicate rows and complete rows in the retained preview. Original attachments remain unchanged; summaries are descriptive checks, not statistical inference. See [Phase 5 scope and safeguards](docs/phase5-dataset-analysis.md).
+
 ## Phase 7 — Optional cloud collaboration
 
 PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
