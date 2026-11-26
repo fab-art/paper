@@ -26,3 +26,5 @@ export function filterProjects<T extends { name?: string; researchQuestion?: str
 export function getProjectCollection<T extends { updatedAt?: number; archivedAt?: number }>(projects: T[]): { active: T[]; archived: T[] };
 export function toggleMilestone<T extends { milestones?: Array<{ id: string; title: string; dueDate?: string; completed: boolean }> }>(project: T, milestoneId: string, completed: boolean): T;
 export function projectRoute(projectId: string): string;
+
+export function isDuplicatePaper(existingPapers: Array<{ title?: string; doi?: string }>, candidate: { title?: string; doi?: string }): boolean;
