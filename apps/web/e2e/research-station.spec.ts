@@ -282,3 +282,16 @@ test("Literature Discovery explains provider rate limits and stays within mobile
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
 });
+
+
+test("Literature Discovery direct route survives refresh and has an accessible empty state", async ({ page }) => {
+  await installExistingProjectFixture(page);
+  await page.goto("/literature");
+  await expect(page.getByRole("heading", { name: "Find research worth reading." })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Find research worth reading." })).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
