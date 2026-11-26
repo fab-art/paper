@@ -6,7 +6,7 @@ export const WORKSPACES = Object.freeze([
   { id: "literature", label: "Literature Discovery", group: "Evidence", path: "/literature", status: "active" },
   { id: "evidence", label: "Evidence Workspace", group: "Evidence", path: "/evidence", status: "active" },
   { id: "writing", label: "Writing Studio", group: "Create & analyze", path: "/writing", status: "planned" },
-  { id: "data", label: "Data & Methods", group: "Create & analyze", path: "/data", status: "planned" },
+  { id: "data", label: "Data & Methods", group: "Create & analyze", path: "/data", status: "active" },
   { id: "systematic-review", label: "Systematic Reviews", group: "Create & analyze", path: "/systematic-reviews", status: "planned" },
   { id: "quality", label: "Scientific Audit", group: "Publish", path: "/quality", status: "planned" },
   { id: "publication", label: "Publication", group: "Publish", path: "/publication", status: "planned" },
