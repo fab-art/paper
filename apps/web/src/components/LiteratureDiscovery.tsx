@@ -16,8 +16,10 @@ function downloadBibtex(project: Project) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = (project.name || "research-project").toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-references.bib";
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function LiteratureDiscovery() {
@@ -84,9 +86,13 @@ export default function LiteratureDiscovery() {
       setResults(papers);
       setNotice("Found " + papers.length + " unique records from Semantic Scholar.");
       if (projectId) {
-        const entry: ProjectSearchHistory = { id: createId(), projectId, query: normalized, searchedAt: Date.now() };
-        await recordProjectSearch(entry);
-        setHistory(await listProjectSearchHistory(projectId));
+        try {
+          const entry: ProjectSearchHistory = { id: createId(), projectId, query: normalized, searchedAt: Date.now() };
+          await recordProjectSearch(entry);
+          setHistory(await listProjectSearchHistory(projectId));
+        } catch (historyError) {
+          setError("Search completed, but its history could not be saved: " + (historyError instanceof Error ? historyError.message : "local storage unavailable."));
+        }
       }
     } catch (reason) {
       setResults([]);
@@ -193,7 +199,7 @@ export default function LiteratureDiscovery() {
                 {paper.abstract && <details className="literature-abstract"><summary>Read abstract</summary><p>{paper.abstract}</p></details>}
                 <div className="literature-paper-actions">
                   {doi && <a href={doi} target="_blank" rel="noreferrer">DOI <ExternalLink size={12} /></a>}
-                  {paperUrl && <a href={paperUrl} target="_blank" rel="noreferrer">Publisher / source <ExternalLink size={12} /></a>}
+                  {paperUrl && <a href={paperUrl} target="_blank" rel="noreferrer">Source record <ExternalLink size={12} /></a>}
                   {pdfUrl && <a href={pdfUrl} target="_blank" rel="noreferrer">Open-access PDF <ExternalLink size={12} /></a>}
                   <Button size="sm" variant={saved ? "secondary" : "default"} disabled={!selectedProject || Boolean(savingId)} onClick={() => void savePaper(paper)}>{savingId === key ? "Saving…" : saved ? "Refresh metadata" : "Save to project"}</Button>
                 </div>
