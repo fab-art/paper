@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-async function installExistingProjectFixture(page) {
-  await page.addInitScript(() => {
+async function installExistingProjectFixture(page, withPaper = false) {
+  await page.addInitScript((includePaper: boolean) => {
     const testWindow = window as Window & {
       __factoryFixtureReady?: boolean;
       __factoryObservedWrites?: string[];
@@ -54,7 +54,7 @@ async function installExistingProjectFixture(page) {
         bibtex: "",
         template: "",
         outline: [],
-        papers: [],
+        papers: includePaper ? [{ title: "Community health intervention outcomes", authors: ["Amina Researcher", "John Analyst"], year: 2023, doi: "10.1000/evidence-fixture", venue: "Journal of Public Health", source: "manual" }] : [],
         figures: [],
         logs: "",
         agentRecords: [],
@@ -294,4 +294,48 @@ test("Literature Discovery direct route survives refresh and has an accessible e
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(results.violations).toEqual([]);
+});
+
+
+test("Evidence Workspace extracts, appraises and persists study-level records", async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on("pageerror", error => browserErrors.push(error.message));
+  page.on("console", message => { if (message.type() === "error") browserErrors.push(message.text()); });
+  await installExistingProjectFixture(page, true);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/evidence");
+  await expect(page.getByRole("heading", { name: "Evidence Workspace", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Community health intervention outcomes" })).toBeVisible();
+
+  await page.getByLabel("Study design").fill("Cluster-randomized controlled trial");
+  const firstDomain = page.locator(".evidence-domain").first();
+  await firstDomain.getByRole("combobox").selectOption("low");
+  await firstDomain.getByLabel(/Rationale/).fill("The methods describe computer-generated allocation and concealment.");
+  await firstDomain.getByLabel("Source location").fill("Methods, page 4");
+  await page.getByRole("button", { name: "Save evidence record" }).click();
+  await expect(page.getByRole("status")).toContainText("Study extraction and appraisal saved on this device.");
+
+  await page.reload();
+  await expect(page.getByLabel("Study design")).toHaveValue("Cluster-randomized controlled trial");
+  const reloadedDomain = page.locator(".evidence-domain").first();
+  await expect(reloadedDomain.getByRole("combobox")).toHaveValue("low");
+  await expect(reloadedDomain.getByLabel(/Rationale/)).toHaveValue("The methods describe computer-generated allocation and concealment.");
+  expect(browserErrors).toEqual([]);
+
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+});
+
+test("Evidence Workspace remains within a narrow mobile viewport", async ({ page }) => {
+  await installExistingProjectFixture(page, true);
+  await page.setViewportSize({ width: 320, height: 850 });
+  await page.goto("/evidence");
+  await expect(page.getByRole("heading", { name: "Evidence Workspace", level: 1 })).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth
+  }));
+  expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
 });
