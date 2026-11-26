@@ -11,7 +11,7 @@ test("inserts a new section before bibliography and document end", () => {
 });
 
 test("replaces the matching section body without deleting the next section", () => {
-  const source = "\\section{Methods}\nOld text\n\\label{sec:methods}\n\\section{Results}\nKeep results";
+  const source = "\\section{Methods}\n\\label{sec:methods}\nOld text\n\\section{Results}\nKeep results";
   const result = insertLatexSection(source, "Methods", "Updated methods.");
   assert.ok(result.includes("\\label{sec:methods}"));
   assert.ok(result.includes("Updated methods."));
