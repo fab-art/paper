@@ -17,6 +17,7 @@ export function protocolDraftToEntity(draft, existing, now = Date.now()) {
   const payload = {
     version: Number.isInteger(draft.version) && draft.version > 0 ? draft.version : 1,
     status,
+    updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : now,
     researchQuestion: String(draft.researchQuestion ?? "").trim(),
     studyDesign: String(draft.studyDesign ?? "").trim(),
     setting: String(draft.setting ?? "").trim(),
