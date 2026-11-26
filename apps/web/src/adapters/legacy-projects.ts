@@ -1,4 +1,4 @@
-import { listProjects } from "../../../../frontend/src/lib/db";
+import { listProjects, saveProject, deleteProjectAndData } from "../../../../frontend/src/lib/db";
 import type { Project } from "../../../../frontend/src/lib/types";
 
 /**
@@ -9,3 +9,36 @@ import type { Project } from "../../../../frontend/src/lib/types";
 export async function listLocalProjects(): Promise<Project[]> {
   return listProjects();
 }
+
+
+/** Explicit owner-facing mutations retain the legacy revision and tombstone guards. */
+export async function createLocalProject(project: Project): Promise<Project | undefined> {
+  return saveProject(project);
+}
+
+export async function updateLocalProject(project: Project): Promise<Project | undefined> {
+  return saveProject(project);
+}
+
+export async function archiveLocalProject(project: Project): Promise<Project | undefined> {
+  return saveProject({ ...project, archivedAt: Date.now() });
+}
+
+export async function restoreLocalProject(project: Project): Promise<Project | undefined> {
+  const restored = { ...project };
+  delete restored.archivedAt;
+  return saveProject(restored);
+}
+
+export async function permanentlyDeleteLocalProject(project: Project): Promise<void> {
+  await deleteProjectAndData(project.id, project.revision ?? 0);
+}
+
+export {
+  listProjectNotes,
+  saveProjectNote,
+  deleteProjectNote,
+  listProjectAttachments,
+  saveProjectAttachment,
+  deleteProjectAttachment
+} from "../../../../frontend/src/lib/db";
