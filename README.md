@@ -108,6 +108,11 @@ See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python
 
 The independent Research Factory now includes a Semantic Scholar discovery workspace with project-linked local search history, metadata inspection, DOI/title duplicate handling, project-library saving and BibTeX export. It reuses the existing /api/search-papers provider proxy, cache and rate-limit cooldown, and writes to the existing IndexedDB project records through revision safeguards. Search results remain discovery leads and bibliographic metadata must be checked against publisher records. See [Phase 3 architecture and safeguards](docs/phase3-literature-discovery.md).
 
+
+## Phase 4 — Evidence Extraction and Appraisal
+
+The Evidence Workspace now supports project-linked study-characteristic extraction, provenance notes, and researcher-led risk-of-bias appraisal prompts for randomized trials, non-randomized interventions, analytical cross-sectional studies and qualitative research. Records are stored in the existing local systematic-review data model; no automatic quality score or risk judgment is generated. See [Phase 4 scope and safeguards](docs/phase4-evidence-appraisal.md).
+
 ## Phase 7 — Optional cloud collaboration
 
 PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
