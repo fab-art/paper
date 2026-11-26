@@ -177,7 +177,8 @@ export default function LiteratureDiscovery() {
           <div className="literature-paper-list">
             {visibleResults.map((paper, index) => {
               const saved = savedPapers.some(item => samePaper(item, paper));
-              const doi = paper.doi ? safeExternalUrl("https://doi.org/" + encodeURIComponent(paper.doi)) : "";
+              const doiPath = paper.doi ? encodeURI(paper.doi).replace(/#/g, "%23").replace(/\?/g, "%3F") : "";
+              const doi = doiPath ? safeExternalUrl("https://doi.org/" + doiPath) : "";
               const paperUrl = safeExternalUrl(paper.url);
               const pdfUrl = safeExternalUrl(paper.openAccessPdf);
               const key = paper.doi || (paper.title + "-" + index);
