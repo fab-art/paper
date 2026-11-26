@@ -8,13 +8,12 @@ Migrate the existing project-level Evidence Intelligence and Protocol & Methods 
 2. In Evidence Intelligence, record claims, link exact source passages and page/section locators, and classify how each passage relates to a claim.
 3. Use Protocol & Methods to draft the research question, design, setting, population, sample size, outcomes, assumptions, limitations and analysis plan. Readiness is not owner approval or registration.
 4. In Study extraction & appraisal, select a saved paper and record study characteristics and source provenance.
-5. Select a paper from that project's saved literature library.
-6. Record study design, setting, population, sample size, intervention/exposure, comparator, outcomes, effect estimates, limitations, funding and conflicts.
-7. Add source page/section references and optional supporting quotations or evidence notes.
-8. Select a structured appraisal prompt set appropriate to the study design.
-9. Judge each domain, write a rationale for every assessed domain, and optionally record source location and supporting evidence.
-10. Save the extraction and appraisal to the selected paper in the existing local project record.
-11. Return later to continue the same record. Switching prompt sets retains the previous tool's judgments in the same record.
+5. Record study design, setting, population, sample size, intervention/exposure, comparator, outcomes, effect estimates, limitations, funding and conflicts.
+6. Add source page/section references and optional supporting quotations or evidence notes.
+7. Select a structured appraisal prompt set appropriate to the study design.
+8. Judge each domain, write a rationale for every assessed domain, and optionally record source location and supporting evidence.
+9. Save the extraction and appraisal to the selected paper in the existing local project record.
+10. Return later to continue the same record. Switching prompt sets retains the previous tool's judgments in the same record.
 
 ## Prompt sets and methodological boundaries
 The initial prompt sets cover:
