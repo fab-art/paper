@@ -272,7 +272,6 @@ export default function ProjectManager({ projectId, onNavigate }: {
 
   return (
     <div className="project-manager">
-      <div className="page-heading"><div><p className="eyebrow">YOUR RESEARCH LIBRARY</p><h1>Projects</h1><p className="page-subtitle">Create, organize and manage your research in one local-first workspace.</p></div></div>
       <Card className="project-create-card">
         <form className="project-create-form" onSubmit={createProject}>
           <label><span>Start a project</span><input name="name" maxLength={200} required placeholder="e.g. Diabetes medication adherence in Rwanda" /></label>
