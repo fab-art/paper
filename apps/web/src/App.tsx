@@ -167,6 +167,8 @@ export default function App() {
             <DataAnalysisWorkspace />
           ) : activeWorkspace.id === "writing" ? (
             <WritingStudioWorkspace onNavigate={navigate} />
+          ) : activeWorkspace.id === "systematic-review" ? (
+            <SystematicReviewsWorkspace />
           ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
