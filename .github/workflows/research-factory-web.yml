@@ -10,6 +10,15 @@ on:
       - "frontend/src/lib/**"
       - "docs/independent-rebuild-*.md"
       - ".github/workflows/research-factory-web.yml"
+  pull_request:
+    branches:
+      - "feat/independent-research-factory-rebuild"
+    paths:
+      - "apps/web/**"
+      - "frontend/src/lib/**"
+      - "docs/independent-rebuild-*.md"
+      - "docs/phase10-plan-orchestrate.md"
+      - ".github/workflows/research-factory-web.yml"
   workflow_dispatch:
 permissions:
   contents: read
