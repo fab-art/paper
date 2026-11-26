@@ -161,3 +161,8 @@ The current Research Station dashboard concept is available in the private [Magi
 ### Phase 9 implementation status
 
 The dashboard visual concept is available in the [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). The production migration will use the published [Lumen React 4.3.0 adapter](https://www.npmjs.com/package/@santi020k/lumen-react) and its matching dependency family, not the newer 5.3.0 MCP catalog contract. The real dashboard's IndexedDB workflows and opt-in Supabase behavior remain authoritative. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md).
+
+
+## Phase 10 — Plan & Orchestrate
+
+The independent Research Factory now includes a project-linked Research Blueprint and Production Line. The Blueprint structures research questions (PICO, PECO, PICOT, SPIDER or custom), objectives, methods, eligibility criteria, search sources, analysis, ethics and feasibility, with explicit researcher approval. The Production Line provides a dependency-aware workflow from blueprint approval through literature, evidence, analysis, writing, verification and publication, plus custom tasks and due dates. Both are stored in the existing IndexedDB project record; no automatic Supabase upload or new cloud schema is introduced. Changes to an approved blueprint revoke its approval and block downstream work until it is approved again. AI agents do not autonomously make scientific decisions or execute consequential actions. See [Phase 10 architecture and safeguards](docs/phase10-plan-orchestrate.md).
