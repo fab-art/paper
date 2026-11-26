@@ -8,7 +8,7 @@ import {
   restoreLocalProject, saveProjectAttachment, saveProjectNote, updateLocalProject
 } from "../adapters/legacy-projects";
 import {
-  createProjectDraft, filterProjects, getProjectCollection, projectRoute, toggleMilestone,
+  createProjectDraft, filterProjects, getProjectCollection, isDuplicatePaper, projectRoute, toggleMilestone,
   validateProjectDraft
 } from "../domain/project-management.mjs";
 
@@ -32,6 +32,10 @@ export default function ProjectManager({ projectId, onNavigate }: {
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [milestoneTitle, setMilestoneTitle] = useState("");
+  const [paperTitle, setPaperTitle] = useState("");
+  const [paperAuthors, setPaperAuthors] = useState("");
+  const [paperDoi, setPaperDoi] = useState("");
+  const [paperYear, setPaperYear] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -125,6 +129,24 @@ export default function ProjectManager({ projectId, onNavigate }: {
     finally { setSaving(false); }
   }
 
+  async function addPaper(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!project || !paperTitle.trim()) return;
+    const paper: Paper = {
+      title: paperTitle.trim(),
+      authors: paperAuthors.split(/[,;]\\s*/).map(value => value.trim()).filter(Boolean),
+      doi: paperDoi.trim() || undefined,
+      year: paperYear ? Number(paperYear) : undefined,
+      source: "manual"
+    };
+    if (isDuplicatePaper(project.papers ?? [], paper)) {
+      setError("This source is already in the project library (matching DOI or title).");
+      return;
+    }
+    await persist({ ...project, papers: [...(project.papers ?? []), paper] });
+    setPaperTitle(""); setPaperAuthors(""); setPaperDoi(""); setPaperYear("");
+  }
+
   async function addMilestone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!project || !milestoneTitle.trim()) return;
@@ -207,6 +229,24 @@ export default function ProjectManager({ projectId, onNavigate }: {
               </label>
             ))}
             <form className="inline-add-form" onSubmit={addMilestone}><input aria-label="New milestone" placeholder="Add a milestone" value={milestoneTitle} onChange={event => setMilestoneTitle(event.target.value)} /><Button type="submit" variant="secondary" disabled={!milestoneTitle.trim()}><Plus size={14} /> Add</Button></form>
+          </div>
+          <div className="project-section">
+            <div className="section-heading"><div><p className="eyebrow">EVIDENCE LIBRARY</p><h2>Literature sources <span className="count-pill">{(project.papers ?? []).length}</span></h2></div></div>
+            <form className="literature-add-form" onSubmit={event => void addPaper(event)}>
+              <input aria-label="Paper title" placeholder="Paper title (required)" value={paperTitle} onChange={event => setPaperTitle(event.target.value)} required />
+              <input aria-label="Authors" placeholder="Authors, separated by commas" value={paperAuthors} onChange={event => setPaperAuthors(event.target.value)} />
+              <div className="inline-add-form">
+                <input aria-label="DOI" placeholder="DOI (optional)" value={paperDoi} onChange={event => setPaperDoi(event.target.value)} />
+                <input aria-label="Publication year" inputMode="numeric" placeholder="Year" value={paperYear} onChange={event => setPaperYear(event.target.value.replace(/[^0-9]/g, "").slice(0, 4))} />
+                <Button type="submit" variant="secondary" disabled={!paperTitle.trim()}><Plus size={14} /> Add source</Button>
+              </div>
+            </form>
+            {(project.papers ?? []).length === 0 ? <p className="page-subtitle">No literature sources yet. Add a source manually or use Literature Discovery when that station is migrated.</p> :
+              (project.papers ?? []).map((paper, index) => <article className="literature-row" key={paper.doi || paper.title + index}>
+                <div><strong>{paper.title}</strong><small>{(paper.authors ?? []).join(", ")}{paper.year ? ` · ${paper.year}` : ""}{paper.doi ? ` · DOI: ${paper.doi}` : ""}</small></div>
+                <Button size="sm" variant="ghost" onClick={() => void persist({ ...project, papers: (project.papers ?? []).filter((_, paperIndex) => paperIndex !== index) })}>Remove</Button>
+              </article>)
+            }
           </div>
           <div className="project-section">
             <div className="section-heading"><div><p className="eyebrow">RESEARCH RECORD</p><h2>Notes</h2></div></div>
