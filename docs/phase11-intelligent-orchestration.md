@@ -33,7 +33,7 @@ The domain service exports:
 - `decideResearchAgentProposal`
 - `applyApprovedResearchProposal`
 
-The model adapter is deliberately separated from the proposal lifecycle. The workspace runs the existing browser-local WebLLM runtime and never sends project context to a remote model provider. The task context may include saved paper abstracts, study-extraction records, dataset file metadata (not raw rows), and a bounded manuscript excerpt. Retrieved text remains untrusted data.
+The model adapter is deliberately separated from the proposal lifecycle. The workspace runs the existing browser-local WebLLM runtime with policy instructions in the system role and project context in the user role; it never sends project context to a remote model provider. The task context may include saved paper abstracts, study-extraction records, dataset file metadata (not raw rows), and a bounded manuscript excerpt. Retrieved text remains untrusted data.
 
 ## Verification
 
