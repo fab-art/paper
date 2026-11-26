@@ -11,10 +11,11 @@ import DataAnalysisWorkspace from "./components/DataAnalysisWorkspace";
 import WritingStudioWorkspace from "./components/WritingStudioWorkspace";
 import ResearchBlueprintWorkspace from "./components/ResearchBlueprintWorkspace";
 import ProductionLineWorkspace from "./components/ProductionLineWorkspace";
+import IntelligentOrchestrationWorkspace from "./components/IntelligentOrchestrationWorkspace";
 import "./components/plan-orchestrate.css";
 
 const iconByWorkspace: Record<string, typeof Activity> = {
-  station: Activity, projects: FolderKanban, blueprint: Workflow, production: Boxes,
+  station: Activity, projects: FolderKanban, blueprint: Workflow, production: Boxes, orchestration: Sparkles,
   literature: BookOpen, evidence: Microscope, writing: FileText, data: FlaskConical,
   "systematic-review": GraduationCap, quality: ShieldCheck, publication: Layers3,
   collaboration: Sparkles, settings: Settings2
@@ -147,7 +148,7 @@ export default function App() {
               <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
               <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
-              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
+              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "orchestration" ? "Prepare local AI-assisted research proposals with evidence checks, researcher approval and an auditable history." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
@@ -155,6 +156,8 @@ export default function App() {
             <ResearchBlueprintWorkspace />
           ) : activeWorkspace.id === "production" ? (
             <ProductionLineWorkspace />
+          ) : activeWorkspace.id === "orchestration" ? (
+            <IntelligentOrchestrationWorkspace />
           ) : activeWorkspace.id === "literature" ? (
             <LiteratureDiscovery />
           ) : activeWorkspace.id === "evidence" ? (
