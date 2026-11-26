@@ -102,7 +102,7 @@ test("production progress reports completed, blocked and remaining tasks", () =>
   const plan = createProductionPlan(project, { now: 1 });
   const first = plan.tasks[0];
   const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
-  const completed = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3 });
+  const completed = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
   const progress = getProductionProgress(completed);
   assert.equal(progress.total, completed.tasks.length);
   assert.equal(progress.completed, 1);
@@ -131,7 +131,7 @@ test("production cannot complete its blueprint gate until the blueprint is appro
   const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
   assert.throws(
     () => updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3 }),
-    /blueprint.*approval/i
+    /approval.*blueprint/i
   );
   const approved = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
   assert.equal(approved.tasks[0].status, "completed");
