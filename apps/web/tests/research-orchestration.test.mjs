@@ -92,7 +92,7 @@ test("task updates are immutable and completion requires an explicit researcher 
   const plan = createProductionPlan(project, { now: 1 });
   const first = plan.tasks[0];
   const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
-  const completed = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3 });
+  const completed = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
   assert.equal(completed.tasks[0].status, "completed");
   assert.equal(completed.tasks[0].completionConfirmedBy, "researcher-1");
   assert.equal(plan.tasks[0].status, "planned");
@@ -123,4 +123,16 @@ test("editing an approved blueprint invalidates its approval and requires a fres
   assert.equal(edited.approvedBy, null);
   assert.equal(edited.updatedAt, 20);
   assert.equal(approved.approvalStatus, "approved");
+});
+
+test("production cannot complete its blueprint gate until the blueprint is approved", () => {
+  const plan = createProductionPlan(project, { now: 1 });
+  const first = plan.tasks[0];
+  const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
+  assert.throws(
+    () => updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3 }),
+    /blueprint.*approval/i
+  );
+  const approved = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
+  assert.equal(approved.tasks[0].status, "completed");
 });
