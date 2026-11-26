@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint, approveResearchBlueprint,
+  createResearchBlueprint, normalizeResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint, approveResearchBlueprint,
   createProductionPlan, createProductionTask, addProductionTask,
   updateProductionTask, getProductionProgress, getTaskReadiness
 } from "../src/domain/research-orchestration.mjs";
@@ -147,4 +147,27 @@ test("downstream tasks become blocked again when blueprint approval is withdrawn
   const withdrawn = getTaskReadiness(approved, second.id, { blueprintApproved: false });
   assert.equal(withdrawn.ready, false);
   assert.ok(withdrawn.blockedBy.includes("research-blueprint-approval"));
+});
+
+test("normalizes older canonical blueprint records without losing saved researcher decisions", () => {
+  const legacy = {
+    ...createResearchBlueprint(project, { now: 1 }),
+    researchQuestion: "Saved legacy question",
+    objectives: ["Saved objective"],
+    framework: undefined,
+    searchSources: undefined,
+    inclusionCriteria: undefined,
+    approvalStatus: undefined,
+    approvedAt: undefined,
+    approvedBy: undefined,
+    version: 4
+  };
+  const normalized = normalizeResearchBlueprint(project, legacy, { now: 20 });
+  assert.equal(normalized.researchQuestion, "Saved legacy question");
+  assert.deepEqual(normalized.objectives, ["Saved objective"]);
+  assert.equal(normalized.framework, "PICO");
+  assert.deepEqual(normalized.searchSources, []);
+  assert.equal(normalized.inclusionCriteria, "");
+  assert.equal(normalized.approvalStatus, "draft");
+  assert.equal(normalized.version, 4);
 });
