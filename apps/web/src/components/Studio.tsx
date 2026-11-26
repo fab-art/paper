@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../../../../frontend/src/lib/types";
 import { listProjects, loadProject, saveProject } from "../../../../frontend/src/lib/db";
 import { projectFingerprint, shouldSaveProjectSnapshot } from "../../../../frontend/src/lib/project-save-guard.mjs";
