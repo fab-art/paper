@@ -123,3 +123,17 @@ export function validateEvidenceEntry(extraction, appraisal) {
   }
   return errors;
 }
+
+
+export function switchAppraisalTemplate(current, paper, tool) {
+  if (current?.tool === tool) return current;
+  const previousTools = { ...(current?.previousTools ?? {}) };
+  if (current?.tool) previousTools[current.tool] = current;
+  const restored = previousTools[tool];
+  if (restored) {
+    const next = { ...restored, previousTools: { ...previousTools } };
+    delete next.previousTools[tool];
+    return next;
+  }
+  return { ...createAppraisalRecord(paper, tool), previousTools };
+}
