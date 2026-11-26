@@ -24,7 +24,9 @@ test("prepares a task brief only for a started, dependency-ready task with appro
   assert.equal(brief.projectRevision, 4);
   assert.equal(brief.taskVersion, 2);
   assert.equal(brief.workspacePath, "/literature");
-  assert.deepEqual(brief.contextSources, contextSources);
+  assert.equal(brief.contextSources[0].id, "paper-1");
+  assert.equal(brief.contextSources[0].excerpt, "");
+  assert.equal(brief.contextSources[0].sourceLocator, null);
   assert.ok(brief.guardrails.some(rule => rule.includes("Do not invent")));
   assert.throws(() => createResearchTaskBrief({ project, task: { ...task, status: "planned" }, plan, blueprint }), /Start the task/i);
   assert.throws(() => createResearchTaskBrief({ project, task, plan, blueprint: { approvalStatus: "draft" } }), /blocked/i);
