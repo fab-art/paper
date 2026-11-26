@@ -66,6 +66,7 @@ export interface RiskOfBiasDomain {
 export interface RiskOfBiasRecord {
   tool: string;
   domains: RiskOfBiasDomain[];
+  previousTools?: Record<string, RiskOfBiasRecord>;
 }
 export interface SystematicReviewData {
   protocol: SystematicReviewProtocol;
