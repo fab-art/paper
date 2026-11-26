@@ -13,6 +13,7 @@ import {
   saveAttachment, saveNote, saveProjectSnapshot
 } from "./projectRepository";
 import { isDuplicatePaper } from "./projectModel.mjs";
+import BlueprintProtocolPanel from "../blueprint/BlueprintProtocolPanel";
 import "./project-workspace.css";
 
 type SaveState = "saved" | "saving" | "error";
@@ -375,11 +376,15 @@ export default function ProjectWorkspace({
       <Tabs defaultValue="overview">
         <TabsList aria-label="Project workspace sections">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="blueprint">Blueprint & protocol</TabsTrigger>
           <TabsTrigger value="library">Research library ({project.papers?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="notes">Notes ({notes.length})</TabsTrigger>
           <TabsTrigger value="files">Files ({attachments.length})</TabsTrigger>
         </TabsList>
 
+        <TabsPanel value="blueprint">
+          <BlueprintProtocolPanel projectId={projectId} />
+        </TabsPanel>
         <TabsPanel value="overview">
           <div className="project-overview-grid">
             <Card className="project-workspace-card">
