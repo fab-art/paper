@@ -31,3 +31,11 @@ test("systematic reviews is enabled as the next migrated research workspace", ()
   assert.equal(workspace.id, "systematic-review");
   assert.equal(workspace.status, "active");
 });
+
+
+test("scientific audit and publication workspaces are enabled under Publish", () => {
+  assert.equal(getWorkspaceByPath("/quality").status, "active");
+  assert.equal(getWorkspaceByPath("/publication").status, "active");
+  assert.equal(getWorkspaceByPath("/quality").group, "Publish");
+  assert.equal(getWorkspaceByPath("/publication").group, "Publish");
+});
