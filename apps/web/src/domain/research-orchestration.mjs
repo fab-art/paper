@@ -162,7 +162,9 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now(), bl
     const readiness = getTaskReadiness(plan, taskId, { blueprintApproved });
     if (!readiness.ready) throw new Error(`Task is blocked by incomplete dependencies: ${readiness.blockedBy.join(", ")}`);
   }
-  if (nextStatus === "completed" && current.stage === "blueprint" && !blueprintApproved) {\n    throw new Error("Researcher approval of the Research Blueprint is required before this task can be completed.");\n  }\n  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
+  if (nextStatus === "completed" && current.stage === "blueprint" && !blueprintApproved) {
+    throw new Error("Researcher approval of the Research Blueprint is required before this task can be completed.");
+  }\n  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
     throw new Error("Researcher confirmation is required to complete a task.");
   }
   const updated = {
