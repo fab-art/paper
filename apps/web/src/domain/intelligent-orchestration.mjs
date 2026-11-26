@@ -127,6 +127,8 @@ export function createResearchAgentProposal({ brief, output, now = Date.now(), i
     projectId: brief.projectId,
     taskId: brief.taskId,
     taskVersion: brief.taskVersion,
+    projectRevision: brief.projectRevision,
+    blueprintVersion: brief.blueprintVersion,
     briefId: brief.id,
     stage: brief.taskStage,
     status: "proposed",
@@ -164,10 +166,12 @@ export function decideResearchAgentProposal(proposal, decision, { actor, now = D
   };
 }
 
-export function applyApprovedResearchProposal(task, proposal, { expectedTaskVersion, actor, now = Date.now() } = {}) {
+export function applyApprovedResearchProposal(task, proposal, { expectedTaskVersion, expectedBlueprintVersion = null, blueprintApproved = false, actor, now = Date.now() } = {}) {
   if (!task?.id || !proposal?.id) throw new Error("A task and a research proposal are required.");
   if (proposal.status !== "approved") throw new Error("Only a researcher-approved proposal can be applied.");
   if (proposal.taskId !== task.id) throw new Error("The proposal belongs to a different task.");
+  if (proposal.stage !== "blueprint" && !blueprintApproved) throw new Error("The research blueprint approval was withdrawn. Prepare a new proposal after re-approval.");
+  if (proposal.stage !== "blueprint" && expectedBlueprintVersion !== proposal.blueprintVersion) throw new Error("The research blueprint changed after this proposal was prepared. Prepare a fresh proposal.");
   if (expectedTaskVersion !== proposal.taskVersion || (task.version ?? 1) !== expectedTaskVersion) {
     throw new Error("The task changed after this proposal was prepared. Prepare a fresh proposal.");
   }
