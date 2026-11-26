@@ -3,7 +3,7 @@ import { CheckCircle2, ClipboardList, Save, ShieldCheck } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
-import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
+import { listLocalProjects, updateLocalProject, loadResearchBlueprint, saveResearchBlueprint } from "../adapters/legacy-projects";
 import { approveResearchBlueprint, createResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
 
 const paperTypes = [
@@ -36,10 +36,18 @@ export default function ResearchBlueprintWorkspace() {
 
   const project = useMemo(() => projects.find(item => item.id === projectId) ?? null, [projects, projectId]);
   useEffect(() => {
-    setBlueprint(project ? createResearchBlueprint(project) : null);
+    let active = true;
+    setBlueprint(null);
     setError("");
     setNotice("");
-  }, [projectId, project?.updatedAt]);
+    if (!project) return () => { active = false; };
+    loadResearchBlueprint(project.id).then(loaded => {
+      if (active) setBlueprint(loaded ?? createResearchBlueprint(project));
+    }).catch(reason => {
+      if (active) setError(reason instanceof Error ? reason.message : "The research blueprint could not be opened.");
+    });
+    return () => { active = false; };
+  }, [projectId]);
 
   const issues = useMemo(() => blueprint ? validateResearchBlueprint(blueprint) : [], [blueprint]);
   const update = (field: keyof ResearchBlueprint, value: unknown) => {
@@ -60,12 +68,22 @@ export default function ResearchBlueprintWorkspace() {
         paperType: next.paperType,
         intendedAudience: next.intendedAudience,
         availableMaterials: next.availableMaterials,
-        researchBlueprint: next,
         updatedAt: Date.now()
       });
-      if (!saved) throw new Error("The blueprint could not be saved.");
+      if (!saved) throw new Error("The project could not be updated.");
+      const currentBlueprint = await loadResearchBlueprint(project.id);
+      if (!currentBlueprint) throw new Error("The canonical research blueprint could not be loaded.");
+      const savedBlueprint = await saveResearchBlueprint({
+        ...next,
+        id: project.id,
+        projectId: project.id,
+        title: saved.name,
+        version: currentBlueprint.version,
+        updatedAt: Date.now()
+      }, currentBlueprint.version);
+      if (!savedBlueprint) throw new Error("The blueprint could not be saved.");
       setProjects(current => current.map(item => item.id === saved.id ? saved : item));
-      setBlueprint(next);
+      setBlueprint(savedBlueprint);
       setNotice("Blueprint saved to this device.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The blueprint could not be saved.");
