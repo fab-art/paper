@@ -16,6 +16,7 @@ test("identifies duplicate papers by DOI or normalized title", () => {
   assert.equal(samePaper({ title: "Different title", doi: "10.1000/x" }, { title: "Other", doi: "https://doi.org/10.1000/X" }), true);
   assert.equal(samePaper({ title: "A Clinical Trial!" }, { title: "a clinical trial" }), true);
   assert.equal(samePaper({ title: "One paper" }, { title: "Another paper" }), false);
+  assert.equal(samePaper({ title: "Same title", doi: "10.1000/first" }, { title: "Same title", doi: "10.1000/second" }), false);
 });
 
 test("deduplicates results while retaining richer metadata and unique authors", () => {
