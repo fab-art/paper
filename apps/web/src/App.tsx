@@ -154,6 +154,8 @@ export default function App() {
             <EvidenceWorkspace />
           ) : activeWorkspace.id === "data" ? (
             <DataAnalysisWorkspace />
+          ) : activeWorkspace.id === "writing" ? (
+            <WritingStudioWorkspace onNavigate={navigate} />
           ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
