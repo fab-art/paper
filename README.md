@@ -170,3 +170,8 @@ The independent Research Factory now includes a project-linked Research Blueprin
 ## Phase 11 — Intelligent Research Orchestration
 
 The Research Factory now adds a browser-local AI orchestration workspace connected to the Production Line. Started tasks with completed dependencies and an approved blueprint can be prepared as bounded task briefs, enriched with saved paper abstracts, extracted study characteristics, dataset file metadata and a limited manuscript excerpt. The existing WebLLM runtime generates structured proposals; source identifiers are validated, researcher identity is required for decisions, and each proposal carries an audit trail. Approved deliverables can be attached to the task only while its task and blueprint versions remain current. Applying a proposal never completes a task, changes scientific judgments or uploads project data to Supabase. See [Phase 11 architecture and safeguards](docs/phase11-intelligent-orchestration.md).
+
+
+## Phase 12 — Systematic Reviews
+
+The Systematic Reviews station is now active in the Research Factory. It wraps the existing systematic-review engine and connects it to local projects, retaining DOI-first deduplication, protocol management, title/abstract and full-text screening, PRISMA-style flow counts, study extraction, researcher-led risk-of-bias assessments and evidence-matrix CSV export. Review records remain in the existing IndexedDB project store; rapid edits are serialized through the project's revision guard. Screening and appraisal decisions are never automated. See [Phase 12 implementation and safeguards](docs/phase12-systematic-reviews.md).
