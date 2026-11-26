@@ -424,7 +424,7 @@ test("Evidence intelligence links researcher-recorded source passages to claims"
 
   await expect(page.getByText("Evidence passage and source relationship saved. Its assessment remains visible for researcher review.")).toBeVisible();
   await expect(page.getByText("Results, page 8, Table 3")).toBeVisible();
-  await expect(page.getByText("Supported", { exact: true })).toBeVisible();
+  await expect(page.locator(".re-assessment").getByText("Supported", { exact: true })).toBeVisible();
 });
 
 test("Evidence intelligence protocol builder saves an owner-review draft", async ({ page }) => {
