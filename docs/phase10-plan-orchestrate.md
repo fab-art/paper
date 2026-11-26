@@ -11,7 +11,7 @@ This phase is an extension of the existing local project model, not a second pro
 
 ## Research Blueprint
 
-The blueprint is stored as `Project.researchBlueprint` in the existing IndexedDB project record. Existing projects are mapped into a draft blueprint without deleting or rewriting their original research question, objectives, methodology, paper type, audience or resource fields.
+The blueprint is stored in the existing IndexedDB `researchBlueprints` table, keyed by the project ID and accessed through the canonical version-aware blueprint service. Existing projects are mapped into a draft blueprint without deleting or rewriting their original research question, objectives, methodology, paper type, audience or resource fields. The legacy Project fields are mirrored deliberately for compatibility; the richer blueprint remains in its canonical store.
 
 Fields include:
 - Research title, type, primary question and intended audience.
@@ -29,7 +29,7 @@ The form does not generate scientific claims, citations, sample-size calculation
 
 ## Production Line
 
-The production plan is stored as `Project.productionLine` in the same IndexedDB record. A first-use project gets seven linked default tasks:
+The production plan is stored as `Project.productionLine` in the existing IndexedDB project record. A first-use project gets seven linked default tasks:
 
 1. Approve research blueprint.
 2. Discover and curate literature.
@@ -48,7 +48,7 @@ The current Production Line tracks workflow state. It does not yet invoke AI age
 ## Data and security boundaries
 
 - IndexedDB remains the default source of truth.
-- Both objects are stored inside the existing project record; no new IndexedDB database or schema migration is introduced.
+- The canonical blueprint uses the existing `researchBlueprints` object store; the production plan uses the existing `projects` object store. No new IndexedDB database or schema migration is introduced.
 - No local project or plan is uploaded to Supabase automatically.
 - The existing Supabase collaboration schema is unchanged in this phase; sharing and sync behavior are not expanded here.
 - No service-role or secret key is used by the browser.
