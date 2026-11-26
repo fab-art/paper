@@ -28,7 +28,6 @@ export function createResearchTaskBrief({ project, task, plan, blueprint, contex
   }
   const workspacePath = getWorkspaceForResearchStage(task.stage);
   if (!workspacePath) throw new Error("This research stage does not have an orchestrated workspace yet.");
-  const { getTaskReadiness } = globalThis.__paperOrchestraTaskReadiness ?? {};
   const byId = new Map(plan.tasks.map(item => [item.id, item]));
   const blocked = (task.dependsOn ?? []).filter(id => byId.get(id)?.status !== "completed");
   if (task.stage !== "blueprint" && blueprint?.approvalStatus !== "approved") {
@@ -40,7 +39,9 @@ export function createResearchTaskBrief({ project, task, plan, blueprint, contex
     id: requireText(source.id, "Context source identifier"),
     kind: requireText(source.kind, "Context source type"),
     label: requireText(source.label, "Context source label"),
-    version: source.version ?? null
+    version: source.version ?? null,
+    sourceLocator: source.sourceLocator ?? null,
+    excerpt: String(source.excerpt ?? "").slice(0, 5000)
   }));
   return {
     id: `brief:${project.id}:${task.id}:${task.updatedAt ?? now}`,
