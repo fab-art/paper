@@ -12,7 +12,7 @@ export function normalizePaperTitle(value) {
 export function samePaper(left, right) {
   const leftDoi = normalizeDoi(left?.doi);
   const rightDoi = normalizeDoi(right?.doi);
-  if (leftDoi && rightDoi && leftDoi === rightDoi) return true;
+  if (leftDoi && rightDoi) return leftDoi === rightDoi;
   const leftTitle = normalizePaperTitle(left?.title);
   return Boolean(leftTitle && leftTitle === normalizePaperTitle(right?.title));
 }
@@ -48,7 +48,7 @@ export function safeExternalUrl(value) {
 }
 
 function bibtexEscape(value) {
-  return String(value ?? "").replace(/[{}]/g, "").replace(/&/g, "\\&").replace(/%/g, "\\%").replace(/_/g, "\\_");
+  return String(value ?? "").replace(/[{}]/g, match => "\\" + match).replace(/&/g, "\\&").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }
 
 export function paperToBibtex(paper, index = 0) {
