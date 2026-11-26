@@ -415,8 +415,8 @@ test("Evidence intelligence links researcher-recorded source passages to claims"
   await expect(page.getByText("Claim saved as awaiting verification. Add source-level evidence before relying on it.")).toBeVisible();
 
   const sourceEvidenceForm = page.locator(".re-grid .re-panel").nth(1);
-  await sourceEvidenceForm.getByLabel("Claim").selectOption({ label: "Community-based interventions improve continuity of diabetes care." });
-  await sourceEvidenceForm.getByLabel("Source").selectOption({ label: "Community health intervention outcomes" });
+  await sourceEvidenceForm.locator("select").nth(0).selectOption({ label: "Community-based interventions improve continuity of diabetes care." });
+  await sourceEvidenceForm.locator("select").nth(1).selectOption({ label: "Community health intervention outcomes" });
   await sourceEvidenceForm.getByLabel("Exact source passage").fill("Participants receiving community follow-up had higher continuity of care at 12 months.");
   await sourceEvidenceForm.getByLabel("Page, table, figure or section").fill("Results, page 8, Table 3");
   await sourceEvidenceForm.getByLabel("How does this passage relate to the claim?").selectOption("supports");
