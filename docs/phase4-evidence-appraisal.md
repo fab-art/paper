@@ -1,17 +1,20 @@
 # Phase 4 — Evidence Extraction and Appraisal
 
 ## Goal
-Provide a local-first workspace for extracting study characteristics and documenting researcher-led critical appraisal for papers already saved in a project.
+Migrate the existing project-level Evidence Intelligence and Protocol & Methods tools into the independent Research Factory, alongside study-characteristic extraction and researcher-led critical appraisal.
 
 ## User workflow
 1. Open Evidence Workspace and choose a local project.
-2. Select a paper from that project's saved literature library.
-3. Record study design, setting, population, sample size, intervention/exposure, comparator, outcomes, effect estimates, limitations, funding and conflicts.
-4. Add source page/section references and optional supporting quotations or evidence notes.
-5. Select a structured appraisal prompt set appropriate to the study design.
-6. Judge each domain, write a rationale for every assessed domain, and optionally record source location and supporting evidence.
-7. Save the extraction and appraisal to the selected paper in the existing local project record.
-8. Return later to continue the same record. Switching prompt sets retains the previous tool's judgments in the same record.
+2. In Evidence Intelligence, record claims, link exact source passages and page/section locators, and classify how each passage relates to a claim.
+3. Use Protocol & Methods to draft the research question, design, setting, population, sample size, outcomes, assumptions, limitations and analysis plan. Readiness is not owner approval or registration.
+4. In Study extraction & appraisal, select a saved paper and record study characteristics and source provenance.
+5. Select a paper from that project's saved literature library.
+6. Record study design, setting, population, sample size, intervention/exposure, comparator, outcomes, effect estimates, limitations, funding and conflicts.
+7. Add source page/section references and optional supporting quotations or evidence notes.
+8. Select a structured appraisal prompt set appropriate to the study design.
+9. Judge each domain, write a rationale for every assessed domain, and optionally record source location and supporting evidence.
+10. Save the extraction and appraisal to the selected paper in the existing local project record.
+11. Return later to continue the same record. Switching prompt sets retains the previous tool's judgments in the same record.
 
 ## Prompt sets and methodological boundaries
 The initial prompt sets cover:
@@ -23,6 +26,7 @@ The initial prompt sets cover:
 These are structured prompts only. They are not a complete implementation of each official instrument, do not calculate an official overall judgment, and do not replace the official manuals, signaling questions or decision rules. Users must choose the tool that fits the design, consult the authoritative guidance and make the judgments themselves. A judgment without a written rationale cannot be saved.
 
 ## Data ownership and compatibility
+- Existing claim records, evidence passages, source relationships and protocol drafts continue to use the established research entity and relation stores. No parallel claim or protocol store is introduced.
 - The project library remains the source of papers; no duplicate paper database is introduced.
 - Extraction and risk-of-bias records are keyed by normalized DOI, falling back to normalized Unicode title.
 - Records are stored in the existing \`Project.systematicReview.extraction\` and \`Project.systematicReview.riskOfBias\` maps.
@@ -39,7 +43,7 @@ These are structured prompts only. They are not a complete implementation of eac
 
 ## Verification
 - Unit tests cover DOI/title keys, framework domain defaults, preservation of protocol/screening/other study records, appraisal progress summaries, rationale validation and preservation of prior prompt-set work.
-- Playwright tests cover the direct route, saving and reloading an evidence record, accessible labels and narrow mobile viewport behavior.
+- Playwright tests cover the direct route, saving and reloading an evidence record, accessible labels, narrow mobile viewport behavior, claim-to-source evidence trails and protocol draft persistence.
 - The replacement-app workflow must pass TypeScript strict checking, all unit tests, dependency audit, Playwright and repository regression tests.
 - The Vercel Preview must build from the independent frontend project and exact Phase 4 commit.
 
