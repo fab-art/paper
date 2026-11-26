@@ -45,29 +45,37 @@ async function installExistingProjectFixture(page, withPaper = false) {
     request.onerror = () => { throw request.error; };
     request.onsuccess = () => {
       const database = request.result;
-      const transaction = database.transaction("projects", "readwrite");
-      transaction.objectStore("projects").put({
-        id: "fixture-project-001",
-        name: "Existing local research project",
-        notes: "",
-        latex: "",
-        bibtex: "",
-        template: "",
-        outline: [],
-        papers: includePaper ? [{ title: "Community health intervention outcomes", authors: ["Amina Researcher", "John Analyst"], year: 2023, doi: "10.1000/evidence-fixture", venue: "Journal of Public Health", source: "manual" }] : [],
-        figures: [],
-        logs: "",
-        agentRecords: [],
-        updatedAt: Date.now(),
-        researchQuestion: "Does the existing local project remain readable?",
-        objectives: [],
-        status: "active"
-      });
-      transaction.oncomplete = () => {
-        testWindow.__factoryFixtureReady = true;
-        database.close();
+      const existingCheck = database.transaction("projects", "readonly").objectStore("projects").get("fixture-project-001");
+      existingCheck.onsuccess = () => {
+        if (existingCheck.result) {
+          testWindow.__factoryFixtureReady = true;
+          database.close();
+          return;
+        }
+        const transaction = database.transaction("projects", "readwrite");
+        transaction.objectStore("projects").put({
+          id: "fixture-project-001",
+          name: "Existing local research project",
+          notes: "",
+          latex: "",
+          bibtex: "",
+          template: "",
+          outline: [],
+          papers: includePaper ? [{ title: "Community health intervention outcomes", authors: ["Amina Researcher", "John Analyst"], year: 2023, doi: "10.1000/evidence-fixture", venue: "Journal of Public Health", source: "manual" }] : [],
+          figures: [],
+          logs: "",
+          agentRecords: [],
+          updatedAt: Date.now(),
+          researchQuestion: "Does the existing local project remain readable?",
+          objectives: [],
+          status: "active"
+        });
+        transaction.oncomplete = () => {
+          testWindow.__factoryFixtureReady = true;
+          database.close();
+        };
+        transaction.onerror = () => { throw transaction.error; };
       };
-      transaction.onerror = () => { throw transaction.error; };
     };
   });
 }
