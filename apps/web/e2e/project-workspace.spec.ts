@@ -207,7 +207,7 @@ test("links exact source passages to claims and surfaces conflicting evidence af
   await page.getByRole("tab", { name: /Evidence intelligence/ }).click();
   await page.getByLabel("New claim or statement").fill("Precision medicine improves diabetes treatment response.");
   await page.getByRole("button", { name: "Add claim" }).click();
-  await expect(page.getByText(/awaiting verification/i)).toBeVisible();
+  await expect(page.getByText(/awaiting verification/i).first()).toBeVisible();
 
   await page.getByLabel("Source record").selectOption({ label: "Precision medicine in diabetes" });
   await page.getByLabel("Exact source passage").fill("The intervention group demonstrated a greater reduction in HbA1c than standard care.");
@@ -226,7 +226,7 @@ test("links exact source passages to claims and surfaces conflicting evidence af
 
   await page.reload();
   await page.getByRole("tab", { name: /Evidence intelligence/ }).click();
-  await expect(page.getByText("Precision medicine improves diabetes treatment response.")).toBeVisible();
+  await expect(page.getByText("Precision medicine improves diabetes treatment response.").first()).toBeVisible();
   await expect(page.getByText("The intervention group demonstrated a greater reduction in HbA1c than standard care.")).toBeVisible();
   await expect(page.getByText("No statistically significant difference was observed in the primary outcome.")).toBeVisible();
   await expect(page.getByText(/Contradictory evidence is present/)).toBeVisible();
