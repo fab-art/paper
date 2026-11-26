@@ -85,7 +85,7 @@ test("task readiness blocks work until every dependency is completed", () => {
 test("task status cannot advance while dependencies are incomplete", () => {
   const plan = createProductionPlan(project, { now: 1 });
   const downstream = plan.tasks.find(task => task.dependsOn.length > 0);
-  assert.throws(() => updateProductionTask(plan, downstream.id, { status: "in-progress" }, { now: 2 }), /dependency/i);
+  assert.throws(() => updateProductionTask(plan, downstream.id, { status: "in-progress" }, { now: 2 }), /incomplete dependenc/i);
 });
 
 test("task updates are immutable and completion requires an explicit researcher confirmation", () => {
