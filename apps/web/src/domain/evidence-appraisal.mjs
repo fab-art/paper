@@ -45,15 +45,15 @@ export function evidencePaperKey(paper) {
   const doi = normalizeDoi(paper?.doi);
   if (doi) return "doi:" + doi;
   const title = String(paper?.title ?? "").normalize("NFKC").toLocaleLowerCase()
-    .replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+    .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   if (title) return "title:" + title;
   const rawUrl = String(paper?.url ?? "").trim();
   if (!rawUrl) return "";
   try {
     const url = new URL(rawUrl);
-    return "url:" + (url.origin + url.pathname).replace(/\\/+$/, "").toLowerCase();
+    return "url:" + (url.origin + url.pathname).replace(/\/+$/, "").toLowerCase();
   } catch {
-    return "url:" + rawUrl.toLowerCase().replace(/[?#].*$/, "").replace(/\\/+$/, "");
+    return "url:" + rawUrl.toLowerCase().replace(/[?#].*$/, "").replace(/\/+$/, "");
   }
 }
 
