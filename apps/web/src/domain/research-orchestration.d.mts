@@ -9,5 +9,5 @@ export function createProductionTask(input: { id?: string; title: string; descri
 export function createProductionPlan(project: Project, options?: { now?: number }): ProductionLine;
 export function getTaskReadiness(plan: ProductionLine, taskId: string): { ready: boolean; blockedBy: string[] };
 export function addProductionTask(plan: ProductionLine, task: ProductionTask, options?: { now?: number }): ProductionLine;
-export function updateProductionTask(plan: ProductionLine, taskId: string, patch: Partial<ProductionTask>, options?: { now?: number }): ProductionLine;
+export function updateProductionTask(plan: ProductionLine, taskId: string, patch: Partial<ProductionTask>, options?: { now?: number; blueprintApproved?: boolean }): ProductionLine;
 export function getProductionProgress(plan: ProductionLine): { total: number; completed: number; blocked: number; remaining: number; percent: number };
