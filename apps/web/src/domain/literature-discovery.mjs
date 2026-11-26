@@ -88,3 +88,10 @@ export function appendMissingBibtex(existingBibtex, papers) {
   }
   return [current.trim(), ...additions].filter(Boolean).join("\n\n");
 }
+
+
+export function findPaperProjectMatches(paper, projects, excludeProjectId = "") {
+  return (projects ?? []).filter(project =>
+    project.id !== excludeProjectId && (project.papers ?? []).some(existing => samePaper(existing, paper))
+  );
+}
