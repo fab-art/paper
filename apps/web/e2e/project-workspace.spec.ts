@@ -85,10 +85,10 @@ test("archives, restores and permanently deletes projects as separate actions", 
 
   await page.getByRole("button", { name: /Archived/ }).click();
   await expect(page.getByText("Project lifecycle test")).toBeVisible();
-  await page.getByRole("button", { name: "Restore" }).click();
+  await page.getByRole("button", { name: "Restore", exact: true }).click();
   await expect(page.getByText("Project lifecycle test")).toBeVisible();
 
-  await page.getByRole("button", { name: "Archive" }).click();
+  await page.getByRole("button", { name: "Archive", exact: true }).click();
   await page.getByRole("button", { name: /Archived/ }).click();
   await page.getByRole("button", { name: "Delete permanently" }).click();
   await expect(page.getByText("No archived projects")).toBeVisible();
