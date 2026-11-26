@@ -1,4 +1,4 @@
-import type { ResearchEntity, ResearchProvenance } from "./research-blueprint";
+import type { ResearchEntity } from "./research-blueprint";
 
 export type EvidenceJudgement = "supports" | "partially-supports" | "contradicts" | "irrelevant";
 export type ClaimEvidenceStatus = "awaiting-verification" | "supported" | "partially-supported" | "unsupported" | "conflicting-evidence";
