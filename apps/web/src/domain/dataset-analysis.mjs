@@ -8,7 +8,7 @@ export function profileColumn(name, values, total = values.length) {
   const present = values.map(value => String(value ?? "").trim()).filter(Boolean);
   const numeric = present.length > 0 && present.every(value => Number.isFinite(Number(value)));
   const dates = !numeric && present.length > 0 && present.every(value =>
-    /^\\d{4}[-/]\\d{1,2}[-/]\\d{1,2}$/.test(value) && Number.isFinite(Date.parse(value))
+    /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(value) && Number.isFinite(Date.parse(value))
   );
   const numbers = numeric ? present.map(Number) : [];
   return {
