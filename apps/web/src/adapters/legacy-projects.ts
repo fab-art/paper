@@ -33,6 +33,8 @@ export async function permanentlyDeleteLocalProject(project: Project): Promise<v
 }
 
 export {
+  loadResearchBlueprint,
+  saveResearchBlueprint,
   listProjectNotes,
   saveProjectNote,
   deleteProjectNote,
