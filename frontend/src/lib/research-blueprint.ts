@@ -48,6 +48,36 @@ export interface ResearchBlueprint {
 
 export type ProductionStage = "blueprint" | "literature" | "evidence" | "analysis" | "writing" | "verification" | "publication";
 export type ProductionTaskStatus = "planned" | "in-progress" | "completed" | "skipped";
+export interface ResearchProposedDeliverable {
+  title: string;
+  content: string;
+  evidenceRefs: string[];
+  proposalId: string;
+  approvedBy: string;
+  approvedAt: number;
+  appliedAt: number;
+}
+export interface ResearchAgentProposal {
+  id: string;
+  contractVersion: 1;
+  projectId: string;
+  taskId: string;
+  taskVersion: number;
+  briefId: string;
+  stage: ProductionStage;
+  status: "proposed" | "approved" | "rejected" | "applied";
+  summary: string;
+  steps: string[];
+  deliverables: Array<{ title: string; content: string; evidenceRefs: string[] }>;
+  evidenceRefs: string[];
+  limitations: string[];
+  createdAt: number;
+  updatedAt: number;
+  approvedAt: number | null;
+  approvedBy: string | null;
+  appliedAt: number | null;
+  auditTrail: Array<{ event: string; actor: string; at: number; detail: string }>;
+}
 export interface ProductionTask {
   id: string;
   title: string;
@@ -61,6 +91,9 @@ export interface ProductionTask {
   completedAt: number | null;
   createdAt: number;
   updatedAt: number;
+  version?: number;
+  orchestrationProposals?: ResearchAgentProposal[];
+  proposedDeliverables?: ResearchProposedDeliverable[];
 }
 export interface ProductionLine {
   id: string;
