@@ -61,7 +61,7 @@ export default function App() {
   }, []);
 
   const groups = useMemo(() => getWorkspaceGroups(), []);
-  const projectRouteMatch = activePath.match(/^\\/projects\\/([^/]+)\\/?$/);
+  const projectRouteMatch = activePath.match(/^\/projects\/([^/]+)\/?$/);
   const projectRouteId = projectRouteMatch ? decodeURIComponent(projectRouteMatch[1]) : undefined;
   const isProjectRoute = activePath === "/projects" || Boolean(projectRouteId);
   const activeWorkspace = getWorkspaceByPath(activePath) ?? (isProjectRoute ? WORKSPACES.find(item => item.id === "projects")! : WORKSPACES[0]);
