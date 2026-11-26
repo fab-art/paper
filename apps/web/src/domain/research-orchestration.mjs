@@ -135,11 +135,12 @@ export function createProductionPlan(project, { now = Date.now() } = {}) {
   };
 }
 
-export function getTaskReadiness(plan, taskId) {
+export function getTaskReadiness(plan, taskId, { blueprintApproved = true } = {}) {
   const task = plan?.tasks?.find(item => item.id === taskId);
   if (!task) throw new Error("Production task not found.");
   const byId = new Map(plan.tasks.map(item => [item.id, item]));
   const blockedBy = task.dependsOn.filter(id => byId.get(id)?.status !== "completed");
+  if (task.stage !== "blueprint" && !blueprintApproved) blockedBy.unshift("research-blueprint-approval");
   return { ready: blockedBy.length === 0, blockedBy };
 }
 
@@ -158,7 +159,7 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now(), bl
   const nextStatus = patch.status ?? current.status;
   if (!TASK_STATUSES.has(nextStatus)) throw new Error("Unknown task status.");
   if (nextStatus === "in-progress" || nextStatus === "completed") {
-    const readiness = getTaskReadiness(plan, taskId);
+    const readiness = getTaskReadiness(plan, taskId, { blueprintApproved });
     if (!readiness.ready) throw new Error(`Task is blocked by incomplete dependencies: ${readiness.blockedBy.join(", ")}`);
   }
   if (nextStatus === "completed" && current.stage === "blueprint" && !blueprintApproved) {\n    throw new Error("Researcher approval of the Research Blueprint is required before this task can be completed.");\n  }\n  if (nextStatus === "completed" && !String(patch.completionConfirmedBy ?? "").trim()) {
@@ -175,10 +176,10 @@ export function updateProductionTask(plan, taskId, patch, { now = Date.now(), bl
   };
 }
 
-export function getProductionProgress(plan) {
+export function getProductionProgress(plan, { blueprintApproved = true } = {}) {
   const tasks = plan?.tasks ?? [];
   const completed = tasks.filter(task => task.status === "completed").length;
-  const blocked = tasks.filter(task => task.status !== "completed" && !getTaskReadiness(plan, task.id).ready).length;
+  const blocked = tasks.filter(task => task.status !== "completed" && !getTaskReadiness(plan, task.id, { blueprintApproved }).ready).length;
   return {
     total: tasks.length, completed, blocked, remaining: tasks.length - completed,
     percent: tasks.length ? Math.round(completed / tasks.length * 100) : 0
