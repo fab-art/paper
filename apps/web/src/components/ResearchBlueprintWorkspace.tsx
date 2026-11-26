@@ -4,7 +4,7 @@ import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
 import type { ResearchBlueprint } from "../../../../frontend/src/lib/research-blueprint";
 import { listLocalProjects, updateLocalProject, loadResearchBlueprint, saveResearchBlueprint } from "../adapters/legacy-projects";
-import { approveResearchBlueprint, createResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
+import { approveResearchBlueprint, createResearchBlueprint, normalizeResearchBlueprint, updateResearchBlueprint, validateResearchBlueprint } from "../domain/research-orchestration.mjs";
 
 const paperTypes = [
   ["unspecified", "Choose a research type"], ["empirical-study", "Empirical study"], ["systematic-review", "Systematic review"],
@@ -42,7 +42,7 @@ export default function ResearchBlueprintWorkspace() {
     setNotice("");
     if (!project) return () => { active = false; };
     loadResearchBlueprint(project.id).then(loaded => {
-      if (active) setBlueprint(loaded ?? createResearchBlueprint(project));
+      if (active) setBlueprint(normalizeResearchBlueprint(project, loaded));
     }).catch(reason => {
       if (active) setError(reason instanceof Error ? reason.message : "The research blueprint could not be opened.");
     });
