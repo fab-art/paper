@@ -83,6 +83,9 @@ export default function IntelligentOrchestrationWorkspace() {
     try { return getTaskReadiness(plan, task.id, { blueprintApproved: blueprint?.approvalStatus === "approved" }); }
     catch { return { ready: false, blockedBy: ["task-not-found"] }; }
   }, [plan, task, blueprint]);
+  const proposalIsCurrent = Boolean(proposal && task &&
+    (task.version ?? 1) === proposal.taskVersion &&
+    (proposal.stage === "blueprint" || (blueprint?.approvalStatus === "approved" && blueprint.version === proposal.blueprintVersion)));
 
   useEffect(() => {
     const latest = task?.orchestrationProposals?.at(-1) ?? null;
@@ -191,6 +194,7 @@ export default function IntelligentOrchestrationWorkspace() {
   async function decide(decision: "approve" | "reject") {
     if (!task || !plan || !proposal) return;
     try {
+      if (!proposalIsCurrent) throw new Error("This proposal is stale because its task or approved blueprint changed. Prepare a fresh proposal.");
       const nextProposal = decideResearchAgentProposal(proposal, decision, { actor: researcherIdentity.trim() });
       const updatedTask = { ...task, orchestrationProposals: (task.orchestrationProposals ?? []).map(item => item.id === proposal.id ? nextProposal : item) };
       const nextPlan = { ...plan, version: plan.version + 1, tasks: plan.tasks.map(item => item.id === task.id ? updatedTask : item), updatedAt: Date.now() };
@@ -205,7 +209,7 @@ export default function IntelligentOrchestrationWorkspace() {
   async function applyProposal() {
     if (!task || !plan || !proposal) return;
     try {
-      const result = applyApprovedResearchProposal(task, proposal, { expectedTaskVersion: proposal.taskVersion, actor: researcherIdentity.trim() });
+      const result = applyApprovedResearchProposal(task, proposal, { expectedTaskVersion: proposal.taskVersion, expectedBlueprintVersion: blueprint?.version ?? null, blueprintApproved: blueprint?.approvalStatus === "approved", actor: researcherIdentity.trim() });
       const updatedTask = {
         ...result.task,
         orchestrationProposals: (task.orchestrationProposals ?? []).map(item => item.id === proposal.id ? result.proposal : item)
@@ -268,8 +272,9 @@ export default function IntelligentOrchestrationWorkspace() {
         {proposal.limitations.length > 0 && <div className="orchestration-limitations"><strong>Limitations to review</strong><ul>{proposal.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
         {(proposal.status === "proposed" || proposal.status === "approved") && <label className="plan-field orchestration-reviewer"><span>Researcher name or ID <small>Required for the decision audit</small></span><input value={researcherIdentity} onChange={event => setResearcherIdentity(event.target.value)} placeholder="Enter your researcher identity" maxLength={120}/></label>}
         <div className="orchestration-audit"><strong>Decision history</strong>{proposal.auditTrail.map((event, index) => <p key={index}><span>{event.event}</span> · {event.actor} · {new Date(event.at).toLocaleString()}</p>)}</div>
-        {proposal.status === "proposed" && <div className="orchestration-actions"><span>Approval is explicit. Review all claims and sources before accepting.</span><Button variant="secondary" onClick={() => void decide("reject")} disabled={saving || !researcherIdentity.trim()}><X size={14}/> Reject</Button><Button onClick={() => void decide("approve")} disabled={saving || !researcherIdentity.trim()}><ShieldCheck size={14}/> Approve proposal</Button></div>}
-        {proposal.status === "approved" && <div className="orchestration-actions"><span>Approval does not mark the task complete.</span><Button onClick={() => void applyProposal()} disabled={saving || !researcherIdentity.trim()}><FileCheck2 size={14}/> Apply approved deliverables</Button></div>}
+        {!proposalIsCurrent && proposal.status !== "rejected" && proposal.status !== "applied" && <p className="orchestration-warning" role="alert">This proposal is stale. The task or approved research blueprint changed after it was prepared. Generate a new proposal.</p>}
+        {proposal.status === "proposed" && <div className="orchestration-actions"><span>Approval is explicit. Review all claims and sources before accepting.</span><Button variant="secondary" onClick={() => void decide("reject")} disabled={saving || !researcherIdentity.trim() || !proposalIsCurrent}><X size={14}/> Reject</Button><Button onClick={() => void decide("approve")} disabled={saving || !researcherIdentity.trim() || !proposalIsCurrent}><ShieldCheck size={14}/> Approve proposal</Button></div>}
+        {proposal.status === "approved" && <div className="orchestration-actions"><span>Approval does not mark the task complete.</span><Button onClick={() => void applyProposal()} disabled={saving || !researcherIdentity.trim() || !proposalIsCurrent}><FileCheck2 size={14}/> Apply approved deliverables</Button></div>}
         {proposal.status === "applied" && <p className="orchestration-applied"><Check size={15}/> Applied to the task. Confirm completion separately in Production Line.</p>}
       </Card>}
 
