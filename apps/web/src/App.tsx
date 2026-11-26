@@ -172,7 +172,11 @@ export default function App() {
             <WritingStudioWorkspace onNavigate={navigate} />
           ) : activeWorkspace.id === "systematic-review" ? (
             <SystematicReviewsWorkspace />
-          ) : activeWorkspace.id === "quality" ? (\n            <ScientificAuditWorkspace />\n          ) : activeWorkspace.id === "publication" ? (\n            <PublicationWorkspace />\n          ) : isProjectRoute ? (
+          ) : activeWorkspace.id === "quality" ? (
+            <ScientificAuditWorkspace />
+          ) : activeWorkspace.id === "publication" ? (
+            <PublicationWorkspace />
+          ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
             <Card className="project-detail-card">
