@@ -14,6 +14,8 @@ const contextSources = [{ id: "paper-1", kind: "paper", label: "Trial publicatio
 test("maps each research stage to its existing workspace", () => {
   assert.equal(getWorkspaceForResearchStage("literature"), "/literature");
   assert.equal(getWorkspaceForResearchStage("analysis"), "/data");
+  assert.equal(getWorkspaceForResearchStage("verification"), "/evidence");
+  assert.equal(getWorkspaceForResearchStage("publication"), "/writing");
   assert.equal(getWorkspaceForResearchStage("unknown"), null);
 });
 
