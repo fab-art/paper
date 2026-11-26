@@ -7,7 +7,9 @@ import {
 
 test("uses normalized DOI as a stable evidence record key and falls back to Unicode title", () => {
   assert.equal(evidencePaperKey({ title: "A study", doi: "https://doi.org/10.1000/ABC" }), "doi:10.1000/abc");
-  assert.equal(evidencePaperKey({ title: "Étude médicale" }), "title:étudemédicale");
+  assert.equal(evidencePaperKey({ title: "Étude médicale" }), "title:étude médicale");
+  assert.equal(evidencePaperKey({ title: "A study: with punctuation!" }), "title:a study with punctuation");
+  assert.equal(evidencePaperKey({ url: "https://example.org/paper?id=ignored" }), "url:https://example.org/paper");
   assert.equal(evidencePaperKey({}), "");
 });
 
