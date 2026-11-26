@@ -55,6 +55,7 @@ test.describe("Writing Studio", () => {
 
     await page.goto("/writing");
     await expect(page.getByRole("textbox", { name: "Project name" })).toHaveValue("Writing Studio Existing Manuscript");
+    await page.getByRole("button", { name: "LaTeX editor" }).click();
     const editor = page.getByRole("textbox", { name: "LaTeX manuscript source" });
     await expect(editor).toBeVisible();
     await editor.fill("\\documentclass{article}\\n\\begin{document}\\nAutosaved manuscript text\\n\\end{document}");
