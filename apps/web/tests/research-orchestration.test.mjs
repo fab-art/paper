@@ -136,3 +136,15 @@ test("production cannot complete its blueprint gate until the blueprint is appro
   const approved = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
   assert.equal(approved.tasks[0].status, "completed");
 });
+
+test("downstream tasks become blocked again when blueprint approval is withdrawn", () => {
+  const plan = createProductionPlan(project, { now: 1 });
+  const first = plan.tasks[0];
+  const second = plan.tasks[1];
+  const started = updateProductionTask(plan, first.id, { status: "in-progress" }, { now: 2 });
+  const approved = updateProductionTask(started, first.id, { status: "completed", completionConfirmedBy: "researcher-1" }, { now: 3, blueprintApproved: true });
+  assert.equal(getTaskReadiness(approved, second.id, { blueprintApproved: true }).ready, true);
+  const withdrawn = getTaskReadiness(approved, second.id, { blueprintApproved: false });
+  assert.equal(withdrawn.ready, false);
+  assert.ok(withdrawn.blockedBy.includes("research-blueprint-approval"));
+});
