@@ -151,7 +151,9 @@ export default function App() {
             <LiteratureDiscovery />
           ) : activeWorkspace.id === "evidence" ? (
             <EvidenceWorkspace />
-          ) : activeWorkspace.id === "data" ? (\n            <DataAnalysisWorkspace />\n          ) : isProjectRoute ? (
+          ) : activeWorkspace.id === "data" ? (
+            <DataAnalysisWorkspace />
+          ) : isProjectRoute ? (
             <ProjectManager projectId={projectRouteId} onNavigate={navigate} />
           ) : selectedProject ? (
             <Card className="project-detail-card">
