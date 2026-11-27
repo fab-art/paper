@@ -227,7 +227,7 @@ test("reduced-motion preference suppresses nonessential transitions", async ({ p
 test("empty local library is distinct from a storage failure", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Your research library is ready")).toBeVisible();
-  await expect(page.getByText(/This Phase 1 preview is read-only/)).toBeVisible();
+  await expect(page.getByText(/No projects yet\. Create one in Projects/)).toBeVisible();
   await expect(page.getByText("Local workspace")).toBeVisible();
 });
 
