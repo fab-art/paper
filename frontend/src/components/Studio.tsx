@@ -644,12 +644,6 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     <footer className="statusbar"><span>PaperOrchestra Studio <span className="muted">v0.1.0</span></span><span><span className="live-dot"/> LOCAL-FIRST WORKSPACE</span><span>WebLLM · FastAPI · IndexedDB</span></footer>
   </div>;
 }
-function downloadPdf(base64:string) {
-  const bytes = Uint8Array.from(atob(base64), c=>c.charCodeAt(0));
-  const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
-  const a=document.createElement("a");a.href=url;a.download="paper.pdf";a.click();URL.revokeObjectURL(url);
-}
-
 function parseCsv(input: string): Record<string, string>[] {
   const lines = input.split(/\r?\n/).filter(line => line.trim());
   if (lines.length < 2) throw new Error("CSV needs a header row and at least one data row.");
