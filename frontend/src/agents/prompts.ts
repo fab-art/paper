@@ -39,7 +39,7 @@ Choose one categorical/time x column and one numeric outcome y column from this 
 DATA SAMPLE: ${project.logs.slice(0, 5000)}
 PROJECT CONTEXT: ${researchBrief(project, 1500)}`;
 }
-export function writingPrompt(project: Project, section: OutlineSection) {
+export function writingPrompt(project: Project, section: OutlineSection, evidenceContext = "No verified source passages or approved analysis outputs are available.") {
   return `You are an academic LaTeX writing assistant. Draft ONLY the LaTeX body for this section (no document preamble).
 Use cautious claims, clear academic tone, and cite only keys present in the supplied bibliography. Insert [SOURCE NEEDED] where evidence is missing. Never fabricate results or references.
 SECTION: ${section.title}
@@ -47,11 +47,27 @@ DESCRIPTION: ${section.description}
 PROJECT BRIEF:
 ${researchBrief(project, 4500)}
 BIBLIOGRAPHY: ${project.bibtex.slice(0, 3500)}
-EXISTING DRAFT: ${project.latex.slice(0, 3000)}`;
+EXISTING DRAFT: ${project.latex.slice(0, 3000)}\nTRACEABLE PROJECT EVIDENCE:\n${evidenceContext}\nRespect every researcher assessment label: supports may support only the specific claim it directly addresses; partially-supports may support only the narrower supported part with qualification; contradicts must remain visible as conflicting evidence and must never be presented as support; irrelevant must not be used as evidence; unassessed remains awaiting verification. For each factual statement, append [EVIDENCE: entity-id] only when the supplied passage/result directly supports it. Otherwise insert [SOURCE NEEDED]. Never treat a title or abstract as a read passage.`;
 }
-export function refinePrompt(project: Project) {
+export function refinePrompt(
+  project: Project,
+  focus: "clarity" | "academic" = "clarity",
+  authorVoice: "preserve" | "formal" | "concise" | "accessible" = "preserve"
+) {
+  const focusInstruction = focus === "academic"
+    ? "Convert plain-language, informal or note-like passages into clear academic prose. Preserve the author's intended meaning, uncertainty and terminology; do not make claims more certain."
+    : "Improve clarity, logical flow, sentence structure and concision while preserving the author's intended meaning.";
+  const voiceInstruction = authorVoice === "preserve"
+    ? "Preserve the author's existing voice and phrasing patterns wherever possible."
+    : authorVoice === "formal"
+      ? "Use formal academic language and precise terminology."
+      : authorVoice === "concise"
+        ? "Prefer concise academic prose without removing essential scientific detail."
+        : "Use accessible scholarly language and explain specialized terms where useful.";
   return `Review this LaTeX manuscript against the supplied research brief. Return ONLY JSON {"issues":["..."],"revised_latex":"..."}.
-Preserve meaning and all factual uncertainty. Check alignment with the research question, balanced braces/environments, citation keys against the bibliography, duplicated text, and academic tone. Do not invent citations or findings.
+${focusInstruction}
+${voiceInstruction}
+Preserve all factual uncertainty. Check alignment with the research question, balanced braces/environments, citation keys against the bibliography, duplicated text and unsupported factual claims. Do not invent citations, methods, approvals or findings.
 PROJECT BRIEF:
 ${researchBrief(project, 2500)}
 LATEX: ${project.latex.slice(0, 9000)}
