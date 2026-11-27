@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BookOpen, Boxes, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Moon, Search, Settings2, Sun, ShieldCheck, Sparkles, Workflow } from "lucide-react";
+import { Activity, ArrowRight, BookOpen, Boxes, Compass, ChevronRight, FileText, FlaskConical, FolderKanban, GraduationCap, Layers3, Microscope, Moon, Search, Settings2, Sun, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { Button, Card, Sidebar } from "@santi020k/lumen-react";
 import { listLocalProjects } from "./adapters/legacy-projects";
 import type { Project } from "../../../frontend/src/lib/types";
@@ -10,6 +10,7 @@ import EvidenceWorkspace from "./components/EvidenceWorkspace";
 import DataAnalysisWorkspace from "./components/DataAnalysisWorkspace";
 import WritingStudioWorkspace from "./components/WritingStudioWorkspace";
 import ResearchBlueprintWorkspace from "./components/ResearchBlueprintWorkspace";
+import ResearchGPSWorkspace from "./components/ResearchGPSWorkspace";
 import ProductionLineWorkspace from "./components/ProductionLineWorkspace";
 import IntelligentOrchestrationWorkspace from "./components/IntelligentOrchestrationWorkspace";
 import SystematicReviewsWorkspace from "./components/SystematicReviewsWorkspace";
@@ -22,7 +23,7 @@ import "./components/publish-workspaces.css";
 import "./components/plan-orchestrate.css";
 
 const iconByWorkspace: Record<string, typeof Activity> = {
-  station: Activity, projects: FolderKanban, blueprint: Workflow, production: Boxes, orchestration: Sparkles,
+  station: Activity, projects: FolderKanban, "research-gps": Compass, blueprint: Workflow, production: Boxes, orchestration: Sparkles,
   literature: BookOpen, evidence: Microscope, writing: FileText, data: FlaskConical,
   "systematic-review": GraduationCap, quality: ShieldCheck, publication: Layers3,
   collaboration: Sparkles, settings: Settings2
@@ -155,11 +156,13 @@ export default function App() {
               <div className="breadcrumb"><span>Research Factory</span><ChevronRight size={13} /><span>{activeWorkspace.label}</span></div>
               <p className="eyebrow">YOUR RESEARCH, ORCHESTRATED</p>
               <h1>{selectedProject ? selectedProject.name || "Untitled project" : activeWorkspace.label}</h1>
-              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "orchestration" ? "Prepare local AI-assisted research proposals with evidence checks, researcher approval and an auditable history." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "systematic-review" ? "Manage reproducible protocols, PRISMA screening, study extraction and risk-of-bias assessments." : activeWorkspace.id === "quality" ? "Review research integrity, protocol alignment, evidence traceability, methods and ethics with a documented researcher sign-off." : activeWorkspace.id === "publication" ? "Prepare journal metadata, authorship, declarations, cover letters and submission readiness." : activeWorkspace.id === "collaboration" ? "Share selected projects securely, manage roles, discuss research and track cloud versions." : activeWorkspace.id === "settings" ? "Manage your account, appearance, local backups and privacy preferences." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
+              <p className="page-subtitle">{selectedProject ? "Project record from your existing local research library." : activeWorkspace.id === "research-gps" ? "Choose your starting point and build an editable, researcher-controlled route from idea, literature, dataset or manuscript to publication." : activeWorkspace.id === "blueprint" ? "Shape a research question into an explicit, researcher-approved protocol and analysis plan." : activeWorkspace.id === "production" ? "Coordinate research tasks, dependencies and deliverables from protocol to publication." : activeWorkspace.id === "orchestration" ? "Prepare local AI-assisted research proposals with evidence checks, researcher approval and an auditable history." : activeWorkspace.id === "literature" ? "Search scholarly sources, curate project libraries and export citation metadata." : activeWorkspace.id === "evidence" ? "Extract study characteristics and document researcher-led risk-of-bias judgments." : activeWorkspace.id === "data" ? "Profile project datasets, inspect data quality and review descriptive summaries on this device." : activeWorkspace.id === "writing" ? "Draft, refine and compile research manuscripts with local AI, LaTeX and linked references." : activeWorkspace.id === "systematic-review" ? "Manage reproducible protocols, PRISMA screening, study extraction and risk-of-bias assessments." : activeWorkspace.id === "quality" ? "Review research integrity, protocol alignment, evidence traceability, methods and ethics with a documented researcher sign-off." : activeWorkspace.id === "publication" ? "Prepare journal metadata, authorship, declarations, cover letters and submission readiness." : activeWorkspace.id === "collaboration" ? "Share selected projects securely, manage roles, discuss research and track cloud versions." : activeWorkspace.id === "settings" ? "Manage your account, appearance, local backups and privacy preferences." : activeWorkspace.id === "projects" ? "Create, organize and manage your research in one local-first workspace." : "A connected environment for every stage of the research journey."}</p>
             </div>
           </div>
 
-          {activeWorkspace.id === "blueprint" ? (
+          {activeWorkspace.id === "research-gps" ? (
+            <ResearchGPSWorkspace onNavigate={navigate} />
+          ) : activeWorkspace.id === "blueprint" ? (
             <ResearchBlueprintWorkspace />
           ) : activeWorkspace.id === "production" ? (
             <ProductionLineWorkspace />
