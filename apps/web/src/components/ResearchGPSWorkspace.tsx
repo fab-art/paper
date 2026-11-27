@@ -171,7 +171,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
         </Card>
         {error && <p className="plan-message error" role="alert">{error}</p>}
         {notice && <p className="plan-message success" role="status">{notice}</p>}
-        <div className="plan-actions"><span>Saved locally only. No project is uploaded or shared automatically.</span><Button type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : <><Save size={15}/> Save Research GPS</>}</Button></div>
+        <div className="plan-actions"><span>Saved locally only. No project is uploaded or shared automatically.</span><button className="publish-button" type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : <><Save size={15}/> Save Research GPS</>}</button></div>
       </div>}
     </section>
   );
