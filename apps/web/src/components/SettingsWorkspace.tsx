@@ -4,6 +4,7 @@ type User = { id: string; email?: string | null };
 import type { Project } from "../../../../frontend/src/lib/types";
 import { isSupabaseConfigured, supabase } from "../../../../frontend/src/lib/supabase";
 import { listLocalProjects } from "../adapters/legacy-projects";
+import { loadAccountProfile } from "../domain/manage-account.mjs";
 
 function downloadBackup(projects: Project[]) {
   const payload = {
@@ -37,25 +38,35 @@ export default function SettingsWorkspace({ theme, onThemeChange }: {
       if (active) setError(reason instanceof Error ? reason.message : "The local project library could not be read.");
     });
     if (!supabase) { setLoading(false); return () => { active = false; }; }
-    supabase.auth.getSession().then(async ({ data }) => {
+    const client = supabase;
+    let sessionRevision = 0;
+    const applySession = async (current: User | null) => {
+      const revision = ++sessionRevision;
       if (!active) return;
-      const current = data.session?.user ?? null;
       setUser(current);
       setEmail(current?.email ?? "");
-      if (current) {
-        const { data: profile } = await supabase!.from("profiles").select("display_name").eq("id", current.id).maybeSingle();
-        if (active) setDisplayName(profile?.display_name ?? "");
+      if (!current) {
+        setDisplayName("");
+        return;
       }
+      try {
+        const account = await loadAccountProfile(client, current);
+        if (active && revision === sessionRevision) setDisplayName(account.displayName);
+      } catch (reason) {
+        if (active && revision === sessionRevision) {
+          setError(reason instanceof Error ? reason.message : "Account profile could not be loaded.");
+        }
+      }
+    };
+    client.auth.getSession().then(async ({ data }) => {
+      await applySession(data.session?.user ?? null);
       if (active) setLoading(false);
     }).catch(reason => { if (active) { setError(reason instanceof Error ? reason.message : "Account settings could not be loaded."); setLoading(false); } });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (active) {
-        setUser(session?.user ?? null);
-        setEmail(session?.user?.email ?? "");
-        setDisplayName("");
-      }
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      // Defer the profile query until Supabase has released its auth-state lock.
+      void Promise.resolve().then(() => applySession(session?.user ?? null));
     });
-    return () => { active = false; subscription.unsubscribe(); };
+    return () => { active = false; sessionRevision += 1; subscription.unsubscribe(); };
   }, []);
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
