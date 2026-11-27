@@ -52,3 +52,19 @@ export function normalizeProjectComment({ projectId, authorId, body }) {
   if (text.length > 10000) throw new Error("Comments must be 10000 characters or fewer.");
   return { project_id: projectId, author_id: authorId, body: text, resource_type: "project" };
 }
+
+export async function refreshSelectedSharedProject(rows, selectedId, handlers) {
+  const nextId = rows.some(item => item.id === selectedId)
+    ? selectedId
+    : rows[0]?.id ?? "";
+
+  if (nextId !== selectedId) {
+    handlers.clearDetails();
+    handlers.setSelectedId(nextId);
+  } else if (nextId) {
+    await handlers.refreshDetails(nextId);
+  } else {
+    handlers.clearDetails();
+  }
+  return nextId;
+}
