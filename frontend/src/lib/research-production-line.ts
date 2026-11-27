@@ -111,8 +111,9 @@ const ROUTES: Record<ResearchPaperType, ResearchStationId[]> = {
   unspecified: ["intake", "protocol", "literature", "evidence", "methods", "data", "writing", "quality", "peer-review", "publication", "revision"]
 };
 
-export function getResearchRoute(paperType: ResearchPaperType) {
-  return ROUTES[paperType].map(id => RESEARCH_STATIONS.find(station => station.id === id)!);
+export function getResearchRoute(paperType: ResearchPaperType, stationOrder?: ResearchStationId[]) {
+  const route = stationOrder ?? ROUTES[paperType];
+  return route.map(id => RESEARCH_STATIONS.find(station => station.id === id)!).filter(Boolean);
 }
 
 export function createResearchTask(input: {
@@ -218,8 +219,8 @@ export function transitionResearchTask(
   return { task: next, approval };
 }
 
-export function summarizeResearchStations(tasks: ResearchTask[], paperType: ResearchPaperType) {
-  return getResearchRoute(paperType).map(station => {
+export function summarizeResearchStations(tasks: ResearchTask[], paperType: ResearchPaperType, stationOrder?: ResearchStationId[]) {
+  return getResearchRoute(paperType, stationOrder).map(station => {
     const stationTasks = tasks.filter(task => task.stationId === station.id);
     const completed = stationTasks.filter(task => task.status === "completed").length;
     const awaitingOwner = stationTasks.filter(task => task.status === "awaiting-owner").length;
