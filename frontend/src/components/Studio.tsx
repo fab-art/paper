@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
 import { listProjects, loadProject, saveProject, listResearchEntities } from "../lib/db";
 import type { ResearchEntity } from "../lib/research-blueprint";
@@ -10,7 +10,7 @@ import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS 
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
 import { exportProject } from "../lib/export";
 import LocalPythonPanel from "./LocalPythonPanel";
-import { outlinePrompt, literatureQueryPrompt, plotPrompt, writingPrompt, refinePrompt } from "../agents/prompts";
+import { outlinePrompt, literatureQueryPrompt, plotPrompt, refinePrompt } from "../agents/prompts";
 import { extractBibtexTitles } from "../lib/phase6-regressions.mjs";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -96,7 +96,6 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const [stream, setStream] = useState("");
   const [pdf, setPdf] = useState<string>();
   const [feedback, setFeedback] = useState("");
-  const [plotData, setPlotData] = useState("");
   const [notice, setNotice] = useState("Ready for this research project.");
   const noticeIsError = /could not|failed|error|another tab|not saved|permanently deleted/i.test(notice);
   const [showSettings, setShowSettings] = useState(false);
