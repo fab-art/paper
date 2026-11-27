@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ArrowLeft, BookOpen, BrainCircuit, Check, ChevronDown, CircleAlert, Download, FileText, FolderOpen, Gauge, Image, Loader2, Play, Plus, RefreshCw, Settings2, Sparkles, Trash2, Upload, Unplug, Zap } from "lucide-react";
 import { AGENTS, type AgentId, type OutlineSection, type Paper, type Project } from "../lib/types";
-import { listProjects, loadProject, saveProject } from "../lib/db";
+import { listProjects, loadProject, saveProject, listResearchEntities } from "../lib/db";
+import type { ResearchEntity } from "../lib/research-blueprint";
+import { buildGroundedWritingContext } from "../lib/writing-grounding";
+import { buildWritingBlockPrompt, checkCitationKeys, getWritingSectionGuide, inspectDraftEvidence, type WritingAuthorVoice } from "../lib/writing-guidance";
 import { projectFingerprint, shouldSaveProjectSnapshot } from "../lib/project-save-guard.mjs";
 import { loadLocalModel, unloadModel, complete, fallbackComplete, MODEL_OPTIONS } from "../lib/llm";
 import { searchPapers, generatePlot, compileLatex } from "../lib/api";
@@ -67,6 +70,14 @@ function papersToBibtex(papers: Paper[]) {
 
 export default function Studio({ projectId, onBack, onSelectProject }: { projectId: string; onBack?: () => void; onSelectProject?: (projectId: string) => void }) {
   const [project, setProject] = useState<Project>(initialProject);
+  const [researchEntities, setResearchEntities] = useState<ResearchEntity[]>([]);
+  const [writingProposal, setWritingProposal] = useState<string | null>(null);
+  const [writingProposalLabel, setWritingProposalLabel] = useState("Writing proposal");
+  const [selectedWritingSectionId, setSelectedWritingSectionId] = useState("");
+  const [writingWordTarget, setWritingWordTarget] = useState("");
+  const [writingMicroPrompt, setWritingMicroPrompt] = useState("");
+  const [authorVoice, setAuthorVoice] = useState<WritingAuthorVoice>("preserve");
+  const [refinementFocus, setRefinementFocus] = useState<"clarity" | "academic">("clarity");
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeAgent, setActiveAgent] = useState<AgentId>("outline");
   const [tab, setTab] = useState<"workspace" | "latex" | "literature" | "plots" | "python">("workspace");
@@ -125,18 +136,52 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     return task;
   };
   const records = useMemo(() => Object.fromEntries(project.agentRecords.map(r => [r.id, r])), [project.agentRecords]);
+  const groundedWritingContext = useMemo(() => buildGroundedWritingContext(researchEntities), [researchEntities]);
+  const selectedWritingSection = project.outline.find(section => section.id === selectedWritingSectionId) ?? project.outline[0];
+  const writingGuide = selectedWritingSection ? getWritingSectionGuide(selectedWritingSection.title, project.paperType ?? "unspecified") : null;
+  const availableWritingEvidenceIds = useMemo(() => [
+    ...groundedWritingContext.passages.map(item => item.id),
+    ...groundedWritingContext.verifiedResults.map(item => item.id)
+  ], [groundedWritingContext]);
+  const currentWritingEvidenceAudit = useMemo(() => inspectDraftEvidence(project.latex, availableWritingEvidenceIds), [project.latex, availableWritingEvidenceIds]);
+  const currentCitationAudit = useMemo(() => checkCitationKeys(project.latex, project.bibtex), [project.latex, project.bibtex]);
+  const proposalEvidenceAudit = useMemo(() => writingProposal ? inspectDraftEvidence(writingProposal, availableWritingEvidenceIds) : { linked: [], unresolved: [] }, [writingProposal, availableWritingEvidenceIds]);
+  const proposalCitationAudit = useMemo(() => writingProposal ? checkCitationKeys(writingProposal, project.bibtex) : { citedKeys: [], missingKeys: [], unusedKeys: [], duplicateKeys: [] }, [writingProposal, project.bibtex]);
+
+  useEffect(() => {
+    if (!project.outline.length) {
+      if (selectedWritingSectionId) setSelectedWritingSectionId("");
+      return;
+    }
+    if (!project.outline.some(section => section.id === selectedWritingSectionId)) {
+      setSelectedWritingSectionId(project.outline[0].id);
+      setWritingWordTarget("");
+      setWritingMicroPrompt("");
+    }
+  }, [project.outline, selectedWritingSectionId]);
 
   useEffect(() => {
     let live = true;
     setGpu("gpu" in navigator ? "WebGPU available" : "WebGPU unavailable");
+    setResearchEntities([]);
+    setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
+    setSelectedWritingSectionId("");
+    setWritingWordTarget("");
+    setWritingMicroPrompt("");
     setHydrated(false);
     setLoadError("");
     setPdf(undefined);
     listProjects().then(items => {
       if (live) setProjects(items.filter(item => !item.archivedAt));
     }).catch(() => {});
-    loadProject(projectId).then(saved => {
+    const evidencePromise = listResearchEntities(projectId).catch(error => {
+      if (live) setNotice("Project loaded, but the evidence library could not be refreshed: " + (error as Error).message);
+      return [];
+    });
+    Promise.all([loadProject(projectId), evidencePromise]).then(([saved, entities]) => {
       if (!live) return;
+      setResearchEntities(entities);
       if (!saved) {
         setLoadError("This project could not be found in the local research library.");
         setHydrated(true);
@@ -146,7 +191,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
       setProject(saved);
       setPdf(undefined);
       setHydrated(true);
-      setNotice("Project loaded. Changes are saved locally.");
+      setNotice("Project and available evidence loaded. Changes are saved locally.");
     }).catch(error => {
       if (!live) return;
       setLoadError((error as Error).message || "Could not load this project.");
@@ -235,6 +280,16 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     setStream("");
     return complete(prompt, token => { if (streamOutput) setStream(s => s + token); });
   };
+  const refreshEvidenceContext = async () => {
+    try {
+      const entities = await listResearchEntities(projectId);
+      if (projectRef.current.id !== projectId) return;
+      setResearchEntities(entities);
+      setNotice("Evidence context refreshed. " + entities.length + " project research record(s) are available to the writing co-pilot.");
+    } catch (error) {
+      setNotice("Could not refresh the project evidence context: " + (error as Error).message);
+    }
+  };
   const runOutline = async () => {
     setBusy(true); setAgent("outline", "running"); setActiveAgent("outline");
     try {
@@ -309,28 +364,56 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
     finally { setBusy(false); }
   };
   const runWriting = async () => {
+    if (busy) return;
+    const section = project.outline.find(item => item.id === selectedWritingSectionId) ?? project.outline[0];
+    if (!section) {
+      setNotice("Add or generate an outline section before drafting.");
+      return;
+    }
+    setWritingProposal(null);
     setBusy(true); setAgent("writing", "running"); setActiveAgent("writing");
     try {
-      let latex = project.latex;
-      const sections = project.outline;
-      if (!sections.length) throw new Error("Generate or add an outline first.");
-      for (const section of sections) {
-        const body = await ask(writingPrompt({ ...project, latex }, section), true);
-        latex = insertSection(latex, section.title, body);
-        patch({ latex });
-      }
-      setAgent("writing", "done", `Drafted ${sections.length} sections sequentially.`);
-      setNotice("Section drafting complete. Review every claim and citation.");
+      const guide = getWritingSectionGuide(section.title, project.paperType ?? "unspecified");
+      const target = Number(writingWordTarget) || guide.defaultWordTarget;
+      const prompt = buildWritingBlockPrompt(
+        project,
+        section,
+        groundedWritingContext.promptContext,
+        { wordTarget: target, authorVoice, microPrompt: writingMicroPrompt }
+      );
+      const body = await ask(prompt, true);
+      if (projectRef.current.id !== project.id) return;
+      const latex = insertSection(project.latex, section.title, body);
+      setWritingProposal(latex);
+      setWritingProposalLabel("Section draft: " + section.title);
+      setAgent("writing", "done", "Prepared a reviewable draft for “" + section.title + "”. The existing manuscript was not changed.");
+      setNotice("Section proposal ready. Inspect its evidence links and citation keys before accepting.");
     } catch (e) { setAgent("writing", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
+  const acceptWritingProposal = () => {
+    if (!writingProposal) return;
+    patch({ latex: writingProposal });
+    setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
+    setNotice("Writing proposal accepted by the researcher and saved to the local manuscript.");
+  };
+  const rejectWritingProposal = () => {
+    setWritingProposal(null);
+    setWritingProposalLabel("Writing proposal");
+    setNotice("Writing proposal rejected. The existing manuscript was left unchanged.");
+  };
   const runRefine = async () => {
+    setWritingProposal(null);
     setBusy(true); setAgent("refine", "running"); setActiveAgent("refine");
     try {
-      const result = parseJson<{issues:string[];revised_latex:string}>(await ask(refinePrompt(project)));
-      patch({ latex: result.revised_latex || project.latex });
+      const raw = await ask(refinePrompt(project, refinementFocus, authorVoice));
+      if (projectRef.current.id !== project.id) return;
+      const result = parseJson<{issues:string[];revised_latex:string}>(raw);
+      setWritingProposal(result.revised_latex || project.latex);
+      setWritingProposalLabel(refinementFocus === "academic" ? "Plain-language to academic refinement" : "Clarity refinement");
       setAgent("refine", "done", (result.issues || []).join("\n").slice(0, 1200));
-      setNotice(`Refinement complete: ${(result.issues || []).length} review notes.`);
+      setNotice("Clarity edits are proposed, not applied. Inspect the diff and accept or reject them.");
     } catch (e) { setAgent("refine", "error", (e as Error).message); setNotice((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -400,6 +483,38 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
   const runExport = () => exportProject(project, pdf);
 
   if (!hydrated) return <div className="studio-loading"><div className="studio-loading-mark"><Sparkles size={20}/></div><strong>Opening Writing Studio</strong><span>Loading your project's saved manuscript, sources and agent history…</span></div>;
+  const renderWritingAudit = (
+    evidenceAudit: ReturnType<typeof inspectDraftEvidence>,
+    citationAudit: ReturnType<typeof checkCitationKeys>,
+    label: string
+  ) => <section className="writing-audit-panel" aria-label={label}>
+    <div className="writing-audit-heading"><strong>{label}</strong><span>{evidenceAudit.linked.length} linked · {evidenceAudit.unresolved.length} unresolved · {citationAudit.missingKeys.length} missing citation key(s)</span></div>
+    {evidenceAudit.linked.length > 0 && <div className="writing-audit-list">
+      {evidenceAudit.linked.map((item, index) => {
+        const passage = groundedWritingContext.passages.find(value => value.id === item.evidenceId);
+        const result = groundedWritingContext.verifiedResults.find(value => value.id === item.evidenceId);
+        return <details key={item.evidenceId + "-" + index}>
+          <summary><span className="audit-state linked">Evidence linked</span>{item.claim || "Claim linked to evidence"}</summary>
+          <blockquote>{passage?.quote ?? result?.summary ?? "The evidence record is available, but its text is not currently in the writing context."}</blockquote>
+          <small>{passage ? "Source " + passage.sourceEntityId + " · " + (passage.locator || "locator not recorded") + " · researcher assessment: " + passage.judgement : result ? "Approved/verified analysis · " + result.title : "Evidence ID: " + item.evidenceId}</small>
+        </details>;
+      })}
+    </div>}
+    {evidenceAudit.unresolved.length > 0 && <div className="writing-audit-list unresolved">
+      {evidenceAudit.unresolved.map((item, index) => <div key={(item.evidenceId ?? item.claim) + "-" + index}>
+        <span className="audit-state unresolved">Needs verification</span><p>{item.claim || "Unspecified factual statement"}</p><small>{item.reason}</small>
+      </div>)}
+    </div>}
+    {evidenceAudit.linked.length === 0 && evidenceAudit.unresolved.length === 0 && <p className="writing-audit-empty">No explicit evidence markers found yet. Add [EVIDENCE: passage-id] or [SOURCE NEEDED] markers while reviewing factual claims.</p>}
+    <div className="citation-audit">
+      <strong>Citation key check</strong>
+      {citationAudit.citedKeys.length === 0 ? <p className="writing-audit-empty">No citation commands detected in this manuscript.</p> : citationAudit.missingKeys.length ? <p className="audit-warning">Missing from bibliography: {citationAudit.missingKeys.join(", ")}</p> : <p className="audit-ok">All cited keys were found in the current bibliography.</p>}
+      {citationAudit.unusedKeys.length > 0 && <small>Unused bibliography entries: {citationAudit.unusedKeys.join(", ")}</small>}
+      {citationAudit.duplicateKeys.length > 0 && <small>Duplicate bibliography keys: {citationAudit.duplicateKeys.join(", ")}</small>}
+    </div>
+    <p className="writing-audit-disclaimer">A linked marker confirms that the ID exists in the available evidence set; it does not prove that the passage supports the claim. Inspect the quotation and make the scientific judgement yourself.</p>
+  </section>;
+
   if (loadError) return <div className="studio-loading" role="alert"><strong>Unable to open this project</strong><span>{loadError}</span><button type="button" className="secondary-button" onClick={onBack}>Return to project workspace</button></div>;
 
   return <div className="app-shell">
@@ -467,7 +582,7 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
           {tab==="python" && <LocalPythonPanel/>}
           {tab==="workspace" && <>
             <div className="studio-project-context"><span>PROJECT RESEARCH BRIEF</span><p>{project.researchQuestion || project.notes || "No research question has been added yet. Add one in the project overview to ground the writing agents."}</p>{(project.objectives?.length || project.methodology) ? <small>{project.objectives?.length ? "Objectives: " + project.objectives.join(" · ") : ""}{project.objectives?.length && project.methodology ? "  |  " : ""}{project.methodology ? "Methodology: " + project.methodology : ""}</small> : null}</div>
-            <div className="agent-heading"><div><div className="eyebrow">AGENT PIPELINE / {activeAgent.toUpperCase()}</div><h1>{AGENTS.find(a=>a.id===activeAgent)?.label} <span>Agent</span></h1><p>{AGENTS.find(a=>a.id===activeAgent)?.description}. Review outputs before continuing.</p></div><button type="button" className="primary-button" disabled={busy} onClick={runAgent}>{busy?<Loader2 className="spin" size={15}/>:<Play size={14}/>} Run agent</button></div>
+            <div className="agent-heading"><div><div className="eyebrow">AGENT PIPELINE / {activeAgent.toUpperCase()}</div><h1>{AGENTS.find(a=>a.id===activeAgent)?.label} <span>Agent</span></h1><p>{AGENTS.find(a=>a.id===activeAgent)?.description}. Review outputs before continuing.</p></div><button type="button" className="primary-button" disabled={busy} onClick={runAgent}>{busy?<Loader2 className="spin" size={15}/>:<Play size={14}/>} {activeAgent === "writing" ? "Draft selected section" : activeAgent === "refine" ? (refinementFocus === "academic" ? "Propose academic rewrite" : "Propose clarity edits") : "Run agent"}</button></div>
             <div className="agent-card" aria-busy={busy}>
               <div className="card-top"><span className="card-title"><Sparkles size={14}/> {activeAgent==="outline"?"Research blueprint":activeAgent==="literature"?"Literature discovery":activeAgent==="plots"?"Experiment visualization":activeAgent==="writing"?"Section drafting":"Manuscript quality review"}</span><span className={`status ${records[activeAgent]?.status}`}>{records[activeAgent]?.status || "idle"}</span></div>
               {activeAgent==="outline" ? <div className="outline-list">
@@ -477,10 +592,40 @@ export default function Studio({ projectId, onBack, onSelectProject }: { project
                 {project.papers.map((p,i)=><div className="paper-row" key={i}><div className="paper-icon"><BookOpen size={15}/></div><div><strong>{p.title}</strong><p>{p.authors?.slice(0,4).join(", ")} {p.year?`· ${p.year}`:""}</p>{p.url&&<a href={p.url} target="_blank" rel="noreferrer">Open source ↗</a>}</div></div>)}
                 {!project.papers.length&&<div className="empty-state">Searches are grounded in Semantic Scholar metadata. Run the agent to retrieve candidate papers.</div>}
               </div> : activeAgent==="plots" ? <div className="plot-grid">{project.figures.map((f,i)=><div className="plot-thumb" key={i}>{f.png&&<img src={`data:${f.mime || "image/png"};base64,${f.png}`} alt={f.name}/>}<span>{f.name}</span></div>)}{!project.figures.length&&<div className="empty-state">Import a CSV or JSON dataset, then run the plotting agent.</div>}</div> :
-              <div className="empty-state">{activeAgent==="writing"?"Drafts each outline section sequentially into the LaTeX source.":"Checks LaTeX structure, citation keys, and academic tone. Review suggested edits."}</div>}
+              <div className="empty-state">{activeAgent==="writing"?"Drafts the selected outline section as a reviewable proposal. The manuscript changes only after you accept it.":"Checks LaTeX structure, citation keys, and academic tone. Review suggested edits."}</div>}
+              {activeAgent==="writing" && <section className="writing-coach-panel" aria-label="Section writing controls">
+                <div className="writing-coach-head"><div><span className="eyebrow">SECTION-BY-SECTION COACH</span><strong>Draft one block at a time</strong><p>Choose a section, set a target and focus the co-pilot on a specific writing problem. Nothing enters the manuscript until you accept it.</p></div><button type="button" className="secondary-button" onClick={() => void refreshEvidenceContext()}><RefreshCw size={12}/> Refresh evidence</button></div>
+                {project.outline.length === 0 ? <p className="writing-audit-empty">Create an outline first. The section list will appear here.</p> : <>
+                  <div className="writing-coach-fields">
+                    <label>Section to draft<select value={selectedWritingSection?.id ?? ""} onChange={event => { setSelectedWritingSectionId(event.target.value); setWritingWordTarget(""); setWritingMicroPrompt(""); }}>
+                      {project.outline.map(section => <option key={section.id} value={section.id}>{section.title}</option>)}
+                    </select></label>
+                    <label>Target words<input type="number" min={50} max={10000} value={writingWordTarget || writingGuide?.defaultWordTarget || 400} onChange={event => setWritingWordTarget(event.target.value)}/></label>
+                    <label>Writing voice<select value={authorVoice} onChange={event => setAuthorVoice(event.target.value as WritingAuthorVoice)}>
+                      <option value="preserve">Preserve my voice</option><option value="formal">Formal academic</option><option value="concise">Concise academic</option><option value="accessible">Accessible scholarly</option>
+                    </select></label>
+                  </div>
+                  {writingGuide && <div className="writing-section-guide"><strong>What this section should do</strong><p>{writingGuide.purpose}</p><small>{writingGuide.evidenceReminder}</small></div>}
+                  <label className="writing-micro-label">Focus for this drafting pass<textarea rows={2} value={writingMicroPrompt} onChange={event => setWritingMicroPrompt(event.target.value)} placeholder="e.g. Explain why this study design is appropriate for the primary outcome."/></label>
+                  {writingGuide && <div className="writing-prompt-lists">
+                    <div><strong>Helpful prompts</strong>{writingGuide.microPrompts.map((prompt, index) => <button type="button" key={index} onClick={() => setWritingMicroPrompt(prompt)}>{prompt}</button>)}</div>
+                    <div><strong>Sentence starters</strong>{writingGuide.sentenceStarters.map((starter, index) => <button type="button" key={index} onClick={() => setWritingMicroPrompt("Start the section with: " + starter)}>{starter}</button>)}</div>
+                  </div>}
+                </>}
+              </section>}
+              {activeAgent==="writing" && renderWritingAudit(currentWritingEvidenceAudit, currentCitationAudit, "Current manuscript evidence and citation audit")}
+              {activeAgent==="refine" && <section className="writing-coach-panel" aria-label="Manuscript clarity refinement controls">
+                <div className="writing-coach-head"><div><span className="eyebrow">CLARITY & ACADEMIC STYLE</span><strong>Refine without changing the science</strong><p>Choose how to improve the prose. Every revision is staged for your review and acceptance.</p></div></div>
+                <div className="writing-coach-fields">
+                  <label>Refinement focus<select value={refinementFocus} onChange={event => setRefinementFocus(event.target.value as "clarity" | "academic")}><option value="clarity">Clarity, flow and concision</option><option value="academic">Plain language to academic prose</option></select></label>
+                  <label>Author voice<select value={authorVoice} onChange={event => setAuthorVoice(event.target.value as WritingAuthorVoice)}><option value="preserve">Preserve my voice</option><option value="formal">Formal academic</option><option value="concise">Concise academic</option><option value="accessible">Accessible scholarly</option></select></label>
+                </div>
+              </section>}
+
               {records[activeAgent]?.summary&&<div className="agent-summary"><strong>Latest agent summary</strong><p>{records[activeAgent].summary}</p></div>}
             </div>
             {activeAgent==="plots"&&<div className="feedback-box"><label>Regenerate with feedback</label><div><input aria-label="Plot regeneration instructions" value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="e.g. Use a log scale and emphasize the intervention period"/><button type="button" className="secondary-button" onClick={()=>{patch({notes:project.notes+"\nPlot feedback: "+feedback});void runPlots();}}><RefreshCw size={13}/> Regenerate</button></div></div>}
+            {writingProposal && (activeAgent==="writing" || activeAgent==="refine") && <section className="agent-summary writing-proposal-review" aria-label="Writing proposal review"><strong>{writingProposalLabel}</strong><p>The current manuscript remains unchanged. Inspect the proposed text, linked evidence, unresolved claims and citation keys before accepting.</p><div className="proposal-diff"><div><b>Current manuscript</b><pre>{project.latex.slice(0, 2600)}</pre></div><div><b>Proposed manuscript</b><pre>{writingProposal.slice(0, 2600)}</pre></div></div><p>{(writingProposal.match(/\[SOURCE NEEDED\]/g) || []).length} source-needed marker(s) · {(writingProposal.match(/\[EVIDENCE:/g) || []).length} evidence marker(s)</p>{renderWritingAudit(proposalEvidenceAudit, proposalCitationAudit, "Proposed manuscript evidence and citation audit")}<div className="proposal-actions"><button type="button" className="primary-button" disabled={busy} onClick={acceptWritingProposal}>Accept proposal</button><button type="button" className="secondary-button" disabled={busy} onClick={rejectWritingProposal}>Reject proposal</button></div></section>}
             <div className="runtime-log"><span className="log-label">AGENT CONSOLE</span><p role={noticeIsError ? "presentation" : "status"} aria-live={noticeIsError ? "off" : "polite"}>{notice}</p>{stream&&<pre>{stream.slice(-1200)}</pre>}</div>
           </>}
           {tab==="latex"&&<div className="editor-wrap"><div className="editor-toolbar"><span><FileText size={14}/> manuscript.tex</span><span className="muted">LaTeX · UTF-8</span></div><textarea className="latex-editor" aria-label="LaTeX manuscript source" spellCheck={false} value={project.latex} onChange={e=>patch({latex:e.target.value})}/></div>}
