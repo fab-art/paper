@@ -3,6 +3,7 @@ import { ClipboardCheck, ShieldCheck } from "lucide-react";
 import type { Project, ScientificAuditRecord } from "../../../../frontend/src/lib/types";
 import { listLocalProjects, listProjectAttachments, updateLocalProject } from "../adapters/legacy-projects";
 import { createScientificAudit, finalizeScientificAudit, summarizeScientificAudit, updateAuditFinding } from "../domain/scientific-publication.mjs";
+import ReviewerJournalTools from "../../../../frontend/src/components/ScientificAuditWorkspace";
 
 export default function ScientificAuditWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -103,5 +104,10 @@ export default function ScientificAuditWorkspace() {
       </article>)}
       <div className="publish-signoff"><p>Sign-off records that a named researcher reviewed every checklist item. It does not certify the study as valid or replace institutional or peer review.</p><button type="button" className="publish-button" disabled={saving || !reviewer.trim() || summary?.unreviewed !== 0 || Boolean(audit.signoff)} onClick={() => void signOff()}><ClipboardCheck size={15}/> Sign off audit</button></div>
     </>}
+    <details className="publish-advanced-tools">
+      <summary>Reviewer simulator and journal-fit advisor</summary>
+      <p className="page-subtitle">These tools inspect the same local project record. Reviewer perspectives are simulated, and journal metadata must be independently verified before relying on it.</p>
+      <ReviewerJournalTools project={project}/>
+    </details>
   </section>;
 }
