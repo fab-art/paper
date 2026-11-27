@@ -33,7 +33,7 @@ test.describe("Research GPS", () => {
   test("keeps Research GPS usable at mobile width", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/research-gps");
-    await expect(page.getByRole("heading", { name: "Research GPS" })).toBeVisible().catch(() => undefined);
+    await expect(page.getByRole("heading", { name: "Research GPS" })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
   });
