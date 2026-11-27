@@ -6,3 +6,12 @@ export function canManageProjectMembers(role: string | null | undefined): boolea
 export function validateMemberAssignment(userId: string, role: "editor" | "viewer"): { userId: string; role: "editor" | "viewer" };
 export function mergeSharedProjectPayload(localProject: Project, remotePayload: unknown, options?: { cloudProjectId?: string; cloudRevision?: number }): Project;
 export function normalizeProjectComment(input: { projectId: string; authorId: string; body: string }): { project_id: string; author_id: string; body: string; resource_type: "project" };
+export function refreshSelectedSharedProject(
+  rows: Array<{ id: string }>,
+  selectedId: string,
+  handlers: {
+    refreshDetails: (projectId: string) => Promise<void>;
+    setSelectedId: (projectId: string) => void;
+    clearDetails: () => void;
+  }
+): Promise<string>;
