@@ -2,13 +2,13 @@
 
 **Date:** 27 November 2026  
 **Release source:** `release/research-factory-production-cutover`  
-**Decision:** Preserve the active implementations in `apps/web/`; do not merge the older divergent Phase 2–6 branches directly.
+**Decision:** Preserve the integrated implementations in `apps/web/` and the compatible Stage 2 research modules; do not merge divergent historical branches directly.
 
 ## Why the old pull requests are not merged as-is
 
-The former PRs #21–25 were created from an earlier revision of the independent frontend branch. Their commit histories have diverged from the current Phase 14 line, and GitHub reports conflicts on the Phase 2 branch. The current release line already contains the same product capabilities in a different, integrated component structure. Merging those PRs would introduce a second implementation of several workspaces and risk duplicate routes, duplicated persistence logic and regressions to the existing IndexedDB adapter.
+The former PRs #21–25 were created from an earlier revision of the independent frontend branch. Their commit histories have diverged from the current release line, and GitHub reports conflicts on the older Phase 2 branch. PRs #18–19 contain the Stage 2 Research GPS, grounded-writing, data-intelligence, scientific-auditor, reviewer-simulation and journal-advisor capabilities. Those modules have been ported into the active Research Factory structure and are surfaced through Research GPS, Writing Studio, Data & Methods and Scientific Audit. PR #15's owner-controlled architecture brief is retained in `docs/research-factory-blueprint.md`. Merging those historical PRs directly would duplicate implementations and risk the IndexedDB adapter.
 
-The correct integration is therefore a feature-parity integration, not a raw branch merge. Once this audit and the release verification are accepted, close PRs #21–25 as superseded and link them to the consolidated release PR.
+The correct integration is therefore a feature-parity integration, not a raw branch merge. Once this audit and the release verification are accepted, close PRs #15, #18–30 as superseded and link them to the consolidated release PR.
 
 ## Capability mapping
 
@@ -18,7 +18,7 @@ The correct integration is therefore a feature-parity integration, not a raw bra
 | Phase 3 — Research Blueprint & Protocol | #22 | `ResearchBlueprintWorkspace.tsx`, `ProductionLineWorkspace.tsx`, `research-orchestration.mjs` | Blueprint completeness, owner approval, version invalidation, task dependencies and researcher-confirmed completion are active. |
 | Phase 4 — Literature Discovery & Evidence | #23 | `LiteratureDiscovery.tsx`, `EvidenceWorkspace.tsx`, `EvidenceIntelligence.tsx`, `literature-discovery.mjs`, `evidence-appraisal.mjs` | Semantic Scholar discovery, DOI/title deduplication, BibTeX, claim/source traceability, protocol methods, study extraction and researcher-led appraisal are active. |
 | Phase 5 — Data & Methods | #24 | `DataMethodsLab.tsx`, `DataAnalysisWorkspace.tsx`, `dataset-analysis.mjs`, `data-methods-worker.ts` | Local CSV/TSV parsing, bounded previews, variable profiles and transparent dataset summaries are active. |
-| Phase 6 — Writing Studio | #25 | `WritingStudioWorkspace.tsx`, `Studio.tsx`, `writing-document.mjs`, `LocalPythonPanel.tsx` | Local manuscript editing, autosave/revision guards, WebLLM options, LaTeX/BibTeX, templates, notes/data import and optional local compute are active. |
+| Phase 6 — Writing Studio | #25 | `WritingStudioWorkspace.tsx`, `Studio.tsx`, `writing-document.mjs`, `LocalPythonPanel.tsx` | Local manuscript editing, autosave/revision guards, WebLLM options, LaTeX/BibTeX, templates, notes/data import and optional local compute are active. |\n| Stage 2 — Research GPS and research intelligence | #18 | `ResearchGPSWorkspace.tsx`, `ResearchPlanEditor.tsx`, `research-intake.ts`, `writing-grounding.ts`, `writing-guidance.ts`, `research-analysis.ts`, `DataMethodsLab.tsx` | Five starting routes, persisted editable station plans, story arcs and milestones; source-linked writing context, section-level draft staging, claim/citation audits, design-aware analysis recommendations, study-specific compliance declarations and reproducible manifests are active. |\n| Stage 2 — Scientific Auditor, reviewer simulator and journal advisor | #19 | `ScientificAuditWorkspace.tsx`, `scientific-audit.mjs` | Traceable checks for evidence, citations, methods, analysis reproducibility and manuscript consistency; simulated reviewer perspectives and journal-fit assessment are active. Simulations are disclosed and journal metadata remains researcher-supplied. |
 
 ## Data and security boundaries retained
 
@@ -39,7 +39,7 @@ The Phase 14 release line was checked from a clean clone under Node.js 22.23.5:
 - Root, legacy frontend and Research Factory dependency audits: **0 vulnerabilities**.
 - TypeScript strict check and Vite production build: **passed**.
 
-The release branch adds additional project-management and Publish/Manage route E2E coverage before production promotion.
+The final release line also verifies the new Research GPS route, Research GPS persistence and mobile layout. All three dependency audits report zero vulnerabilities.
 
 ## Remaining distinctions and honest limitations
 
@@ -51,4 +51,4 @@ The release branch adds additional project-management and Publish/Manage route E
 
 ## Release decision
 
-Use the consolidated Phase 14 line as the sole release candidate. After the added E2E checks and staged Vercel preview pass, merge the consolidated release PR to `main`, close superseded PRs #20–29 with a link to the release PR, and promote the exact staged deployment to `paper-eta-mauve.vercel.app`.
+Use the consolidated release line as the sole release candidate. After the exact release commit passes staged Vercel route/API smoke tests, merge PR #31 to `main`, close superseded PRs #15 and #18–30 with a link to the consolidated release, and promote the exact verified deployment to `paper-eta-mauve.vercel.app`.
