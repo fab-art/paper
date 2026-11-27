@@ -1,6 +1,7 @@
 export const WORKSPACES = Object.freeze([
   { id: "station", label: "Research Station", group: "Workspace", path: "/", status: "active" },
   { id: "projects", label: "Projects", group: "Workspace", path: "/projects", status: "active" },
+  { id: "research-gps", label: "Research GPS", group: "Plan & orchestrate", path: "/research-gps", status: "active" },
   { id: "blueprint", label: "Research Blueprint", group: "Plan & orchestrate", path: "/blueprint", status: "active" },
   { id: "production", label: "Production Line", group: "Plan & orchestrate", path: "/production", status: "active" },
   { id: "orchestration", label: "Intelligent Orchestration", group: "Plan & orchestrate", path: "/orchestration", status: "active" },
