@@ -64,7 +64,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
     setStoryArc(project.storyArc?.length ? project.storyArc : intake.storyArc);
     setError("");
     setNotice("");
-  }, [projectId, project?.updatedAt]);
+  }, [projectId]);
 
   const route = useMemo(() => getResearchEntryPlan(startPath, paperType), [startPath, paperType]);
   const nextAction = useMemo(() => project ? getResearchNextAction({
