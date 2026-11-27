@@ -7,7 +7,7 @@ The Research Factory brings project management, research planning, literature di
 
 ## Research Factory release inventory
 
-The current application exposes these active stations: Research Station, Projects, Research Blueprint, Production Line, Intelligent Orchestration, Literature Discovery, Evidence Workspace, Writing Studio, Data & Methods, Systematic Reviews, Scientific Audit, Publication, Collaboration and Settings. The older Phase 2–6 pull requests are superseded by the equivalent migrated workspaces in `apps/web/src/components/`; see [the Phase 2–6 parity audit](docs/release/phase2-6-parity-audit.md).
+The current application exposes these active stations: Research Station, Projects, Research GPS, Research Blueprint, Production Line, Intelligent Orchestration, Literature Discovery, Evidence Workspace, Writing Studio, Data & Methods, Systematic Reviews, Scientific Audit, Publication, Collaboration and Settings. The older Phase 2–6 pull requests are superseded by the equivalent migrated workspaces in `apps/web/src/components/`; see [the Phase 2–6 parity audit](docs/release/phase2-6-parity-audit.md).
 
 The production cutover is staged separately from feature development. The release candidate must pass Node 22 typecheck/build, all unit and repository regression tests, Playwright, dependency audits and a preview deployment in the existing production project before its domain is promoted. Native Limrun emulator acceptance is currently unavailable because the account has no credits; responsive Playwright coverage is used as the automated fallback and is not represented as a native-device test.
 
