@@ -1,6 +1,15 @@
-# PaperOrchestra Studio — Hybrid Vercel + Railway
+# PaperOrchestra — Research Factory
 
-PaperOrchestra Studio is a local-first academic writing PWA inspired by Google Research's PaperOrchestra. Vercel hosts the application, WebLLM runs in the user's browser, and Railway hosts a protected Python + TeX compute service.
+PaperOrchestra is a local-first research environment inspired by Google Research's PaperOrchestra. The active Research Factory frontend lives in `apps/web/`; the legacy implementation in `frontend/` remains in the repository as a compatibility and data adapter for the existing IndexedDB records and research engines.
+
+The Research Factory brings project management, research planning, literature discovery, evidence appraisal, systematic reviews, data inspection, manuscript writing, scientific audit, publication preparation and optional collaboration into one application. IndexedDB remains the default source of truth. Supabase cloud sharing is opt-in.
+
+
+## Research Factory release inventory
+
+The current application exposes these active stations: Research Station, Projects, Research Blueprint, Production Line, Intelligent Orchestration, Literature Discovery, Evidence Workspace, Writing Studio, Data & Methods, Systematic Reviews, Scientific Audit, Publication, Collaboration and Settings. The older Phase 2–6 pull requests are superseded by the equivalent migrated workspaces in `apps/web/src/components/`; see [the Phase 2–6 parity audit](docs/release/phase2-6-parity-audit.md).
+
+The production cutover is staged separately from feature development. The release candidate must pass Node 22 typecheck/build, all unit and repository regression tests, Playwright, dependency audits and a preview deployment in the existing production project before its domain is promoted. Native Limrun emulator acceptance is currently unavailable because the account has no credits; responsive Playwright coverage is used as the automated fallback and is not represented as a native-device test.
 
 ## Runtime architecture
 
@@ -14,12 +23,18 @@ PaperOrchestra Studio is a local-first academic writing PWA inspired by Google R
 
 The compute engine does not host or invoke an LLM. Model inference stays in the browser. Python handles chart rendering and TeX compilation.
 
-## A. Vercel deployment
+## A. Vercel deployment — Research Factory
 
-1. Import this repository into Vercel. Keep the project root at the repository root, not frontend.
-2. Use the committed vercel.json build settings.
-3. Set Node.js to 22.x in Vercel Project Settings → General.
-4. Deploy.
+The Research Factory production target is the existing Vercel project **paper**, with project root directory set to `apps/web` and Node.js set to `22.x`. The existing production domain is `https://paper-eta-mauve.vercel.app`.
+
+1. Link the repository to the existing Vercel project.
+2. Set the project root directory to `apps/web`.
+3. Use the checked-in `apps/web/vercel.json` settings (Vite build, `dist` output and SPA rewrites).
+4. Ensure the project's existing VITE Supabase URL and publishable-key variables are scoped to Production and Preview.
+5. Add the documented optional compute and Semantic Scholar variables only when those services are configured.
+6. Deploy the exact verified release commit.
+
+The repository-root `vercel.json` is retained for the legacy `frontend/` application. It is not the build configuration for the Research Factory once the Vercel project root directory is `apps/web`.
 
 The WebLLM initialization callback is explicitly typed, fixing the reported TS7006 implicit-any error for parameter report. The PWA cache limit is raised to 12 MiB because the WebLLM assets exceed Workbox's 2 MiB default. The WebLLM runtime is lazy-loaded to reduce the initial application bundle.
 
