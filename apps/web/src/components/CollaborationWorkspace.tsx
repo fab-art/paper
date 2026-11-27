@@ -5,7 +5,7 @@ import type { Project } from "../../../../frontend/src/lib/types";
 import type { Json, Tables } from "../../../../frontend/src/lib/database.types";
 import { isSupabaseConfigured, supabase } from "../../../../frontend/src/lib/supabase";
 import { listLocalProjects, updateLocalProject } from "../adapters/legacy-projects";
-import { canEditSharedProject, canManageProjectMembers, createSharedProjectPayload, mergeSharedProjectPayload, normalizeProjectComment, validateMemberAssignment } from "../domain/collaboration.mjs";
+import { canEditSharedProject, canManageProjectMembers, createSharedProjectPayload, mergeSharedProjectPayload, normalizeProjectComment, refreshSelectedSharedProject, validateMemberAssignment } from "../domain/collaboration.mjs";
 
 type SharedProject = Tables<"shared_projects">;
 type Member = Tables<"project_members">;
@@ -64,8 +64,14 @@ export default function CollaborationWorkspace() {
       if (queryError) throw queryError;
       const rows = data ?? [];
       setSharedProjects(rows);
-      if (!rows.some(item => item.id === selectedCloudId)) setSelectedCloudId(rows[0]?.id ?? "");
-      setNotice("Shared project list refreshed.");
+      await refreshSelectedSharedProject(rows, selectedCloudId, {
+        refreshDetails,
+        setSelectedId: setSelectedCloudId,
+        clearDetails: () => {
+          setMembers([]); setComments([]); setActivity([]); setVersions([]); setProfileNames({});
+        }
+      });
+      setNotice("Shared project list and selected project details refreshed.");
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Shared projects could not be loaded."); }
     finally { setBusy(false); setLoading(false); }
   }
