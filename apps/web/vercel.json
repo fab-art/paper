@@ -7,6 +7,7 @@
     { "source": "/", "destination": "/index.html" },
     { "source": "/projects", "destination": "/index.html" },
     { "source": "/projects/:path*", "destination": "/index.html" },
+    { "source": "/research-gps", "destination": "/index.html" },
     { "source": "/blueprint", "destination": "/index.html" },
     { "source": "/production", "destination": "/index.html" },
     { "source": "/orchestration", "destination": "/index.html" },
