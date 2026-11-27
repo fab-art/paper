@@ -33,7 +33,7 @@ test.describe("Publish and Manage workspaces", () => {
 
   test("settings theme selector updates the visible theme", async ({ page }) => {
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
     await page.getByLabel("Color theme").selectOption("dark");
     await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "dark");
     await page.reload();
