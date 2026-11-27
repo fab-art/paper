@@ -36,6 +36,8 @@ export default function DataAnalysisWorkspace() {
     return () => { active = false; };
   }, [projectId]);
 
+  const selectedProject = projects.find(project => project.id === projectId) ?? null;
+
   return (
     <section className="data-analysis-workspace" aria-label="Dataset analysis workspace">
       <div className="data-analysis-context">
@@ -56,7 +58,7 @@ export default function DataAnalysisWorkspace() {
       {loading ? <div className="data-analysis-state" role="status">Opening your local research library…</div> :
         error ? <div className="data-analysis-state is-error" role="alert">{error}</div> :
         projects.length === 0 ? <div className="data-analysis-state"><FolderOpen size={22}/><strong>No research projects yet</strong><span>Create a project first, then add a dataset to its Research Library.</span></div> :
-        <DataMethodsLab attachments={attachments} />}
+        <DataMethodsLab attachments={attachments} project={selectedProject!} />}
     </section>
   );
 }
