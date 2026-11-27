@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { normalizeEnginePath } from "./path.mjs";
 
 const ALLOWED = new Set(["generate-plot", "compile-latex", "health"]);
 const WINDOW_SECONDS = 60;
@@ -28,8 +29,7 @@ async function enforceRateLimit(req: VercelRequest, path: string) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const raw = req.query.path;
-  const path = Array.isArray(raw) ? raw.join("/") : String(raw || "");
+  const path = normalizeEnginePath(req.query.path);
   if (!ALLOWED.has(path)) return res.status(404).json({ detail: "Unknown engine endpoint." });
 
   const base = process.env.PAPERORCHESTRA_ENGINE_URL?.replace(/\/$/, "");
