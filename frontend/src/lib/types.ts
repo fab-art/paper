@@ -107,6 +107,8 @@ export interface Project {
   availableMaterials?: string[];
   storyArc?: string[];
   researchMode?: "guided" | "professional";
+  startPath?: import("./research-intake").ResearchEntryPath;
+  researchPlan?: import("./research-intake").ResearchStationPlan;
   productionLine?: import("./research-blueprint").ProductionLine;
   cloudProjectId?: string;
   cloudRevision?: number;
