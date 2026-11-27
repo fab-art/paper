@@ -45,7 +45,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
     if (!project) return;
     const nextPath = project.startPath ?? "idea";
     const nextType = project.paperType ?? "empirical-study";
-    setProblem(project.description ?? "");
+    setProblem(project.researchProblem ?? "");
     setQuestion(project.researchQuestion ?? "");
     setAudience(project.intendedAudience ?? "");
     setMaterialsText((project.availableMaterials ?? []).join("\n"));
@@ -54,7 +54,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
     setPlan(project.researchPlan ?? createResearchStationPlan(nextType, nextPath));
     const intake = buildResearchIntake({
       title: project.name,
-      problemOrObservation: project.description ?? "",
+      problemOrObservation: project.researchProblem ?? "",
       researchQuestion: project.researchQuestion ?? "",
       intendedAudience: project.intendedAudience ?? "",
       availableMaterials: project.availableMaterials ?? [],
@@ -105,7 +105,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
       });
       const updated = await updateLocalProject({
         ...project,
-        description: intake.description,
+        researchProblem: intake.description,
         researchQuestion: intake.researchQuestion,
         intendedAudience: intake.intendedAudience,
         availableMaterials: intake.availableMaterials,
