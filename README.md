@@ -1,6 +1,15 @@
-# PaperOrchestra Studio — Hybrid Vercel + Railway
+# PaperOrchestra — Research Factory
 
-PaperOrchestra Studio is a local-first academic writing PWA inspired by Google Research's PaperOrchestra. Vercel hosts the application, WebLLM runs in the user's browser, and Railway hosts a protected Python + TeX compute service.
+PaperOrchestra is a local-first research environment inspired by Google Research's PaperOrchestra. The active Research Factory frontend lives in `apps/web/`; the legacy implementation in `frontend/` remains in the repository as a compatibility and data adapter for the existing IndexedDB records and research engines.
+
+The Research Factory brings project management, research planning, literature discovery, evidence appraisal, systematic reviews, data inspection, manuscript writing, scientific audit, publication preparation and optional collaboration into one application. IndexedDB remains the default source of truth. Supabase cloud sharing is opt-in.
+
+
+## Research Factory release inventory
+
+The current application exposes these active stations: Research Station, Projects, Research GPS, Research Blueprint, Production Line, Intelligent Orchestration, Literature Discovery, Evidence Workspace, Writing Studio, Data & Methods, Systematic Reviews, Scientific Audit, Publication, Collaboration and Settings. The older Phase 2–6 pull requests are superseded by the equivalent migrated workspaces in `apps/web/src/components/`; see [the Phase 2–6 parity audit](docs/release/phase2-6-parity-audit.md).
+
+The production cutover is staged separately from feature development. The release candidate must pass Node 22 typecheck/build, all unit and repository regression tests, Playwright, dependency audits and a preview deployment in the existing production project before its domain is promoted. Native Limrun emulator acceptance is currently unavailable because the account has no credits; responsive Playwright coverage is used as the automated fallback and is not represented as a native-device test.
 
 ## Runtime architecture
 
@@ -14,12 +23,18 @@ PaperOrchestra Studio is a local-first academic writing PWA inspired by Google R
 
 The compute engine does not host or invoke an LLM. Model inference stays in the browser. Python handles chart rendering and TeX compilation.
 
-## A. Vercel deployment
+## A. Vercel deployment — Research Factory
 
-1. Import this repository into Vercel. Keep the project root at the repository root, not frontend.
-2. Use the committed vercel.json build settings.
-3. Set Node.js to 22.x in Vercel Project Settings → General.
-4. Deploy.
+The Research Factory production target is the existing Vercel project **paper**, with project root directory set to `apps/web` and Node.js set to `22.x`. The existing production domain is `https://paper-eta-mauve.vercel.app`.
+
+1. Link the repository to the existing Vercel project.
+2. Set the project root directory to `apps/web`.
+3. Use the checked-in `apps/web/vercel.json` settings (Vite build, `dist` output and SPA rewrites).
+4. Ensure the project's existing VITE Supabase URL and publishable-key variables are scoped to Production and Preview.
+5. Add the documented optional compute and Semantic Scholar variables only when those services are configured.
+6. Deploy the exact verified release commit.
+
+The repository-root `vercel.json` is retained for the legacy `frontend/` application. It is not the build configuration for the Research Factory once the Vercel project root directory is `apps/web`.
 
 The WebLLM initialization callback is explicitly typed, fixing the reported TS7006 implicit-any error for parameter report. The PWA cache limit is raised to 12 MiB because the WebLLM assets exceed Workbox's 2 MiB default. The WebLLM runtime is lazy-loaded to reduce the initial application bundle.
 
@@ -103,6 +118,26 @@ The local engine binds only to `127.0.0.1:8765`. It creates `%USERPROFILE%\\Pape
 See [desktop/README.md](desktop/README.md) for setup and troubleshooting. Python scripts run with the permissions of the signed-in Windows account; the workspace is not a security sandbox. Only execute code you trust. Never forward port 8765 to the internet.
 
 
+
+## Phase 3 — Literature Discovery
+
+The independent Research Factory now includes a Semantic Scholar discovery workspace with project-linked local search history, metadata inspection, DOI/title duplicate handling, project-library saving and BibTeX export. It reuses the existing /api/search-papers provider proxy, cache and rate-limit cooldown, and writes to the existing IndexedDB project records through revision safeguards. Search results remain discovery leads and bibliographic metadata must be checked against publisher records. See [Phase 3 architecture and safeguards](docs/phase3-literature-discovery.md).
+
+
+## Phase 4 — Evidence Extraction and Appraisal
+
+The Evidence Workspace now combines the migrated claim-to-source evidence trail and protocol/methods builder with project-linked study-characteristic extraction, provenance notes, and researcher-led risk-of-bias appraisal prompts for randomized trials, non-randomized interventions, diagnostic-accuracy studies, observational studies, analytical cross-sectional studies and qualitative research. Records are stored in the existing local systematic-review data model; no automatic quality score or risk judgment is generated. See [Phase 4 scope and safeguards](docs/phase4-evidence-appraisal.md).
+
+
+## Phase 5 — Data & Methods
+
+The independent Research Factory now includes a dedicated local-first Data & Methods station. It reads CSV/TSV attachments from existing project records, parses them in a bounded Web Worker, profiles variable types and descriptive summaries, and reports missing cells, duplicate rows and complete rows in the retained preview. Original attachments remain unchanged; summaries are descriptive checks, not statistical inference. See [Phase 5 scope and safeguards](docs/phase5-dataset-analysis.md).
+
+
+## Phase 6 — Writing Studio
+
+The independent Research Factory now includes the migrated local-first Writing Studio: project-linked LaTeX and BibTeX editing, guarded autosave, local WebLLM writing agents, outline/literature/plot/refinement workflows, CVPR and ICLR templates, citation-key checks, print preview, ZIP export and the optional Windows Python companion. Manuscript records continue to use the existing IndexedDB store and write guards. Search and native compile endpoints still depend on the existing compute/API configuration. See [Phase 6 scope and integration boundaries](docs/phase6-writing-studio.md).
+
 ## Phase 7 — Optional cloud collaboration
 
 PaperOrchestra remains local-first. Existing research projects are stored in the browser's IndexedDB and are not uploaded when a user signs in. Cloud collaboration is enabled only after the owner explicitly shares a project.
@@ -141,3 +176,25 @@ The current Research Station dashboard concept is available in the private [Magi
 ### Phase 9 implementation status
 
 The dashboard visual concept is available in the [MagicPath prototype](https://designs.magicpath.ai/v1/radiant-dawn-6040). The production migration will use the published [Lumen React 4.3.0 adapter](https://www.npmjs.com/package/@santi020k/lumen-react) and its matching dependency family, not the newer 5.3.0 MCP catalog contract. The real dashboard's IndexedDB workflows and opt-in Supabase behavior remain authoritative. See [Phase 9 implementation notes](docs/phase9-lumen-redesign.md).
+
+
+## Phase 10 — Plan & Orchestrate
+
+The independent Research Factory now includes a project-linked Research Blueprint and Production Line. The Blueprint structures research questions (PICO, PECO, PICOT, SPIDER or custom), objectives, methods, eligibility criteria, search sources, analysis, ethics and feasibility, with explicit researcher approval. The Production Line provides a dependency-aware workflow from blueprint approval through literature, evidence, analysis, writing, verification and publication, plus custom tasks and due dates. The Blueprint uses the existing version-aware IndexedDB `researchBlueprints` store and the Production Line is stored on the existing project record; no automatic Supabase upload or new cloud schema is introduced. Changes to an approved blueprint revoke its approval and block downstream work until it is approved again. AI agents do not autonomously make scientific decisions or execute consequential actions. See [Phase 10 architecture and safeguards](docs/phase10-plan-orchestrate.md).
+
+## Phase 11 — Intelligent Research Orchestration
+
+The Research Factory now adds a browser-local AI orchestration workspace connected to the Production Line. Started tasks with completed dependencies and an approved blueprint can be prepared as bounded task briefs, enriched with saved paper abstracts, extracted study characteristics, dataset file metadata and a limited manuscript excerpt. The existing WebLLM runtime generates structured proposals; source identifiers are validated, researcher identity is required for decisions, and each proposal carries an audit trail. Approved deliverables can be attached to the task only while its task and blueprint versions remain current. Applying a proposal never completes a task, changes scientific judgments or uploads project data to Supabase. See [Phase 11 architecture and safeguards](docs/phase11-intelligent-orchestration.md).
+
+
+## Phase 12 — Systematic Reviews
+
+The Systematic Reviews station is now active in the Research Factory. It wraps the existing systematic-review engine and connects it to local projects, retaining DOI-first deduplication, protocol management, title/abstract and full-text screening, PRISMA-style flow counts, study extraction, researcher-led risk-of-bias assessments and evidence-matrix CSV export. Review records remain in the existing IndexedDB project store; rapid edits are serialized through the project's revision guard. Screening and appraisal decisions are never automated. See [Phase 12 implementation and safeguards](docs/phase12-systematic-reviews.md).
+
+## Phase 13 — Scientific Audit and Publication
+
+The Publish group now includes Scientific Audit and Publication. Scientific Audit provides a researcher-led checklist for protocol alignment, evidence provenance, study selection, extraction, appraisal, reproducibility, ethics, conflicts and manuscript traceability, with named reviewer decisions and sign-off only after every finding is reviewed. It deliberately provides no automated scientific quality score. Publication manages journal metadata, authorship, declarations, submission readiness, cover-letter drafting and metadata export. External journal submission remains a human action and must be explicitly confirmed before the local status is recorded. Both stations preserve local-first project storage. See [Phase 13 implementation and safeguards](docs/phase13-scientific-audit-publication.md).
+
+## Phase 14 — Collaboration and Settings
+
+The Manage group now includes optional Supabase collaboration and local account/settings controls. Owners can share local projects explicitly, manage existing account members as editors or viewers, track comments/activity/version snapshots, and manually push or pull version-checked project snapshots. The browser uses only the Supabase publishable key and the existing RLS-protected schema/RPCs. Local execution logs, agent records, templates and binary figure assets are excluded from shared payloads. Settings provides theme selection, profile/account identity, privacy details and local project-record backup export. Realtime is not enabled on the collaboration tables, so refresh is explicit. Invitations currently require an existing PaperOrchestra account UUID; no email-invitation service is claimed. See [Phase 14 implementation and safeguards](docs/phase14-collaboration-settings.md).

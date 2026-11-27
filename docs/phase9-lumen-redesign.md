@@ -134,12 +134,14 @@ Before implementation, inspect each component's installed-version public exports
 - Regression tests, TypeScript, production build and Vercel Preview pass on the same commit.
 - Independent review findings are addressed before the redesign is merged.
 
-## Current baseline and release blockers
+## Current baseline and release status — 27 November 2026
 
-- Existing app: React 19 + Vite 6, npm workspaces via root/frontend package manifests, Node 22.
-- Lumen is not yet installed in the repository; the React catalog currently reports 5.3.0.
-- Phase 8 GitHub Actions workflow passed for the inspected head, but the Vercel status is `build-rate-limit`; a READY preview for that exact head was not available.
-- The earlier phase PRs are drafts and stacked. Do not merge them solely because GitHub reports `mergeable=true`; mergeability is not equivalent to passing CI, deployment, review or product acceptance.
+- The active Research Factory is React 19 + Vite 6 in `apps/web/`, built with Node 22.
+- Lumen React `4.3.0` and matching runtime packages are installed and pinned in the Research Factory lockfile.
+- The latest Phase 14 line has a READY Vercel preview and passes strict TypeScript, 74 unit tests, 25 Playwright E2E tests, 168 repository regression tests and all three dependency audits with zero vulnerabilities.
+- The former Phase 2–6 pull requests are divergent from the release line and their capabilities are represented by the active migrated workspaces. They must not be merged blindly; see [the Phase 2–6 parity audit](release/phase2-6-parity-audit.md).
+- Production remains on the legacy Vercel root until the Research Factory is staged in the existing `paper` project with root directory `apps/web` and the exact verified deployment is promoted.
+- Limrun native-device testing is still unavailable because the account has no credits. Playwright responsive tests are the automated fallback, not a native-device certification.
 
 ## Implementation checkpoint — 25 November 2026
 

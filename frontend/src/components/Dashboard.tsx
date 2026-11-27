@@ -5,14 +5,14 @@ import type { Project } from "../lib/types";
 import { listProjects, saveProject, restoreProject, deleteProjectAndData } from "../lib/db";
 import AuthPanel from "./AuthPanel";
 import "./dashboard-intake.css";
-import { buildResearchIntake, PAPER_TYPE_BLUEPRINTS } from "../lib/research-intake";
+import { buildResearchIntake, PAPER_TYPE_BLUEPRINTS, RESEARCH_ENTRY_PATHS, getResearchEntryPlan, type ResearchEntryPath } from "../lib/research-intake";
 import type { ResearchPaperType } from "../lib/research-blueprint";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeProject = (intake: ReturnType<typeof buildResearchIntake>): Project => ({
   id: uid(), name: intake.title, notes: intake.description ? `Research context: ${intake.description}` : "", researchQuestion: intake.researchQuestion || undefined,
   paperType: intake.paperType, intendedAudience: intake.intendedAudience,
-  availableMaterials: intake.availableMaterials, storyArc: intake.storyArc, researchMode: intake.researchMode,
+  availableMaterials: intake.availableMaterials, storyArc: intake.storyArc, researchMode: intake.researchMode, startPath: intake.startPath,
   latex: "\\documentclass{article}\n\\usepackage{graphicx}\n\\usepackage{natbib}\n\\title{Research Manuscript}\n\\begin{document}\n\\maketitle\n\\end{document}",
   bibtex: "", template: "Generic Article", outline: [], papers: [], figures: [], logs: "", templateFiles: {},
   agentRecords: [
@@ -43,6 +43,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
   const [audience, setAudience] = useState("");
   const [materials, setMaterials] = useState("");
   const [paperType, setPaperType] = useState<ResearchPaperType>("unspecified");
+  const [startPath, setStartPath] = useState<ResearchEntryPath>("idea");
   const [intakeStep, setIntakeStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState("");
@@ -137,7 +138,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
     try {
       await saveProject(project);
       setActionError("");
-      setName(""); setQuestion(""); setProblem(""); setAudience(""); setMaterials(""); setPaperType("unspecified"); setIntakeStep(0); setShowCreate(false);
+      setName(""); setQuestion(""); setProblem(""); setAudience(""); setMaterials(""); setPaperType("unspecified"); setStartPath("idea"); setIntakeStep(0); setShowCreate(false);
       await refresh();
       onOpen(project);
     } catch (error) {
@@ -223,6 +224,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
       <div className="dash-intake-progress"><Progress value={(intakeStep+1)/3*100} max={100} aria-label={`Research intake step ${intakeStep+1} of 3`}/><div><span aria-current={intakeStep===0?"step":undefined}>1 · Your idea</span><span aria-current={intakeStep===1?"step":undefined}>2 · Your materials</span><span aria-current={intakeStep===2?"step":undefined}>3 · Review</span></div></div>
       {actionError && <div role="alert" className="dash-action-error">{actionError}</div>}
       {intakeStep===0 && <>
+        <label>Where would you like to begin?<select value={startPath} onChange={e=>{const next=e.target.value as ResearchEntryPath;setStartPath(next);setPaperType(getResearchEntryPlan(next).selectedPaperType);}}>{RESEARCH_ENTRY_PATHS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select><small>{RESEARCH_ENTRY_PATHS.find(item=>item.id===startPath)?.description}</small><small>Suggested first action: {getResearchEntryPlan(startPath).firstAction}</small></label>
         <label>Project name<input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Childhood immunization timeliness"/></label>
         <label>What problem or observation brought you here?<textarea value={problem} onChange={e=>setProblem(e.target.value)} placeholder="Describe the issue, observation or idea in your own words." rows={3}/></label>
         <label>What do you want to find out? <span>OPTIONAL · YOU CAN REFINE THIS LATER</span><textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What question would you like this research to answer?" rows={2}/></label>
@@ -233,7 +235,7 @@ export default function Dashboard({ onOpen }: { onOpen: (project: Project) => vo
         <label>What do you already have? <span>OPTIONAL · SEPARATE WITH COMMAS</span><input value={materials} onChange={e=>setMaterials(e.target.value)} placeholder="e.g. PDFs, spreadsheet, existing manuscript, no data yet"/></label>
       </>}
       {intakeStep===2 && <>
-        <div className="dash-intake-review"><span className="dash-kicker">PROJECT</span><strong>{intakePreview.title}</strong><p>{intakePreview.description || "No background description added yet."}</p><div><span>Research format</span><b>{PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.label}</b></div><div><span>Research question</span><b>{intakePreview.researchQuestion || "To be refined with you"}</b></div><div><span>Audience</span><b>{intakePreview.intendedAudience || "Not specified yet"}</b></div><div><span>Available materials</span><b>{intakePreview.availableMaterials.join(", ") || "Not specified yet"}</b></div></div>
+        <div className="dash-intake-review"><span className="dash-kicker">PROJECT</span><strong>{intakePreview.title}</strong><p>{intakePreview.description || "No background description added yet."}</p><div><span>Starting point</span><b>{RESEARCH_ENTRY_PATHS.find(item=>item.id===startPath)?.label}</b></div><div><span>Research format</span><b>{PAPER_TYPE_BLUEPRINTS.find(item=>item.id===paperType)?.label}</b></div><div><span>Research question</span><b>{intakePreview.researchQuestion || "To be refined with you"}</b></div><div><span>Audience</span><b>{intakePreview.intendedAudience || "Not specified yet"}</b></div><div><span>Available materials</span><b>{intakePreview.availableMaterials.join(", ") || "Not specified yet"}</b></div></div>
         <div className="dash-intake-story"><strong>Draft research story arc</strong><ol>{intakePreview.storyArc.map((item,index)=><li key={index}>{item}</li>)}</ol></div>
         <div className="dash-intake-note"><ShieldCheck size={14}/> Your answers create a draft brief only. Research questions, methods, inclusion decisions, conclusions and ethics declarations remain yours to approve.</div>
       </>}

@@ -1,0 +1,70 @@
+name: Research Factory replacement quality gates
+
+on:
+  push:
+    branches:
+      - "feat/independent-research-factory-rebuild"
+      - "feat/phase10-plan-orchestrate"
+    paths:
+      - "apps/web/**"
+      - "frontend/src/lib/**"
+      - "docs/independent-rebuild-*.md"
+      - ".github/workflows/research-factory-web.yml"
+  pull_request:
+    branches:
+      - "feat/independent-research-factory-rebuild"
+    paths:
+      - "apps/web/**"
+      - "frontend/src/lib/**"
+      - "docs/independent-rebuild-*.md"
+      - "docs/phase10-plan-orchestrate.md"
+      - ".github/workflows/research-factory-web.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  replacement-web:
+    name: Replacement app tests, audit and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install legacy frontend dependencies for the temporary data bridge
+        run: npm --prefix frontend ci
+
+      - name: Install replacement app dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Audit replacement app dependencies
+        working-directory: apps/web
+        run: npm audit --audit-level=high
+
+      - name: Run replacement app typecheck, tests and build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Install Chromium for browser tests
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser, responsive and accessibility tests
+        working-directory: apps/web
+        run: npm run test:e2e
+
+      - name: Run existing repository regression suite
+        run: npm run test:regression
+

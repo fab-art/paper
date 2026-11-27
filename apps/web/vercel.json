@@ -1,0 +1,24 @@
+{
+  "framework": "vite",
+  "installCommand": "npm --prefix ../.. ci && npm --prefix ../../frontend ci && npm ci --no-audit --no-fund",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/projects", "destination": "/index.html" },
+    { "source": "/projects/:path*", "destination": "/index.html" },
+    { "source": "/research-gps", "destination": "/index.html" },
+    { "source": "/blueprint", "destination": "/index.html" },
+    { "source": "/production", "destination": "/index.html" },
+    { "source": "/orchestration", "destination": "/index.html" },
+    { "source": "/literature", "destination": "/index.html" },
+    { "source": "/evidence", "destination": "/index.html" },
+    { "source": "/writing", "destination": "/index.html" },
+    { "source": "/data", "destination": "/index.html" },
+    { "source": "/systematic-reviews", "destination": "/index.html" },
+    { "source": "/quality", "destination": "/index.html" },
+    { "source": "/publication", "destination": "/index.html" },
+    { "source": "/collaboration", "destination": "/index.html" },
+    { "source": "/settings", "destination": "/index.html" }
+  ]
+}

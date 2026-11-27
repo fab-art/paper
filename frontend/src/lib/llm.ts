@@ -76,3 +76,32 @@ export async function fallbackComplete(endpoint: string, model: string, prompt: 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
+
+
+/** Runs a bounded completion with policy instructions isolated in the system role. */
+export async function completeWithSystem(
+  systemPrompt: string,
+  userPrompt: string,
+  onToken?: (token: string) => void
+): Promise<string> {
+  if (!engine) throw new Error("Load a local model first.");
+  const started = performance.now();
+  let output = "";
+  const stream = await engine.chat.completions.create({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ],
+    temperature: 0.25,
+    max_tokens: 1800,
+    stream: true
+  });
+  for await (const chunk of stream) {
+    const token = chunk.choices[0]?.delta?.content || "";
+    output += token;
+    onToken?.(token);
+  }
+  const elapsed = Math.max((performance.now() - started) / 1000, 0.1);
+  window.dispatchEvent(new CustomEvent("studio:tokens", { detail: output.length / 4 / elapsed }));
+  return output;
+}

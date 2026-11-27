@@ -1,0 +1,10 @@
+import type { Project, ScientificAuditRecord, ScientificAuditFinding, PublicationPlan } from "../../../../frontend/src/lib/types";
+export function createScientificAudit(project: Project, options?: { blueprint?: unknown; attachments?: unknown[]; now?: number }): ScientificAuditRecord;
+export function updateAuditFinding(audit: ScientificAuditRecord, findingId: string, patch: { status: ScientificAuditFinding["status"]; reviewer: string; note?: string }, options?: { now?: number }): ScientificAuditRecord;
+export function summarizeScientificAudit(audit: ScientificAuditRecord): { total: number; reviewed: number; verified: number; needsAttention: number; notApplicable: number; unreviewed: number; scientificQualityScore: null };
+export function finalizeScientificAudit(audit: ScientificAuditRecord, options: { reviewer: string; now?: number }): ScientificAuditRecord;
+export function createPublicationPlan(project: Project, options?: { now?: number }): PublicationPlan;
+export function updatePublicationPlan(plan: PublicationPlan, patch: Partial<PublicationPlan>, options?: { now?: number }): PublicationPlan;
+export function getPublicationReadiness(project: Project, plan: PublicationPlan): { ready: boolean; missing: string[] };
+export function createCoverLetter(plan: PublicationPlan): string;
+export function transitionPublicationStatus(project: Project, plan: PublicationPlan, nextStatus: PublicationPlan["status"], options: { actor: string; now?: number; confirmExternalSubmission?: boolean }): PublicationPlan;
