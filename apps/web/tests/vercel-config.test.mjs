@@ -12,7 +12,7 @@ test("SPA rewrites are explicit and cannot capture Vercel API routes", () => {
   assert.ok(rewriteSources.includes("/projects"), "the project library route must resolve to the SPA");
   assert.ok(rewriteSources.includes("/projects/:path*"), "direct project-detail routes must resolve to the SPA");
   for (const path of [
-    "/blueprint", "/production", "/orchestration", "/literature", "/evidence",
+    "/research-gps", "/blueprint", "/production", "/orchestration", "/literature", "/evidence",
     "/writing", "/data", "/systematic-reviews", "/quality", "/publication",
     "/collaboration", "/settings"
   ]) {
