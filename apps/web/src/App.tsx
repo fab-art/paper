@@ -220,7 +220,7 @@ export default function App() {
 
                 {loading ? <div className="state-panel" role="status">Opening your local research library…</div> :
                   storageError ? <div className="state-panel state-error" role="alert"><strong>Local library unavailable</strong><span>{storageError}</span><span>Your records have not been changed.</span></div> :
-                  filteredProjects.length === 0 ? <div className="state-panel"><div className="empty-icon"><FolderKanban size={22} /></div><strong>{projects.length ? "No matching projects" : "Your research library is ready"}</strong><span>{projects.length ? "Try another project name." : "This Phase 1 preview is read-only. Project creation and import arrive in the next migration phase; your existing local data is preserved."}</span></div> :
+                  filteredProjects.length === 0 ? <div className="state-panel"><div className="empty-icon"><FolderKanban size={22} /></div><strong>{projects.length ? "No matching projects" : "Your research library is ready"}</strong><span>{projects.length ? "Try another project name." : "No projects yet. Create one in Projects to start a research workflow; your existing local data remains on this device."}</span></div> :
                   <div className="project-grid">{filteredProjects.map((project) => (
                     <Card className="project-card" key={project.id}>
                       <div className="project-card-top"><span className="project-type"><FileText size={14} /> Research project</span><span className="project-status">{project.status ?? "planning"}</span></div>
