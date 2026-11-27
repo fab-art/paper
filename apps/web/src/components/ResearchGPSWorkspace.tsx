@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Compass, FolderOpen, Save, Sparkles } from "lucide-react";
 import { Button, Card } from "@santi020k/lumen-react";
 import type { Project } from "../../../../frontend/src/lib/types";
@@ -87,8 +87,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
     setPlan(next);
   }
 
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function save() {
     if (!project) return;
     setSaving(true);
     setError("");
@@ -143,7 +142,7 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
         <div><p className="eyebrow">RESEARCH GPS · GUIDED START</p><h2>Choose your starting point. Build a route you can own.</h2><p>Research GPS helps structure the next steps; it does not decide the scientific question or approve the methods for you.</p></div>
         <label className="plan-project-select"><span>Project</span><select value={projectId} onChange={event => setProjectId(event.target.value)}>{projects.map(item => <option key={item.id} value={item.id}>{item.name || "Untitled project"}</option>)}</select></label>
       </div>
-      {project && <form className="blueprint-form" onSubmit={save}>
+      {project && <div className="blueprint-form">
         <Card className="plan-section">
           <div className="plan-section-heading"><div><span className="plan-step">01</span><div><h3>Where are you starting?</h3><p>Select the route that best matches the work you already have.</p></div></div></div>
           <div className="plan-fields">
@@ -172,8 +171,8 @@ export default function ResearchGPSWorkspace({ onNavigate }: { onNavigate: (path
         </Card>
         {error && <p className="plan-message error" role="alert">{error}</p>}
         {notice && <p className="plan-message success" role="status">{notice}</p>}
-        <div className="plan-actions"><span>Saved locally only. No project is uploaded or shared automatically.</span><Button type="submit" disabled={saving}>{saving ? "Saving…" : <><Save size={15}/> Save Research GPS</>}</Button></div>
-      </form>}
+        <div className="plan-actions"><span>Saved locally only. No project is uploaded or shared automatically.</span><Button type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : <><Save size={15}/> Save Research GPS</>}</Button></div>
+      </div>}
     </section>
   );
 }
