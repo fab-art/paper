@@ -1,6 +1,7 @@
 import base64
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ["PAPERORCHESTRA_ENGINE_TOKEN"] = "paperorchestra-ci-engine-token"
 
@@ -60,6 +61,24 @@ class ComputeApiSmokeTests(unittest.TestCase):
             json={"data": [{"x": "A", "y": 1}], "x": "x", "y": "y"},
         )
         self.assertEqual(response.status_code, 401)
+
+
+
+    def test_rate_limit_middleware_returns_429_and_uses_forwarded_client_ip(self):
+        denied = {"allowed": False, "limit": 20, "remaining": 0, "retry_after": 17}
+        with patch("backend.rate_limit.consume_rate_limit", return_value=denied) as consume:
+            response = self.client.post(
+                "/api/generate-plot",
+                headers={
+                    **self.headers,
+                    "X-Forwarded-For": "198.51.100.23",
+                },
+                json={"data": [{"x": "A", "y": 1}], "x": "x", "y": "y"},
+            )
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.headers["retry-after"], "17")
+        self.assertEqual(response.headers["x-ratelimit-limit"], "20")
+        consume.assert_called_once_with("generate-plot", "198.51.100.23")
 
 
 if __name__ == "__main__":
