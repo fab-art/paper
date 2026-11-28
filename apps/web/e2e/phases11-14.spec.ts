@@ -147,7 +147,7 @@ test.describe("Research Factory phases 11–14", () => {
   test("Phase 14: settings persist appearance and export a local project backup", async ({ page }) => {
     await seedProject(page, true);
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
+    await expect(page.locator(".manage-toolbar h2")).toHaveText("Settings");
     await page.locator(".manage-setting-row select").selectOption("dark");
     await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "dark");
 
