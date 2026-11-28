@@ -87,15 +87,15 @@ test.describe("Research Factory phases 11–14", () => {
     await page.getByLabel("Intervention / exposure").fill("Community-based follow-up");
     await page.getByLabel("Outcomes").fill("Glycaemic control and continuity of care");
     await page.getByLabel("Databases searched").fill("PubMed, Scopus");
-    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
+    await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
 
     await page.getByRole("button", { name: "Screening" }).click();
     await page.getByRole("button", { name: "Mark Community health intervention outcomes include at title/abstract stage" }).click();
-    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
+    await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Full text retrieved").check();
-    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
+    await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Full-text decision").selectOption("include");
-    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
+    await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
     await expect(page.getByText("1 included full-text study/studies")).toBeVisible();
 
     await page.reload();
@@ -157,7 +157,8 @@ test.describe("Research Factory phases 11–14", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export JSON backup" }).click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toMatch(/^paperorchestra-backup-.*\\.json$/);
+    expect(download.suggestedFilename()).toContain("paperorchestra-backup-");
+    expect(download.suggestedFilename().endsWith(".json")).toBe(true);
   });
 
   test("Phase 14: collaboration does not upload local projects before explicit sign-in and sharing", async ({ page }) => {
