@@ -18,7 +18,7 @@ The production cutover is staged separately from feature development. The releas
 | React PWA | Vercel | IDE and static assets |
 | Five AI stages | Browser WebGPU/WebLLM | Sequential outline, literature planning, plot instructions, writing, refinement |
 | Literature search | Vercel Function | Semantic Scholar proxy |
-| Compute engine | Railway Docker service | Python, Pandas, Matplotlib, TeX Live and latexmk |
+| Compute engine | Render Docker service | Python, Pandas, Matplotlib, TeX Live and latexmk |
 | Projects | Browser IndexedDB | Local-first drafts and project data |
 
 The compute engine does not host or invoke an LLM. Model inference stays in the browser. Python handles chart rendering and TeX compilation.
@@ -38,24 +38,24 @@ The repository-root `vercel.json` is retained for the legacy `frontend/` applica
 
 The WebLLM initialization callback is explicitly typed, fixing the reported TS7006 implicit-any error for parameter report. The PWA cache limit is raised to 12 MiB because the WebLLM assets exceed Workbox's 2 MiB default. The WebLLM runtime is lazy-loaded to reduce the initial application bundle.
 
-## B. Railway compute deployment
+## B. Render compute deployment
 
-1. Create a Railway project at https://railway.com.
+1. Create a Render project at https://render.com.
 2. Deploy from this GitHub repository.
-3. Railway should detect the root Dockerfile. Keep service root directory as /.
-4. Add Railway variables:
+3. Render should detect the root Dockerfile. Keep service root directory as /.
+4. Add Render variables:
    - PAPERORCHESTRA_ENGINE_TOKEN: a long random secret (32+ random bytes).
    - CORS_ORIGINS: exact Vercel production origin, e.g. https://your-project.vercel.app.
 5. Deploy. Health endpoint: https://YOUR-ENGINE.up.railway.app/api/health. Expected ok: true and latexmk: true.
 
 The Docker image installs Python requirements and TeX Live, runs as a non-root user, disables TeX shell escape, and compiles in a temporary directory. Template style files and figure assets are included in compilation requests with path and size checks.
 
-## C. Connect Vercel to Railway
+## C. Connect Vercel to Render
 
 Set these variables in Vercel → Project → Settings → Environment Variables:
 
-- PAPERORCHESTRA_ENGINE_URL = Railway public URL (without trailing slash).
-- PAPERORCHESTRA_ENGINE_TOKEN = the same secret configured in Railway.
+- PAPERORCHESTRA_ENGINE_URL = Render public URL (without trailing slash).
+- PAPERORCHESTRA_ENGINE_TOKEN = the same secret configured in Render.
 - UPSTASH_REDIS_REST_URL = Upstash Redis REST endpoint used for compute abuse protection.
 - UPSTASH_REDIS_REST_TOKEN = Upstash Redis REST token. Compute proxy requests fail closed until both rate-limit variables are configured.
 - Optional SEMANTIC_SCHOLAR_API_KEY = Semantic Scholar API key.
@@ -64,7 +64,7 @@ Apply to Production and Preview as appropriate, then redeploy. The browser calls
 
 ## D. Test
 
-- Open Railway /api/health.
+- Open Render /api/health.
 - Open Vercel app, load WebLLM, run agents sequentially.
 - Import a small CSV and run Plots; connected engine uses Matplotlib.
 - Click Print / Save PDF; connected engine compiles the .tex with latexmk and returns a PDF for the preview pane.
@@ -74,7 +74,7 @@ Apply to Production and Preview as appropriate, then redeploy. The browser calls
 
 - Never put the engine token in a VITE_ variable.
 - Current LaTeX checks disable shell escape, reject several dangerous file primitives and paths, use a temporary working directory, and run the service as non-root. These are not a complete sandbox against malicious TeX. Before accepting arbitrary public user documents at scale, move compilation into one-shot isolated containers with strict CPU, memory, filesystem, network and wall-clock limits.
-- The initial Railway service has no durable queue or account-level authorization. Protect it behind the Vercel proxy and keep the token secret.
+- The Render service has no durable queue or account-level authorization. Keep compute POST routes behind the Vercel proxy and keep the bearer token secret.
 - Generated claims, citations, plots and LaTeX require human review.
 
 ## Local development
@@ -105,7 +105,7 @@ The uploaded Google Research repository remains under upstream/paper-orchestra/.
 
 ## E. Windows desktop companion (local Python execution)
 
-The optional Windows companion adds a desktop window for the Vercel PWA and runs a local FastAPI engine on the user's computer. Python execution stays on the Windows machine; it does not use Railway.
+The optional Windows companion adds a desktop window for the Vercel PWA and runs a local FastAPI engine on the user's computer. Python execution stays on the Windows machine; it does not use remote compute.
 
 1. Install 64-bit Python 3.11 or 3.12.
 2. Open the repository folder and double-click `desktop/start_windows.bat`.
