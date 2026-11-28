@@ -91,8 +91,11 @@ test.describe("Research Factory phases 11–14", () => {
 
     await page.getByRole("button", { name: "Screening" }).click();
     await page.getByRole("button", { name: "Mark Community health intervention outcomes include at title/abstract stage" }).click();
+    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Full text retrieved").check();
+    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Full-text decision").selectOption("include");
+    await expect(page.getByRole("status")).toContainText("Systematic review changes saved locally.");
     await expect(page.getByText("1 included full-text study/studies")).toBeVisible();
 
     await page.reload();
