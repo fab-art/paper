@@ -83,11 +83,15 @@ test.describe("Research Factory phases 11–14", () => {
     await expect(page.getByRole("heading", { name: "Systematic review management" })).toBeVisible();
 
     await page.getByRole("button", { name: "Protocol", exact: true }).click();
+    const savedNotice = page.locator(".systematic-reviews-workspace > .plan-message.success");
     await page.getByLabel("Population").fill("Adults with type 2 diabetes");
+    await expect(savedNotice).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Intervention / exposure").fill("Community-based follow-up");
+    await expect(savedNotice).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Outcomes").fill("Glycaemic control and continuity of care");
+    await expect(savedNotice).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Databases searched").fill("PubMed, Scopus");
-    await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
+    await expect(savedNotice).toContainText("Systematic review changes saved locally.");
 
     await page.getByRole("button", { name: "Screening" }).click();
     await page.getByRole("button", { name: "Mark Community health intervention outcomes include at title/abstract stage" }).click();
