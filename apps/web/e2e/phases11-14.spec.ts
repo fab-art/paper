@@ -82,7 +82,7 @@ test.describe("Research Factory phases 11–14", () => {
     await page.goto("/systematic-reviews");
     await expect(page.getByRole("heading", { name: "Systematic review management" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Protocol" }).click();
+    await page.getByRole("button", { name: "Protocol", exact: true }).click();
     await page.getByLabel("Population").fill("Adults with type 2 diabetes");
     await page.getByLabel("Intervention / exposure").fill("Community-based follow-up");
     await page.getByLabel("Outcomes").fill("Glycaemic control and continuity of care");
@@ -96,14 +96,14 @@ test.describe("Research Factory phases 11–14", () => {
     await expect(page.getByText("1 included full-text study/studies")).toBeVisible();
 
     await page.reload();
-    await page.getByRole("button", { name: "Protocol" }).click();
+    await page.getByRole("button", { name: "Protocol", exact: true }).click();
     await expect(page.getByLabel("Population")).toHaveValue("Adults with type 2 diabetes");
   });
 
   test("Phase 13: scientific audit requires named review of every finding before sign-off", async ({ page }) => {
     await seedProject(page, true);
     await page.goto("/quality");
-    await expect(page.getByRole("heading", { name: "Scientific audit" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Scientific audit", exact: true })).toBeVisible();
     await page.getByPlaceholder("Required for every audit decision").fill("Test Reviewer");
 
     const findings = page.locator(".publish-finding");
@@ -114,6 +114,7 @@ test.describe("Research Factory phases 11–14", () => {
       await finding.locator("select").selectOption("verified");
       await finding.locator("textarea").fill("Reviewed against the deterministic E2E project record.");
       await finding.getByRole("button", { name: "Save review" }).click();
+      await expect(page.getByRole("status")).toContainText("Scientific audit saved in the local project.");
     }
     await expect(page.getByRole("button", { name: "Sign off audit" })).toBeEnabled();
     await page.getByRole("button", { name: "Sign off audit" }).click();
@@ -146,7 +147,7 @@ test.describe("Research Factory phases 11–14", () => {
   test("Phase 14: settings persist appearance and export a local project backup", async ({ page }) => {
     await seedProject(page, true);
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
     await page.locator(".manage-setting-row select").selectOption("dark");
     await expect(page.locator(".factory-app")).toHaveAttribute("data-theme", "dark");
 
