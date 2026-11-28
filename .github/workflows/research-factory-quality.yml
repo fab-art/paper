@@ -55,5 +55,13 @@ jobs:
       - name: Run browser end-to-end and accessibility tests
         working-directory: apps/web
         run: npm run test:e2e
+      - name: Upload Playwright failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperorchestra-playwright-diagnostics
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Run legacy repository regression suite
         run: npm run test:regression
