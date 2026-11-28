@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from backend.rate_limit import reset_rate_limits, consume_rate_limit
 
@@ -32,6 +33,16 @@ class ComputeRateLimitTests(unittest.TestCase):
         next_window = consume_rate_limit("generate-plot", "203.0.113.10", now=180.0)
         self.assertTrue(next_window["allowed"])
         self.assertEqual(next_window["remaining"], 19)
+
+
+
+    def test_rate_limiter_bounds_tracked_client_buckets(self):
+        with patch("backend.rate_limit.MAX_TRACKED_BUCKETS", 2):
+            consume_rate_limit("generate-plot", "203.0.113.10", now=120.0)
+            consume_rate_limit("generate-plot", "203.0.113.11", now=120.0)
+            overflow = consume_rate_limit("generate-plot", "203.0.113.12", now=120.0)
+        self.assertFalse(overflow["allowed"])
+        self.assertEqual(overflow["remaining"], 0)
 
 
 if __name__ == "__main__":
