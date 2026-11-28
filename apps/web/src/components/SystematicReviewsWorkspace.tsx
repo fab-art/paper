@@ -13,6 +13,7 @@ export default function SystematicReviewsWorkspace() {
   const [notice, setNotice] = useState("");
   const latestProject = useRef<Project | null>(null);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const pendingSaves = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -33,12 +34,17 @@ export default function SystematicReviewsWorkspace() {
   useEffect(() => { latestProject.current = project; }, [project]);
 
   function updateProject(changes: Partial<Project>) {
+    pendingSaves.current += 1;
+    setError("");
+    setNotice("");
+    setSaving(true);
     saveQueue.current = saveQueue.current.then(async () => {
       const current = latestProject.current;
-      if (!current) return;
-      setSaving(true);
-      setError("");
-      setNotice("");
+      if (!current) {
+        pendingSaves.current = Math.max(0, pendingSaves.current - 1);
+        if (pendingSaves.current === 0) setSaving(false);
+        return;
+      }
       try {
         const saved = await updateLocalProject({ ...current, ...changes });
         if (!saved) throw new Error("The project changed elsewhere or could not be saved. Reload it before continuing.");
@@ -48,7 +54,8 @@ export default function SystematicReviewsWorkspace() {
       } catch (reason) {
         setError(reason instanceof Error ? reason.message : "Systematic review changes could not be saved.");
       } finally {
-        setSaving(false);
+        pendingSaves.current = Math.max(0, pendingSaves.current - 1);
+        if (pendingSaves.current === 0) setSaving(false);
       }
     });
   }
