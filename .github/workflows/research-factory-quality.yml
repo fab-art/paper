@@ -3,6 +3,7 @@ name: PaperOrchestra production quality gates
 on:
   push:
     branches:
+      - main
       - "hardening/render-engine-rate-limit-e2e"
   pull_request:
     branches:
