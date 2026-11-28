@@ -65,3 +65,44 @@ jobs:
           retention-days: 3
       - name: Run legacy repository regression suite
         run: npm run test:regression
+      - name: Smoke-test production compute proxy (plot + LaTeX)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          BASE_URL="https://paper-eta-mauve.vercel.app"
+          READY=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error --max-time 15 "$BASE_URL/" | grep -Fq '<title>PaperOrchestra — Research Factory</title>'; then
+              READY=1
+              break
+            fi
+            echo "Waiting for the Research Factory production alias (attempt $attempt/30)..."
+            sleep 10
+          done
+          test "$READY" -eq 1
+
+          curl --fail --silent --show-error --max-time 55 \
+            -H "Content-Type: application/json" \
+            --data '{"data":[{"month":"Jan","value":12},{"month":"Feb","value":18}],"x":"month","y":"value","title":"Production plot smoke test"}' \
+            "$BASE_URL/api/engine/generate-plot" > /tmp/production-plot.json
+          python - <<'PY'
+          import base64, json
+          payload = json.load(open("/tmp/production-plot.json"))
+          png = base64.b64decode(payload["png_base64"], validate=True)
+          pdf = base64.b64decode(payload["pdf_base64"], validate=True)
+          assert png.startswith(b"\x89PNG\r\n\x1a\n")
+          assert pdf.startswith(b"%PDF-")
+          print("Production plot proxy returned valid PNG and PDF.")
+          PY
+
+          curl --fail --silent --show-error --max-time 55 \
+            -H "Content-Type: application/json" \
+            --data '{"tex":"\\documentclass{article}\\begin{document}PaperOrchestra production PDF smoke test.\\end{document}","bibtex":"","files":{},"assets":{}}' \
+            "$BASE_URL/api/engine/compile-latex" > /tmp/production-pdf.json
+          python - <<'PY'
+          import base64, json
+          payload = json.load(open("/tmp/production-pdf.json"))
+          pdf = base64.b64decode(payload["pdf_base64"], validate=True)
+          assert pdf.startswith(b"%PDF-")
+          print("Production LaTeX proxy compiled a valid PDF.")
+          PY
