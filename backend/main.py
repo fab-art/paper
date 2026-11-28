@@ -50,6 +50,30 @@ async def authenticate_engine(request: Request, call_next):
         if not hmac.compare_digest(supplied, "Bearer " + expected):
             from starlette.responses import JSONResponse
             return JSONResponse({"detail": "Unauthorized compute request."}, status_code=401)
+
+        endpoint = request.url.path.rsplit("/", 1)[-1]
+        if endpoint in {"generate-plot", "compile-latex"}:
+            forwarded = request.headers.get("x-forwarded-for", "")
+            client_ip = forwarded.split(",", 1)[0].strip()
+            if not client_ip and request.client:
+                client_ip = request.client.host
+            from backend.rate_limit import consume_rate_limit
+            rate = consume_rate_limit(endpoint, client_ip or "unknown")
+            if not rate["allowed"]:
+                from starlette.responses import JSONResponse
+                return JSONResponse(
+                    {"detail": "Compute rate limit reached. Please wait before retrying."},
+                    status_code=429,
+                    headers={
+                        "Retry-After": str(rate["retry_after"]),
+                        "X-RateLimit-Limit": str(rate["limit"]),
+                        "X-RateLimit-Remaining": "0",
+                    },
+                )
+            response = await call_next(request)
+            response.headers["X-RateLimit-Limit"] = str(rate["limit"])
+            response.headers["X-RateLimit-Remaining"] = str(rate["remaining"])
+            return response
     return await call_next(request)
 
 
