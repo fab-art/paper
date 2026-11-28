@@ -40,6 +40,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends latexmk texlive-latex-base
       - name: Run backend rate-limit and compute API smoke tests
         run: python -m unittest backend.test_rate_limit backend.test_compute_api -v
+      - name: Verify the live Render health endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 240 --retry 3 --retry-all-errors --retry-delay 5 \
+            https://paperorchestra-engine.onrender.com/api/health | tee /tmp/render-health.json
+          python -c "import json; p=json.load(open('/tmp/render-health.json')); assert p.get('ok') is True and p.get('latexmk') is True, p; print('Render engine healthy; latexmk available.')"
       - name: Build Research Factory (typecheck + unit tests)
         working-directory: apps/web
         run: npm run build
