@@ -70,7 +70,7 @@ test.describe("Research Factory phases 11–14", () => {
     await approveBlueprintAndStartFirstTask(page);
     await page.goto("/orchestration");
     await expect(page.getByText("Browser-local research assistant")).toBeVisible();
-    await page.getByLabel("Task to orchestrate").selectOption({ label: /Approve research blueprint/ });
+    await page.getByLabel("Task to orchestrate").selectOption("task:phase11-14-e2e-project:protocol");
     await expect(page.getByText("Ready for AI assistance")).toBeVisible();
     await expect(page.getByRole("button", { name: "Copy task prompt" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Generate with local model" })).toBeDisabled();
