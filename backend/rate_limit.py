@@ -10,6 +10,7 @@ import time
 
 WINDOW_SECONDS = 60
 LIMITS = {"generate-plot": 20, "compile-latex": 4}
+MAX_TRACKED_BUCKETS = 10_000
 _counts: dict[tuple[str, str, int], int] = {}
 _lock = Lock()
 
@@ -29,13 +30,19 @@ def consume_rate_limit(path: str, ip: str, now: float | None = None) -> dict[str
     bucket = int(current // WINDOW_SECONDS)
     key = (path, ip, bucket)
     with _lock:
-        count = _counts.get(key, 0) + 1
-        _counts[key] = count
-        if len(_counts) > 10000:
-            oldest_bucket = bucket - 1
-            stale = [entry for entry in _counts if entry[2] < oldest_bucket]
+        if len(_counts) >= MAX_TRACKED_BUCKETS:
+            stale = [entry for entry in _counts if entry[2] < bucket]
             for entry in stale:
                 _counts.pop(entry, None)
+        if key not in _counts and len(_counts) >= MAX_TRACKED_BUCKETS:
+            return {
+                "allowed": False,
+                "limit": limit,
+                "remaining": 0,
+                "retry_after": max(1, int(WINDOW_SECONDS - (current % WINDOW_SECONDS))),
+            }
+        count = _counts.get(key, 0) + 1
+        _counts[key] = count
 
     remaining = max(0, limit - count)
     retry_after = max(1, int(WINDOW_SECONDS - (current % WINDOW_SECONDS)))
