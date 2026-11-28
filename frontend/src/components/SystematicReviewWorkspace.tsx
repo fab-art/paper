@@ -36,13 +36,21 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
   const screeningSearchRef = useRef<HTMLInputElement | null>(null);
   const [filter, setFilter] = useState<ScreeningFilter>("all");
   const [selectedPaperKey, setSelectedPaperKey] = useState("");
+  const [screeningDraft, setScreeningDraft] = useState<Record<string, ReviewScreeningRecord> | null>(null);
   const review = project.systematicReview || emptyReview();
-  const synced = useMemo(() => syncReviewRecords(project.papers, review.screening), [project.papers, review.screening]);
+  const synced = useMemo(
+    () => syncReviewRecords(project.papers, screeningDraft ?? review.screening),
+    [project.papers, review.screening, screeningDraft]
+  );
   const migratedExtraction = useMemo(() => migrateReviewRecords(project.papers, review.extraction), [project.papers, review.extraction]);
   const migratedRiskOfBias = useMemo(() => migrateReviewRecords(project.papers, review.riskOfBias), [project.papers, review.riskOfBias]);
   const flow = useMemo(() => calculatePrismaFlow(project.papers, synced.screening), [project.papers, synced.screening]);
   const includedPapers = synced.uniquePapers.filter(paper => synced.screening[paper.reviewKey]?.fullTextDecision === "include");
   const selectedPaper = includedPapers.find(paper => paper.reviewKey === selectedPaperKey) || includedPapers[0];
+
+  useEffect(() => {
+    setScreeningDraft(null);
+  }, [project.systematicReview?.screening]);
 
   useEffect(() => {
     const nextReview = {
@@ -71,7 +79,9 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     if ("titleAbstractDecision" in changes) next.titleAbstractDecisionUpdatedAt = updatedAt;
     if ("fullTextDecision" in changes) next.fullTextDecisionUpdatedAt = updatedAt;
     if ("fullTextRetrieved" in changes) next.fullTextRetrievedUpdatedAt = updatedAt;
-    updateReview({ screening: { ...synced.screening, [key]: next } });
+    const nextScreening = { ...synced.screening, [key]: next };
+    setScreeningDraft(nextScreening);
+    updateReview({ screening: nextScreening });
   };
   const updateExtraction = (key: string, changes: Partial<StudyExtraction>) => {
     updateReview({ extraction: { ...migratedExtraction, [key]: { ...emptyExtraction(), ...migratedExtraction[key], ...changes } } });
@@ -104,7 +114,9 @@ export default function SystematicReviewWorkspace({ project, onUpdate }: Props) 
     const current = synced.screening[key];
     if (!current) return;
     const next = updateTitleAbstractDecision(current, decision);
-    updateReview({ screening: { ...synced.screening, [key]: next } });
+    const nextScreening = { ...synced.screening, [key]: next };
+    setScreeningDraft(nextScreening);
+    updateReview({ screening: nextScreening });
   };
   const addRiskDomain = (key: string) => {
     const current = migratedRiskOfBias[key] || { tool: "JBI", domains: [] };

@@ -1,0 +1,67 @@
+name: PaperOrchestra production quality gates
+
+on:
+  push:
+    branches:
+      - main
+      - "hardening/render-engine-rate-limit-e2e"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository dependencies
+        run: |
+          npm ci
+          npm --prefix frontend ci
+          npm --prefix apps/web ci
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Install LaTeX compiler for PDF smoke tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends latexmk texlive-latex-base
+      - name: Run backend rate-limit and compute API smoke tests
+        run: python -m unittest backend.test_rate_limit backend.test_compute_api -v
+      - name: Verify the live Render health endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 240 --retry 3 --retry-all-errors --retry-delay 5 \
+            https://paperorchestra-engine.onrender.com/api/health | tee /tmp/render-health.json
+          python -c "import json; p=json.load(open('/tmp/render-health.json')); assert p.get('ok') is True and p.get('latexmk') is True, p; print('Render engine healthy; latexmk available.')"
+      - name: Build Research Factory (typecheck + unit tests)
+        working-directory: apps/web
+        run: npm run build
+      - name: Install Chromium
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Run browser end-to-end and accessibility tests
+        working-directory: apps/web
+        run: npm run test:e2e
+      - name: Upload Playwright failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperorchestra-playwright-diagnostics
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 3
+      - name: Run legacy repository regression suite
+        run: npm run test:regression
