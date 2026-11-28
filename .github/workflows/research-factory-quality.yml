@@ -1,0 +1,47 @@
+name: PaperOrchestra production quality gates
+
+on:
+  push:
+    branches:
+      - "hardening/render-engine-rate-limit-e2e"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository dependencies
+        run: |
+          npm ci
+          npm --prefix frontend ci
+          npm --prefix apps/web ci
+      - name: Run backend rate-limit tests
+        run: python -m unittest backend.test_rate_limit -v
+      - name: Build Research Factory (typecheck + unit tests)
+        working-directory: apps/web
+        run: npm run build
+      - name: Install Chromium
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Run browser end-to-end and accessibility tests
+        working-directory: apps/web
+        run: npm run test:e2e
+      - name: Run legacy repository regression suite
+        run: npm run test:regression
