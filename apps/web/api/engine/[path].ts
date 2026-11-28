@@ -23,10 +23,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = process.env.PAPERORCHESTRA_ENGINE_TOKEN;
   if (!token) return res.status(503).json({ detail: "PAPERORCHESTRA_ENGINE_TOKEN is not configured in Vercel." });
 
+  const realIp = req.headers["x-real-ip"];
   const forwarded = req.headers["x-forwarded-for"];
-  const forwardedFor = Array.isArray(forwarded)
-    ? forwarded.join(",")
-    : String(forwarded || req.headers["x-real-ip"] || "");
+  const trustedClientIp = Array.isArray(realIp)
+    ? realIp[0]
+    : String(realIp || (Array.isArray(forwarded) ? forwarded[0] : forwarded || ""));
+  const forwardedFor = trustedClientIp.split(",", 1)[0].trim();
 
   try {
     const r = await fetch(base + "/api/" + path, {
