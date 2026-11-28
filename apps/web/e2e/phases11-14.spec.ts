@@ -100,7 +100,9 @@ test.describe("Research Factory phases 11–14", () => {
     await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
     await page.getByLabel("Full-text decision").selectOption("include");
     await expect(page.locator(".systematic-reviews-workspace > .plan-message.success")).toContainText("Systematic review changes saved locally.");
-    await expect(page.getByText("1 included full-text study/studies")).toBeVisible();
+    await page.getByRole("button", { name: "Overview", exact: true }).click();
+    const includedStudies = page.locator(".srw-flow-stat").filter({ hasText: "Studies included" });
+    await expect(includedStudies.locator("strong")).toHaveText("1");
 
     await page.reload();
     await page.getByRole("button", { name: "Protocol", exact: true }).click();
